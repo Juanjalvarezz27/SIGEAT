@@ -1,4 +1,5 @@
-import { X } from 'lucide-react';
+// components/AddCarModal.tsx
+import { X, User, Phone } from 'lucide-react';
 
 interface AddCarModalProps {
   isOpen: boolean;
@@ -12,13 +13,15 @@ export default function AddCarModal({ isOpen, onClose, onSave }: AddCarModalProp
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
-    
+
     // Creamos un objeto con los datos del formulario
     const nuevoCarro = {
       modelo: (form.elements.namedItem('modelo') as HTMLInputElement).value,
       placa: (form.elements.namedItem('placa') as HTMLInputElement).value,
       servicio: (form.elements.namedItem('servicio') as HTMLSelectElement).value,
       precio: Number((form.elements.namedItem('precio') as HTMLInputElement).value),
+      cliente: (form.elements.namedItem('cliente') as HTMLInputElement).value,
+      telefono: (form.elements.namedItem('telefono') as HTMLInputElement).value,
       estado: 'Pendiente', // Por defecto entra como pendiente
       hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       id: Date.now(), // ID único falso
@@ -26,6 +29,7 @@ export default function AddCarModal({ isOpen, onClose, onSave }: AddCarModalProp
 
     onSave(nuevoCarro);
     onClose();
+    form.reset(); // Limpiar el formulario
   };
 
   return (
@@ -34,9 +38,9 @@ export default function AddCarModal({ isOpen, onClose, onSave }: AddCarModalProp
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
 
       {/* Contenido del Modal */}
-      <div className="bg-white w-full sm:w-96 rounded-t-3xl sm:rounded-3xl p-6 relative z-10 shadow-2xl animate-in slide-in-from-bottom-10">
-        
-        <div className="flex justify-between items-center mb-6">
+      <div className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 relative z-10 shadow-2xl animate-in slide-in-from-bottom-10 max-h-[90vh] overflow-y-auto">
+
+        <div className="flex justify-between items-center mb-6 sticky top-0 bg-white pt-2">
           <h2 className="text-xl font-bold text-slate-800">Nuevo Ingreso</h2>
           <button onClick={onClose} className="p-2 bg-slate-100 rounded-full text-slate-500 hover:bg-slate-200">
             <X size={20} />
@@ -44,38 +48,115 @@ export default function AddCarModal({ isOpen, onClose, onSave }: AddCarModalProp
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-1">Modelo del Carro</label>
-            <input name="modelo" type="text" placeholder="Ej: Toyota Yaris" required 
-              className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
-          </div>
+          {/* Información del Cliente */}
+          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+            <h3 className="text-sm font-bold text-blue-700 mb-3 flex items-center gap-2">
+              <User size={16} />
+              Datos del Cliente
+            </h3>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">Nombre del Cliente</label>
+                <input 
+                  name="cliente" 
+                  type="text" 
+                  placeholder="Ej: Juan Pérez" 
+                  required
+                  className="w-full p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
+                />
+              </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-600 mb-1">Placa</label>
-              <input name="placa" type="text" placeholder="ABC-123" required 
-                className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" />
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1 flex items-center gap-2">
+                  <Phone size={14} />
+                  Teléfono
+                </label>
+                <input 
+                  name="telefono" 
+                  type="tel" 
+                  placeholder="Ej: 555-1234" 
+                  required
+                  className="w-full p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-600 mb-1">Precio ($)</label>
-              <input name="precio" type="number" placeholder="0.00" required 
-                className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+
+          {/* Información del Vehículo */}
+          <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+            <h3 className="text-sm font-bold text-slate-700 mb-3">Información del Vehículo</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">Modelo del Carro</label>
+                <input 
+                  name="modelo" 
+                  type="text" 
+                  placeholder="Ej: Toyota Yaris" 
+                  required
+                  className="w-full p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" 
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">Placa</label>
+                  <input 
+                    name="placa" 
+                    type="text" 
+                    placeholder="ABC-123" 
+                    required
+                    className="w-full p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase" 
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-600 mb-1">Precio ($)</label>
+                  <input 
+                    name="precio" 
+                    type="number" 
+                    placeholder="0.00" 
+                    required
+                    min="0"
+                    step="0.01"
+                    className="w-full p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-600 mb-1">Servicio</label>
+                <select 
+                  name="servicio" 
+                  className="w-full p-3 rounded-xl bg-white border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                >
+                  <option value="">Seleccionar servicio</option>
+                  <option value="Lavado Sencillo">Lavado Sencillo</option>
+                  <option value="Lavado + Aspirado">Lavado + Aspirado</option>
+                  <option value="Lavado Motor">Lavado Motor</option>
+                  <option value="Full Equipo">Full Equipo</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-600 mb-1">Servicio</label>
-            <select name="servicio" className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>Lavado Sencillo</option>
-              <option>Lavado + Aspirado</option>
-              <option>Lavado Motor</option>
-              <option>Full Equipo</option>
-            </select>
+          <div className="sticky bottom-0 bg-white pt-4 border-t border-slate-100">
+            <button 
+              type="submit" 
+              className="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-all"
+            >
+              Registrar Vehículo
+            </button>
+            
+            <button 
+              type="button" 
+              onClick={onClose}
+              className="w-full py-3 text-slate-500 hover:text-slate-700 font-medium text-sm mt-2"
+            >
+              Cancelar
+            </button>
           </div>
-
-          <button type="submit" className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-200 active:scale-95 transition-all mt-4">
-            Registrar Vehículo
-          </button>
         </form>
 
       </div>
