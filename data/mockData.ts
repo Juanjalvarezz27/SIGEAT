@@ -20,7 +20,7 @@ export const listaCarros: Carro[] = [
     estado: 'Pagado', 
     hora: '08:30 AM',
     cliente: 'Carlos Mendoza',
-    telefono: '+584162119578'
+    telefono: '04162119578'
   },
   { 
     id: 2, 
