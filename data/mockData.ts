@@ -20,7 +20,7 @@ export const listaCarros: Carro[] = [
     estado: 'Pagado', 
     hora: '08:30 AM',
     cliente: 'Carlos Mendoza',
-    telefono: '04162119578'
+    telefono: '+584162119578'
   },
   { 
     id: 2, 
@@ -31,7 +31,7 @@ export const listaCarros: Carro[] = [
     estado: 'En Proceso', 
     hora: '10:15 AM',
     cliente: 'Ana García',
-    telefono: '555-5678'
+    telefono: '+584162119578'
   },
   { 
     id: 3, 
@@ -42,7 +42,7 @@ export const listaCarros: Carro[] = [
     estado: 'Pagado', 
     hora: '11:00 AM',
     cliente: 'Roberto Sánchez',
-    telefono: '555-9012'
+    telefono: '+584162119578'
   },
   { 
     id: 4, 
@@ -53,7 +53,7 @@ export const listaCarros: Carro[] = [
     estado: 'Pendiente', 
     hora: '12:45 PM',
     cliente: 'María López',
-    telefono: '555-3456'
+    telefono: '+584162119578'
   },
   { 
     id: 5, 
@@ -64,6 +64,6 @@ export const listaCarros: Carro[] = [
     estado: 'Pendiente', 
     hora: '01:20 PM',
     cliente: 'David Rodríguez',
-    telefono: '555-7890'
+    telefono: '+584162119578'
   },
 ];
