@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UsuarioSistema {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String   // Hash bcrypt
+  createdAt DateTime @default(now())
+  
+  @@index([username])
+  @@map("usuarios_sistema")
+}
+
+model TipoVehiculo {
+  id        Int                @id @default(autoincrement())
+  nombre    String             @unique
+  categoria String
+  registros RegistroVehiculo[]
+  
+  @@index([categoria])
+}
+
+model Servicio {
+  id          Int                @id @default(autoincrement())
+  nombre      String             @unique
+  descripcion String?
+  categoria   String             
+  precio      Decimal            @db.Decimal(10, 2)
+  registros   RegistroVehiculo[]
+  
+  @@index([nombre])
+  @@index([categoria])  
+}
+
+model ServicioExtra {
+  id          Int                           @id @default(autoincrement())
+  nombre      String                        @unique
+  descripcion String?
+  precio      Decimal                       @db.Decimal(10, 2)
+  registros   RegistroVehiculoServicioExtra[]
+  
+  @@index([nombre])
+}
+
+model EstadoCarro {
+  id        Int                @id @default(autoincrement())
+  nombre    String             @unique
+  registros RegistroVehiculo[]
+}
+
+model EstadoPago {
+  id        Int                @id @default(autoincrement())
+  nombre    String             @unique
+  registros RegistroVehiculo[]
+}
+
+model RegistroVehiculoServicioExtra {
+  id                 Int            @id @default(autoincrement())
+  registroVehiculoId Int
+  servicioExtraId    Int
+  
+  registroVehiculo   RegistroVehiculo @relation(fields: [registroVehiculoId], references: [id], onDelete: Cascade)
+  servicioExtra      ServicioExtra    @relation(fields: [servicioExtraId], references: [id])
+  
+  @@unique([registroVehiculoId, servicioExtraId])
+  @@map("registro_vehiculo_servicio_extra")
+}
+
+model RegistroVehiculo {
+  id                Int                               @id @default(autoincrement())
+  fechaHora         DateTime                          @default(dbgenerated("(now() AT TIME ZONE 'America/Caracas')"))
+  nombre            String
+  cedula            String
+  telefono          String
+  placa             String
+  tipoVehiculoId    Int
+  servicioId        Int
+  estadoCarroId     Int
+  estadoPagoId      Int
+  precioServicio    Decimal                           @db.Decimal(10, 2)
+  precioServiciosExtra Decimal?                       @db.Decimal(10, 2)
+  precioTotal       Decimal                           @db.Decimal(10, 2)
+  precioTotalBs     Decimal?                          @db.Decimal(15, 2)
+  referenciaPago    String?
+  notas             String?
+  tasaCambio        Decimal?                          @db.Decimal(10, 2)
+  
+  tipoVehiculo      TipoVehiculo                      @relation(fields: [tipoVehiculoId], references: [id])
+  servicio          Servicio                          @relation(fields: [servicioId], references: [id])
+  estadoCarro       EstadoCarro                       @relation(fields: [estadoCarroId], references: [id])
+  estadoPago        EstadoPago                        @relation(fields: [estadoPagoId], references: [id])
+  serviciosExtras   RegistroVehiculoServicioExtra[]
+  
+  @@index([placa])
+  @@index([cedula])
+  @@index([fechaHora])
+  @@index([estadoCarroId])
+  @@index([estadoPagoId])
+  @@index([telefono])
+}
+
