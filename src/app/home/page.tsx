@@ -1,15 +1,7 @@
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/src/lib/auth"
-import { redirect } from "next/navigation"
 import LogoutButton from "../components/login/LogoutButton"
 import { Car, Users, DollarSign, Calendar } from "lucide-react"
 
 export default async function HomeDashboard() {
-  const session = await getServerSession(authOptions)
-
-  if (!session) {
-    redirect("/")
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-6">
@@ -17,7 +9,6 @@ export default async function HomeDashboard() {
       <header className="bg-linear-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 text-white mb-8">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">¡Bienvenido, {session.user.username}!</h1>
             <p className="opacity-90">Panel de Control - AutoLavado SilaV</p>
           </div>
           <LogoutButton />

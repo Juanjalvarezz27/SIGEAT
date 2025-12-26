@@ -107,15 +107,6 @@ export default function LoginForm() {
             </button>
           </form>
 
-          {/* Información adicional */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <p className="text-center text-sm text-gray-600">
-              Usuario de prueba: <span className="font-mono font-medium">admin</span>
-              <br />
-              Contraseña: <span className="font-mono font-medium">autolavado123</span>
-            </p>
-          </div>
-          
         </div>
       </div>
     </div>
