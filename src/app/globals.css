@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+body {
+  background-color: #F0F8FF;
+  color: #000000;
+  font-family: var(--font-poppins), sans-serif; /* textos normales */
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-montserrat), sans-serif; /* títulos */
+}
