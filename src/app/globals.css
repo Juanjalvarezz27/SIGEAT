@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 body {
-  background-color: #F0F8FF;
+  background-image: linear-gradient(to bottom right, #eff6ff, #e0e7ff);
   color: #000000;
   font-family: var(--font-poppins), sans-serif; /* textos normales */
 }

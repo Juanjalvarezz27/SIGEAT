@@ -38,7 +38,7 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 to-indigo-100 p-4">
+    <div className="flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           {/* Logo/Header */}
@@ -46,7 +46,7 @@ export default function LoginForm() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-r from-blue-500 to-indigo-600 rounded-full mb-4">
               <Lock className="h-8 w-8 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">AutoLavado</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Autolavado</h1>
             <p className="text-gray-600 mt-2">Sistema de Gestión de Vehículos</p>
           </div>
 

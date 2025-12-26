@@ -7,7 +7,7 @@ export async function seedUsuarios() {
   const usuariosExistentes = await prisma.usuarioSistema.count()
   
   if (usuariosExistentes === 0) {
-    const hash = await bcrypt.hash('autolavado123', 10)
+    const hash = await bcrypt.hash('1234', 10)
     
     await prisma.usuarioSistema.create({
       data: {
