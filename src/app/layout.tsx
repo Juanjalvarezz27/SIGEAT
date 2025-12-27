@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins, Montserrat } from "next/font/google";
+import 'react-toastify/dist/ReactToastify.css'
 import "./globals.css";
 import Navbar from "@/src/app/components/Navbar";
 import { AuthProvider } from "@/src/app/providers/AuthProvider";
