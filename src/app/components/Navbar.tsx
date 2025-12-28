@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, Home, User, Car, Droplets, Users, Car as CarIcon } from 'lucide-react'
+import { Menu, X, Home, User, Car, Droplets, Users, Settings, ChartColumnDecreasing as CarIcon, ChartColumnDecreasing } from 'lucide-react'
 import LogoutButton from './login/LogoutButton'
 import { useSession } from 'next-auth/react'
 
@@ -25,6 +25,8 @@ export default function Navbar() {
   // Definir las rutas con iconos - solo se muestran cuando hay sesión
   const routes: NavRoute[] = [
     { name: 'Inicio', path: '/home', icon: <Home className="h-4 w-4" /> },
+    { name: 'Estadisticas', path: '/home/estadisticas', icon: <ChartColumnDecreasing className="h-4 w-4" /> },
+    { name: 'Configuracion', path: '/home/configuracion', icon: <Settings className="h-4 w-4" /> },
     { name: 'Usuarios', path: '/home/usuarios', icon: <Users className="h-4 w-4" /> },
     { name: 'Perfil', path: '/home/perfil', icon: <User className="h-4 w-4" /> },
     // Agrega más rutas aquí según necesites

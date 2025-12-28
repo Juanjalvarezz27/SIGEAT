@@ -1,13 +1,28 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/src/lib/prisma'
+import { getServerSession } from 'next-auth'
+import { authOptions } from "@/src/lib/auth"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // Obtener SOLO el primer usuario (solo username)
-    const usuario = await prisma.usuarioSistema.findFirst({
+    // Verificar autenticación
+    const session = await getServerSession(authOptions)
+    
+    if (!session || !session.user?.username) {
+      return NextResponse.json(
+        { error: 'No autorizado' },
+        { status: 401 }
+      )
+    }
+
+    // Obtener el usuario actual en sesión
+    const usuario = await prisma.usuarioSistema.findUnique({
+      where: {
+        username: session.user.username
+      },
       select: {
         username: true,
-        createdAt: true  
+        createdAt: true
       }
     })
 
@@ -18,15 +33,17 @@ export async function GET() {
       )
     }
 
-    // Formatear la fecha
+    // Formatear la fecha en dd/mm/yyyy
+    const fechaFormateada = usuario.createdAt.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+
     const usuarioFormateado = {
       username: usuario.username,
       createdAt: usuario.createdAt.toISOString(),
-      fechaCreacionFormateada: usuario.createdAt.toLocaleDateString('es-ES', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
+      fechaCreacionFormateada: fechaFormateada
     }
 
     return NextResponse.json(usuarioFormateado)

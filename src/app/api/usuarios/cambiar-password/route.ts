@@ -7,6 +7,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { username, oldPassword, newPassword } = body
 
+    console.log('Cambiando contraseña para usuario:', username)
+
     // Validaciones básicas
     if (!username || !oldPassword || !newPassword) {
       return NextResponse.json(
@@ -21,14 +23,19 @@ export async function POST(request: NextRequest) {
     })
 
     if (!usuario) {
+      console.error('Usuario no encontrado:', username)
       return NextResponse.json(
         { error: 'Usuario no encontrado' },
         { status: 404 }
       )
     }
 
+    console.log('Usuario encontrado, verificando contraseña...')
+
     // Verificar contraseña antigua
     const isOldPasswordValid = await bcrypt.compare(oldPassword, usuario.password)
+    console.log('Contraseña válida:', isOldPasswordValid)
+    
     if (!isOldPasswordValid) {
       return NextResponse.json(
         { error: 'La contraseña actual es incorrecta' },
@@ -37,14 +44,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Validar que la nueva contraseña sea diferente
-    if (oldPassword === newPassword) {
+    const isSamePassword = await bcrypt.compare(newPassword, usuario.password)
+    if (isSamePassword) {
       return NextResponse.json(
         { error: 'La nueva contraseña debe ser diferente a la actual' },
         { status: 400 }
       )
     }
 
-    // Validaciones de nueva contraseña (mismas que al crear)
+    // Validaciones de nueva contraseña
     if (newPassword.length < 8) {
       return NextResponse.json(
         { error: 'La nueva contraseña debe tener al menos 8 caracteres' },
@@ -66,16 +74,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!passwordValidations.hasUppercase || !passwordValidations.hasLowercase) {
+    if (!passwordValidations.hasUppercase) {
       return NextResponse.json(
-        { error: 'La nueva contraseña debe contener mayúsculas y minúsculas' },
+        { error: 'La nueva contraseña debe contener al menos una mayúscula' },
+        { status: 400 }
+      )
+    }
+
+    if (!passwordValidations.hasLowercase) {
+      return NextResponse.json(
+        { error: 'La nueva contraseña debe contener al menos una minúscula' },
         { status: 400 }
       )
     }
 
     if (!passwordValidations.hasSpecialChar) {
       return NextResponse.json(
-        { error: 'La nueva contraseña debe contener al menos un carácter especial (!@#$%^&*)' },
+        { error: 'La nueva contraseña debe contener al menos un carácter especial (!@#$%^&*(),.?":{}|<>)' },
         { status: 400 }
       )
     }
@@ -83,6 +98,7 @@ export async function POST(request: NextRequest) {
     // Hash de la nueva contraseña
     const salt = await bcrypt.genSalt(10)
     const hashedNewPassword = await bcrypt.hash(newPassword, salt)
+    console.log('Nuevo hash generado')
 
     // Actualizar contraseña
     await prisma.usuarioSistema.update({
@@ -90,14 +106,17 @@ export async function POST(request: NextRequest) {
       data: { password: hashedNewPassword }
     })
 
+    console.log('Contraseña actualizada exitosamente')
+
     return NextResponse.json({
-      message: 'Contraseña actualizada exitosamente'
+      success: true,
+      message: '¡Contraseña cambiada exitosamente!'
     }, { status: 200 })
 
   } catch (error) {
     console.error('Error al cambiar contraseña:', error)
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Error interno del servidor. Inténtalo de nuevo más tarde.' },
       { status: 500 }
     )
   }

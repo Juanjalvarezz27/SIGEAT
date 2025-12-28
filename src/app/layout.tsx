@@ -4,6 +4,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import "./globals.css";
 import Navbar from "@/src/app/components/Navbar";
 import { AuthProvider } from "@/src/app/providers/AuthProvider";
+import { ToastContainer } from 'react-toastify'
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -34,6 +35,18 @@ export default function RootLayout({
           <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {children}
           </main>
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
         </AuthProvider>
       </body>
     </html>

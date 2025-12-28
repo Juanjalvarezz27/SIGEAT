@@ -45,6 +45,7 @@ export default function PerfilUsuario({
     confirmPassword: ''
   })
   const [showValidations, setShowValidations] = useState(false)
+  const [showSamePasswordError, setShowSamePasswordError] = useState(false)
 
   // Validaciones de nueva contraseña
   const passwordValidations: PasswordValidation = {
@@ -57,7 +58,8 @@ export default function PerfilUsuario({
 
   const isPasswordValid = Object.values(passwordValidations).every(v => v)
   const passwordsMatch = formData.newPassword === formData.confirmPassword && formData.newPassword !== ''
-  const isFormValid = formData.oldPassword !== '' && isPasswordValid && passwordsMatch
+  const isSamePassword = formData.oldPassword === formData.newPassword && formData.oldPassword !== ''
+  const isFormValid = formData.oldPassword !== '' && isPasswordValid && passwordsMatch && !isSamePassword
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -72,65 +74,104 @@ export default function PerfilUsuario({
     if (name === 'newPassword' && value.length === 0) {
       setShowValidations(false)
     }
+
+    // Mostrar error si la nueva contraseña es igual a la actual
+    if (name === 'newPassword' || name === 'oldPassword') {
+      if (formData.oldPassword && formData.newPassword && formData.oldPassword === formData.newPassword) {
+        setShowSamePasswordError(true)
+      } else {
+        setShowSamePasswordError(false)
+      }
+    }
   }
 
-  const handleSubmitPasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!isFormValid) {
-      toast.error('Por favor, completa todos los campos correctamente')
-      return
-    }
+const handleSubmitPasswordChange = async (e: React.FormEvent) => {
+  e.preventDefault()
 
-    if (!usuario?.username) {
-      toast.error('No se pudo identificar el usuario')
-      return
-    }
-
-    setIsChangingPassword(true)
-
-    try {
-      const response = await fetch('/api/usuarios/cambiar-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: usuario.username,
-          oldPassword: formData.oldPassword,
-          newPassword: formData.newPassword
-        })
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al cambiar la contraseña')
-      }
-
-      // Éxito
-      toast.success('✅ Contraseña cambiada exitosamente!', {
+  if (!isFormValid) {
+    if (isSamePassword) {
+      toast.error('La nueva contraseña no puede ser igual a la actual', {
         position: "top-right",
         autoClose: 5000,
       })
-
-      // Cerrar modal y limpiar formulario
-      setShowModal(false)
-      setFormData({
-        oldPassword: '',
-        newPassword: '',
-        confirmPassword: ''
-      })
-      setShowValidations(false)
-
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Error desconocido', {
+    } else {
+      toast.error('Por favor, completa todos los campos correctamente', {
         position: "top-right",
+        autoClose: 5000,
       })
-    } finally {
-      setIsChangingPassword(false)
     }
+    return
   }
+
+  if (!usuario?.username) {
+    toast.error('No se pudo identificar el usuario', {
+      position: "top-right",
+      autoClose: 5000,
+    })
+    return
+  }
+
+  setIsChangingPassword(true)
+
+  try {
+    const response = await fetch('/api/usuarios/cambiar-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        username: usuario.username,
+        oldPassword: formData.oldPassword,
+        newPassword: formData.newPassword
+      })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      // Mostrar mensaje específico para contraseña incorrecta
+      if (response.status === 401) {
+        toast.error('La contraseña actual es incorrecta. Inténtalo de nuevo.', {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        })
+      } else {
+        toast.error(data.error || 'Error al cambiar la contraseña', {
+          position: "top-right",
+          autoClose: 5000,
+        })
+      }
+      return
+    }
+
+    // Éxito - Mostrar toast específico
+    toast.success('¡Contraseña cambiada exitosamente! Tu contraseña ha sido actualizada.', {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+    })
+
+    // Cerrar modal y limpiar formulario
+    setShowModal(false)
+    resetForm()
+
+  } catch (error) {
+    console.error('Error:', error)
+    toast.error('Error de conexión. Inténtalo de nuevo más tarde.', {
+      position: "top-right",
+      autoClose: 5000,
+    })
+  } finally {
+    setIsChangingPassword(false)
+  }
+}
 
   const resetForm = () => {
     setFormData({
@@ -139,9 +180,15 @@ export default function PerfilUsuario({
       confirmPassword: ''
     })
     setShowValidations(false)
+    setShowSamePasswordError(false)
     setShowOldPassword(false)
     setShowNewPassword(false)
     setShowConfirmPassword(false)
+  }
+
+  const handleCloseModal = () => {
+    setShowModal(false)
+    resetForm()
   }
 
   return (
@@ -155,6 +202,7 @@ export default function PerfilUsuario({
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-bold text-white">Cambiar Contraseña</h3>
+                  <p className="text-blue-100 text-sm mt-1">Actualiza tu contraseña de acceso</p>
                 </div>
                 <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
                   <Lock className="h-6 w-6 text-white" />
@@ -176,7 +224,7 @@ export default function PerfilUsuario({
                       name="oldPassword"
                       value={formData.oldPassword}
                       onChange={handleInputChange}
-                      className="w-full text-sm  px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all pr-12"
+                      className="w-full text-sm px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all pr-12"
                       placeholder="Ingresa tu contraseña actual"
                       required
                     />
@@ -201,7 +249,9 @@ export default function PerfilUsuario({
                       name="newPassword"
                       value={formData.newPassword}
                       onChange={handleInputChange}
-                      className="w-full text-sm  px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all pr-12"
+                      className={`w-full text-sm px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all pr-12 ${
+                        showSamePasswordError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                      }`}
                       placeholder="Crea una nueva contraseña"
                       required
                     />
@@ -213,6 +263,14 @@ export default function PerfilUsuario({
                       {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
+
+                  {/* Error si la contraseña es igual */}
+                  {showSamePasswordError && (
+                    <div className="mt-2 flex items-center space-x-2 text-red-600">
+                      <XCircle className="h-4 w-4" />
+                      <span className="text-xs">La nueva contraseña no puede ser igual a la actual</span>
+                    </div>
+                  )}
 
                   {/* Validaciones de contraseña */}
                   {showValidations && (
@@ -269,7 +327,7 @@ export default function PerfilUsuario({
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      className={`w-full text-sm  px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all pr-12 ${
+                      className={`w-full text-sm px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all pr-12 ${
                         formData.confirmPassword ? 
                           (passwordsMatch ? 'border-green-500 focus:border-green-500' : 'border-red-500 focus:border-red-500') : 
                           'border-gray-300 focus:border-blue-500'
@@ -302,34 +360,78 @@ export default function PerfilUsuario({
                   )}
                 </div>
 
+                {/* Resumen de validaciones */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                      <Lock className="h-3 w-3 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-800 mb-1">Requisitos para cambiar contraseña:</p>
+                      <ul className="text-xs text-blue-700 space-y-1">
+                        <li className="flex items-center space-x-1">
+                          {formData.oldPassword ? (
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <XCircle className="h-3 w-3 text-gray-400" />
+                          )}
+                          <span>Contraseña actual ingresada</span>
+                        </li>
+                        <li className="flex items-center space-x-1">
+                          {isPasswordValid ? (
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <XCircle className="h-3 w-3 text-gray-400" />
+                          )}
+                          <span>Nueva contraseña válida</span>
+                        </li>
+                        <li className="flex items-center space-x-1">
+                          {passwordsMatch ? (
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <XCircle className="h-3 w-3 text-gray-400" />
+                          )}
+                          <span>Contraseñas coinciden</span>
+                        </li>
+                        <li className="flex items-center space-x-1">
+                          {!isSamePassword ? (
+                            <CheckCircle className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <XCircle className="h-3 w-3 text-red-500" />
+                          )}
+                          <span>Nueva contraseña diferente</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Botones del modal */}
                 <div className="flex space-x-3 pt-4">
                   <button
                     type="button"
-                    onClick={() => {
-                      setShowModal(false)
-                      resetForm()
-                    }}
-                    className="flex-1 py-3 cursor-pointer bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors"
+                    onClick={handleCloseModal}
+                    disabled={isChangingPassword}
+                    className="flex-1 py-3 cursor-pointer bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={!isFormValid || isChangingPassword}
-                    className={`flex-1 py-3 cursor-pointer rounded-xl font-medium transition-all ${
+                    className={`flex-1 py-3 cursor-pointer rounded-xl font-medium transition-all flex items-center justify-center ${
                       isFormValid && !isChangingPassword
-                        ? 'bg-linear-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 cursor-pointer'
+                        ? 'bg-linear-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700'
                         : 'bg-gray-200 text-gray-500 cursor-not-allowed'
                     }`}
                   >
                     {isChangingPassword ? (
-                      <div className="flex  items-center justify-center">
+                      <>
                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
                         Cambiando...
-                      </div>
+                      </>
                     ) : (
-                      'Aceptar'
+                      'Cambiar'
                     )}
                   </button>
                 </div>
@@ -376,7 +478,6 @@ export default function PerfilUsuario({
             </div>
           ) : usuario ? (
             <div className="space-y-6">
-
               {/* Campos de información */}
               <div className="space-y-4">
                 {/* Username */}
@@ -405,16 +506,16 @@ export default function PerfilUsuario({
                   </div>
                 </div>
 
-                {/* Botón para cambiar contraseña - SEPARADO después de Cuenta creada */}                
-                  <button
-                    onClick={() => setShowModal(true)}
-                    className="w-full py-3 bg-linear-to-r cursor-pointer from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all flex items-center justify-center space-x-2"
-                  >
-                    <Lock className="h-4 w-4" />
-                    <span>Cambiar contraseña</span>
-                  </button>
-                </div>
+                {/* Botón para cambiar contraseña */}
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="w-full py-3 bg-linear-to-r cursor-pointer from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all flex items-center justify-center space-x-2"
+                >
+                  <Lock className="h-4 w-4" />
+                  <span>Cambiar contraseña</span>
+                </button>
               </div>
+            </div>
           ) : null}
         </div>
       </div>
