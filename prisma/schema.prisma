@@ -34,7 +34,6 @@ model TipoVehiculo {
   @@index([categoria])
 }
 
-// SERVICIO ACTUALIZADO con relación a categoría
 model Servicio {
   id          Int                @id @default(autoincrement())
   nombre      String             @unique
