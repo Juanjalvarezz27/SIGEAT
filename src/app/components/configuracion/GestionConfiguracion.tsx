@@ -1,30 +1,34 @@
 "use client"
 
 import { useState, useRef, useEffect } from 'react'
-import { ChevronDown, ChevronUp, Settings, Tag, Layers, Car } from 'lucide-react'
+import { ChevronDown, ChevronUp, Settings, Tag, Layers, Car, Star } from 'lucide-react'
 import GestionServicios from './GestionServicios'
 import GestionCategorias from './GestionCategorias'
 import GestionTiposVehiculo from './GestionTiposVehiculo'
+import GestionServiciosExtra from './GestionServiciosExtra' // Nuevo import
 
 export default function GestionConfiguracion() {
   // Estado inicial: todos los desplegables cerrados
   const [expanded, setExpanded] = useState({
     servicios: false,
     categorias: false,
-    tiposVehiculo: false
+    tiposVehiculo: false,
+    serviciosExtra: false // Nuevo estado
   })
 
   const [heights, setHeights] = useState({
     servicios: '0px',
     categorias: '0px',
-    tiposVehiculo: '0px' 
+    tiposVehiculo: '0px',
+    serviciosExtra: '0px' // Nueva altura
   })
 
   const serviciosRef = useRef<HTMLDivElement>(null)
   const categoriasRef = useRef<HTMLDivElement>(null)
   const tiposVehiculoRef = useRef<HTMLDivElement>(null)
+  const serviciosExtraRef = useRef<HTMLDivElement>(null) // Nueva referencia
 
-  const toggleSection = (section: 'servicios' | 'categorias' | 'tiposVehiculo') => {
+  const toggleSection = (section: 'servicios' | 'categorias' | 'tiposVehiculo' | 'serviciosExtra') => {
     setExpanded(prev => {
       const newState = !prev[section]
 
@@ -44,6 +48,11 @@ export default function GestionConfiguracion() {
           setHeights(prev => ({
             ...prev,
             tiposVehiculo: newState ? `${tiposVehiculoRef.current!.scrollHeight}px` : '0px'
+          }))
+        } else if (section === 'serviciosExtra' && serviciosExtraRef.current) {
+          setHeights(prev => ({
+            ...prev,
+            serviciosExtra: newState ? `${serviciosExtraRef.current!.scrollHeight}px` : '0px'
           }))
         }
       }, 10)
@@ -75,7 +84,13 @@ export default function GestionConfiguracion() {
         tiposVehiculo: `${tiposVehiculoRef.current!.scrollHeight}px`
       }))
     }
-  }, [expanded.servicios, expanded.categorias, expanded.tiposVehiculo])
+    if (expanded.serviciosExtra && serviciosExtraRef.current) {
+      setHeights(prev => ({
+        ...prev,
+        serviciosExtra: `${serviciosExtraRef.current!.scrollHeight}px`
+      }))
+    }
+  }, [expanded.servicios, expanded.categorias, expanded.tiposVehiculo, expanded.serviciosExtra])
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
@@ -188,6 +203,43 @@ export default function GestionConfiguracion() {
           >
             <div className="p-5 border-t border-gray-200">
               <GestionTiposVehiculo />
+            </div>
+          </div>
+        </div>
+
+        {/* Desplegable - Servicios Extra (NUEVO) */}
+        <div className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-sm">
+          <button
+            onClick={() => toggleSection('serviciosExtra')}
+            className="w-full px-5 py-4 bg-linear-to-r from-amber-50 to-orange-100 hover:from-amber-100 hover:to-orange-200 transition-all duration-300 flex items-center justify-between group"
+          >
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                <Star className="h-4 w-4 text-white" />
+              </div>
+              <div className="text-left">
+                <h3 className="font-semibold text-gray-900 group-hover:text-amber-700 transition-colors duration-300">Servicios Extra</h3>
+              </div>
+            </div>
+            <div className={`transform transition-transform duration-300 ${expanded.serviciosExtra ? 'rotate-180' : ''}`}>
+              {expanded.serviciosExtra ? (
+                <ChevronUp className="h-5 w-5 text-amber-600" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-amber-500" />
+              )}
+            </div>
+          </button>
+
+          <div
+            ref={serviciosExtraRef}
+            style={{
+              maxHeight: heights.serviciosExtra,
+              overflow: 'hidden'
+            }}
+            className="transition-all duration-300 ease-in-out"
+          >
+            <div className="p-5 border-t border-gray-200">
+              <GestionServiciosExtra />
             </div>
           </div>
         </div>

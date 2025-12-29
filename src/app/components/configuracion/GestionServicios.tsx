@@ -316,7 +316,7 @@ export default function GestionServicios() {
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${categoryColor.bg} ${categoryColor.text}`}>
                 {servicio.categoria.nombre}
               </span>
-              <div className="flex items-center font-semibold text-gray-900">
+              <div className="flex items-center font-semibold text-green-600">
                 <span className="text-sm">{formatPrice(servicio.precio)}</span>
               </div>
             </div>
