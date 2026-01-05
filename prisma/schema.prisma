@@ -83,7 +83,7 @@ model RegistroVehiculoServicioExtra {
 
 model RegistroVehiculo {
   id                Int                               @id @default(autoincrement())
-  fechaHora         DateTime                          @default(dbgenerated("(now() AT TIME ZONE 'America/Caracas')"))
+  fechaHora DateTime @default(now()) 
   nombre            String
   cedula            String
   telefono          String
@@ -92,10 +92,10 @@ model RegistroVehiculo {
   servicioId        Int
   estadoCarroId     Int
   estadoPagoId      Int
-  precioServicio    Decimal                           @db.Decimal(10, 2)
-  precioServiciosExtra Decimal?                       @db.Decimal(10, 2)
+  
   precioTotal       Decimal                           @db.Decimal(10, 2)
   precioTotalBs     Decimal?                          @db.Decimal(15, 2)
+  
   referenciaPago    String?
   notas             String?
   tasaCambio        Decimal?                          @db.Decimal(10, 2)
