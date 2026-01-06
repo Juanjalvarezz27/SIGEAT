@@ -87,8 +87,9 @@ model RegistroVehiculo {
   nombre            String
   cedula            String
   telefono          String
-  placa             String
+  placa             String                            
   tipoVehiculoId    Int
+  color             String?
   servicioId        Int
   estadoCarroId     Int
   estadoPagoId      Int

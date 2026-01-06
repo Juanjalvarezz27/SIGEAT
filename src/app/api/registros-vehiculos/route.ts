@@ -61,6 +61,11 @@ export async function POST(request: NextRequest) {
   try {
     const data = await request.json()
 
+    // Limpiar espacios de la placa
+    if (data.placa) {
+      data.placa = data.placa.replace(/\s/g, '').toUpperCase()
+    }
+
     // Validar campos requeridos
     const camposRequeridos = [
       'nombre', 'cedula', 'telefono', 'placa',
@@ -84,6 +89,7 @@ export async function POST(request: NextRequest) {
         cedula: data.cedula,
         telefono: data.telefono,
         placa: data.placa,
+        color: data.color || null,
         tipoVehiculoId: parseInt(data.tipoVehiculoId),
         servicioId: parseInt(data.servicioId),
         estadoCarroId: parseInt(data.estadoCarroId),

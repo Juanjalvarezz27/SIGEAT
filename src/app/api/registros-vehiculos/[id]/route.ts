@@ -48,7 +48,7 @@ export async function GET(
   }
 }
 
-// PUT: Actualizar un registro
+// PUT: Actualizar un registro existente
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -58,21 +58,14 @@ export async function PUT(
     const registroId = parseInt(id)
     const data = await request.json()
 
-    // Verificar que el registro existe
-    const registroExistente = await prisma.registroVehiculo.findUnique({
-      where: { id: registroId }
-    })
-
-    if (!registroExistente) {
-      return NextResponse.json(
-        { error: 'Registro no encontrado' },
-        { status: 404 }
-      )
+    // Limpiar espacios de la placa
+    if (data.placa) {
+      data.placa = data.placa.replace(/\s/g, '').toUpperCase()
     }
 
     // Validar campos requeridos
     const camposRequeridos = [
-      'nombre', 'cedula', 'telefono', 'placa',
+      'nombre', 'cedula', 'telefono', 'placa', 'color',
       'tipoVehiculoId', 'servicioId', 'estadoCarroId', 'estadoPagoId',
       'precioTotal'
     ]
@@ -86,12 +79,19 @@ export async function PUT(
       }
     }
 
-    // Primero eliminar los servicios extras existentes
-    await prisma.registroVehiculoServicioExtra.deleteMany({
-      where: { registroVehiculoId: registroId }
+    // Verificar si el registro existe
+    const registroExistente = await prisma.registroVehiculo.findUnique({
+      where: { id: registroId }
     })
 
-    // Actualizar registro
+    if (!registroExistente) {
+      return NextResponse.json(
+        { error: 'Registro no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    // Actualizar el registro
     const registro = await prisma.registroVehiculo.update({
       where: { id: registroId },
       data: {
@@ -99,6 +99,7 @@ export async function PUT(
         cedula: data.cedula,
         telefono: data.telefono,
         placa: data.placa,
+        color: data.color, // NUEVO: incluir campo color
         tipoVehiculoId: parseInt(data.tipoVehiculoId),
         servicioId: parseInt(data.servicioId),
         estadoCarroId: parseInt(data.estadoCarroId),
@@ -106,17 +107,24 @@ export async function PUT(
         precioTotal: parseFloat(data.precioTotal),
         precioTotalBs: data.precioTotalBs ? parseFloat(data.precioTotalBs) : null,
         tasaCambio: data.tasaCambio ? parseFloat(data.tasaCambio) : null,
-        referenciaPago: data.referenciaPago,
-        notas: data.notas,
-        serviciosExtras: data.serviciosExtrasIds?.length > 0 ? {
-          create: data.serviciosExtrasIds.map((extraId: number) => ({
-            servicioExtraId: extraId
-          }))
-        } : undefined
+        referenciaPago: data.referenciaPago || null,
+        notas: data.notas || null,
+        serviciosExtras: {
+          deleteMany: {}, // Eliminar todas las relaciones existentes
+          create: data.serviciosExtrasIds?.length > 0 
+            ? data.serviciosExtrasIds.map((id: number) => ({
+                servicioExtraId: id
+              }))
+            : undefined
+        }
       },
       include: {
         tipoVehiculo: true,
-        servicio: true,
+        servicio: {
+          include: {
+            categoria: true
+          }
+        },
         estadoCarro: true,
         estadoPago: true,
         serviciosExtras: {
@@ -128,8 +136,24 @@ export async function PUT(
     })
 
     return NextResponse.json(registro)
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error al actualizar registro:', error)
+    
+    // Manejar errores específicos
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'La placa ya existe en otro registro' },
+        { status: 400 }
+      )
+    }
+    
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Registro no encontrado' },
+        { status: 404 }
+      )
+    }
+
     return NextResponse.json(
       { error: 'Error al actualizar registro' },
       { status: 500 }

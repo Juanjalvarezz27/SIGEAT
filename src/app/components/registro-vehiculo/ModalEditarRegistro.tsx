@@ -1,80 +1,18 @@
 "use client"
 
 import { useState, useEffect, useRef } from 'react'
-import { X, AlertCircle, Plus, ChevronDown, ChevronUp, FileText } from 'lucide-react'
+import { X, AlertCircle, Plus, ChevronDown, ChevronUp, FileText, Palette } from 'lucide-react'
 import useTasaBCV from '../../hooks/useTasaBCV'
-
-interface TipoVehiculo {
-  id: number
-  nombre: string
-  categoria: string
-}
-
-interface Servicio {
-  id: number
-  nombre: string
-  precio: number
-  categoriaId: number
-  categoria: {
-    id: number
-    nombre: string
-  }
-}
-
-interface EstadoCarro {
-  id: number
-  nombre: string
-}
-
-interface EstadoPago {
-  id: number
-  nombre: string
-}
-
-interface ServicioExtra {
-  id: number
-  nombre: string
-  precio: number
-  descripcion?: string
-}
-
-interface RegistroVehiculo {
-  id: number
-  nombre: string
-  cedula: string
-  telefono: string
-  placa: string
-  fechaHora: string
-  precioTotal: number
-  precioTotalBs: number | null
-  tipoVehiculoId: number
-  servicioId: number
-  estadoCarroId: number
-  estadoPagoId: number
-  referenciaPago: string | null
-  notas: string | null
-  tipoVehiculo: TipoVehiculo
-  servicio: Servicio
-  estadoCarro: EstadoCarro
-  estadoPago: EstadoPago
-  serviciosExtras: Array<{
-    servicioExtra: ServicioExtra
-  }>
-}
-
-interface ModalEditarRegistroProps {
-  isOpen: boolean
-  onClose: () => void
-  registro: RegistroVehiculo | null
-  onUpdate: () => void
-  datosFormulario: {
-    tiposVehiculo: TipoVehiculo[]
-    servicios: Servicio[]
-    estadosCarro: EstadoCarro[]
-    estadosPago: EstadoPago[]
-    serviciosExtras: ServicioExtra[]
-  } | null
-}
+import { 
+  ModalEditarRegistroProps,
+  RegistroVehiculoCompleto,
+  FormularioDatos,
+  Servicio,
+  ServicioExtra,
+  TipoVehiculo,
+  EstadoCarro,
+  EstadoPago
+} from '../../types/formularioTypes'
 
 export default function ModalEditarRegistro({
   isOpen,
@@ -91,6 +29,7 @@ export default function ModalEditarRegistro({
     cedula: '',
     telefono: '',
     placa: '',
+    color: '', // NUEVO: campo color agregado
     tipoVehiculoId: '',
     servicioId: '',
     estadoCarroId: '',
@@ -115,6 +54,7 @@ export default function ModalEditarRegistro({
         cedula: registro.cedula,
         telefono: registro.telefono,
         placa: registro.placa,
+        color: registro.color || '', // NUEVO: inicializar con valor del registro
         tipoVehiculoId: registro.tipoVehiculoId.toString(),
         servicioId: registro.servicioId.toString(),
         estadoCarroId: registro.estadoCarroId.toString(),
@@ -250,6 +190,13 @@ export default function ModalEditarRegistro({
       return
     }
 
+    // NUEVO: Validar campo color
+    if (!form.color || form.color.trim() === '') {
+      setError('El color del vehículo es requerido')
+      setLoading(false)
+      return
+    }
+
     if (!registro) {
       setError('No hay registro seleccionado')
       setLoading(false)
@@ -333,14 +280,27 @@ export default function ModalEditarRegistro({
               {error && (
                 <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3">
                   <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
-                  <p className="text-red-700">{error}</p>
+                  <div className="flex-1">
+                    <p className="text-red-700 font-medium">{error}</p>
+                    {(form.cedula.length < 6 || form.telefono.length < 10 || form.placa.length < 5 || !form.color) && (
+                      <ul className="mt-2 text-sm text-red-600 space-y-1">
+                        {form.cedula.length < 6 && <li>• Cédula: mínimo 6 dígitos</li>}
+                        {form.telefono.length < 10 && <li>• Teléfono: mínimo 10 dígitos</li>}
+                        {form.placa.length < 5 && <li>• Placa: mínimo 5 caracteres</li>}
+                        {!form.color && <li>• Color del vehículo: campo requerido</li>}
+                      </ul>
+                    )}
+                  </div>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Información del Cliente */}
+                {/* Información del Cliente - CON CAMPO COLOR */}
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <svg className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
                     Información del Cliente
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -395,6 +355,25 @@ export default function ModalEditarRegistro({
                         required
                         className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition uppercase"
                       />
+                    </div>
+                    {/* NUEVO: Campo Color */}
+                    <div className="sm:col-span-2">
+                      <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
+                        <Palette className="h-4 w-4 mr-2 text-blue-500" />
+                        Color del Vehículo *
+                      </label>
+                      <input
+                        type="text"
+                        name="color"
+                        value={form.color}
+                        onChange={handleChange}
+                        required
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        placeholder="Ej: Rojo, Azul, Negro, Blanco, Plateado..."
+                      />
+                      <p className="mt-1 text-xs text-gray-500">
+                        Especifica el color principal del vehículo
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -728,8 +707,12 @@ export default function ModalEditarRegistro({
                   </button>
                   <button
                     type="submit"
-                    disabled={loading}
-                    className="inline-flex w-full justify-center rounded-xl bg-linear-to-r from-blue-500 to-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={loading || !form.color} // NUEVO: deshabilitar si no hay color
+                    className={`inline-flex w-full justify-center rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-sm hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto ${
+                      loading || !form.color
+                        ? 'bg-gray-300 cursor-not-allowed'
+                        : 'bg-linear-to-r from-blue-500 to-blue-600'
+                    }`}
                   >
                     {loading ? (
                       <span className="flex items-center">

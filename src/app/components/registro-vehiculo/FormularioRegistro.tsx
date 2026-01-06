@@ -1,71 +1,19 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
-import { Car, DollarSign, Calendar, Phone, User, AlertCircle, ChevronDown, ChevronUp, Plus, FileText } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Car, AlertCircle, Search, Loader2, Sparkles, ArrowRight } from 'lucide-react'
 import useTasaBCV from '../../hooks/useTasaBCV'
-
-interface TipoVehiculo {
-  id: number
-  nombre: string
-  categoria: string
-}
-
-interface Servicio {
-  id: number
-  nombre: string
-  precio: number
-  categoriaId: number
-  categoria: {
-    id: number
-    nombre: string
-  }
-}
-
-interface EstadoCarro {
-  id: number
-  nombre: string
-}
-
-interface EstadoPago {
-  id: number
-  nombre: string
-}
-
-interface ServicioExtra {
-  id: number
-  nombre: string
-  precio: number
-  descripcion?: string
-}
-
-interface CategoriaServicio {
-  id: number
-  nombre: string
-  servicios: Servicio[]
-}
-
-interface FormularioDatos {
-  tiposVehiculo: TipoVehiculo[]
-  servicios: Servicio[]
-  estadosCarro: EstadoCarro[]
-  estadosPago: EstadoPago[]
-  serviciosExtras: ServicioExtra[]
-  categorias: CategoriaServicio[]
-}
-
-interface RegistroForm {
-  nombre: string
-  cedula: string
-  telefono: string
-  placa: string
-  tipoVehiculoId: string
-  servicioId: string
-  estadoCarroId: string
-  estadoPagoId: string
-  referenciaPago: string
-  notas: string
-  serviciosExtrasIds: number[]
-}
+import { debounce } from 'lodash'
+import CamposCliente from './formulario/CamposCliente'
+import CamposServicio from './formulario/CamposServicio'
+import CamposPago from './formulario/CamposPago'
+import { 
+  FormularioDatos, 
+  RegistroForm, 
+  VehiculoEncontrado,
+  ServicioExtra,
+  Servicio 
+} from '../../types/formularioTypes'
 
 interface FormularioRegistroProps {
   onRegistroCreado: () => void
@@ -77,11 +25,13 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [datos, setDatos] = useState<FormularioDatos | null>(null)
+  
   const [form, setForm] = useState<RegistroForm>({
     nombre: '',
     cedula: '',
     telefono: '',
     placa: '',
+    color: '',
     tipoVehiculoId: '',
     servicioId: '',
     estadoCarroId: '',
@@ -98,6 +48,12 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
   const [precioTotal, setPrecioTotal] = useState(0)
   const [precioTotalBs, setPrecioTotalBs] = useState<number | null>(null)
 
+  // Nuevos estados para la verificación de placa
+  const [buscandoPlaca, setBuscandoPlaca] = useState(false)
+  const [vehiculoEncontrado, setVehiculoEncontrado] = useState<VehiculoEncontrado | null>(null)
+  const [mostrarFormularioCompleto, setMostrarFormularioCompleto] = useState(false)
+  const [mensajePlaca, setMensajePlaca] = useState<string>('')
+
   const formRef = useRef<HTMLFormElement>(null)
 
   // Cargar datos del formulario solo una vez
@@ -113,8 +69,8 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
         setDatos(data)
 
         // Encontrar IDs de estados "Pendiente"
-        const estadoPendienteCarro = data.estadosCarro.find((e: EstadoCarro) => e.nombre.toLowerCase() === 'pendiente')
-        const estadoPendientePago = data.estadosPago.find((e: EstadoPago) => e.nombre.toLowerCase() === 'pendiente')
+        const estadoPendienteCarro = data.estadosCarro.find((e: any) => e.nombre.toLowerCase() === 'pendiente')
+        const estadoPendientePago = data.estadosPago.find((e: any) => e.nombre.toLowerCase() === 'pendiente')
 
         // Actualizar el formulario con los estados por defecto
         setForm(prev => ({
@@ -133,7 +89,112 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
     }
 
     fetchDatosFormulario()
-  }, []) // Solo se ejecuta una vez al montar
+  }, [])
+
+  // Función debounced para buscar placa
+  const buscarPlaca = useCallback(
+    debounce(async (placa: string) => {
+      if (!placa || placa.length < 5) {
+        setVehiculoEncontrado(null)
+        setMensajePlaca('')
+        return
+      }
+
+      setBuscandoPlaca(true)
+      setMensajePlaca('')
+
+      try {
+        const response = await fetch(`/api/registros-vehiculos/verificar-placa?placa=${encodeURIComponent(placa)}`)
+        
+        if (!response.ok) {
+          throw new Error('Error al buscar placa')
+        }
+
+        const data = await response.json()
+
+        if (data.encontrado) {
+          setVehiculoEncontrado(data.vehiculo)
+          setMensajePlaca(data.mensaje)
+          
+          // Auto-completar información del cliente y color
+          setForm(prev => ({
+            ...prev,
+            nombre: data.vehiculo.nombre,
+            cedula: data.vehiculo.cedula,
+            telefono: data.vehiculo.telefono,
+            color: data.vehiculo.color || '',
+            tipoVehiculoId: data.vehiculo.tipoVehiculoId.toString()
+          }))
+          
+          // Mostrar formulario completo
+          setTimeout(() => {
+            setMostrarFormularioCompleto(true)
+          }, 500)
+        } else {
+          setVehiculoEncontrado(null)
+          setMensajePlaca(data.mensaje)
+          // Mostrar formulario completo si no se encuentra
+          setMostrarFormularioCompleto(true)
+        }
+      } catch (err) {
+        console.error('Error al buscar placa:', err)
+        setMensajePlaca('Error al verificar placa')
+      } finally {
+        setBuscandoPlaca(false)
+      }
+    }, 800), // Debounce de 800ms
+    []
+  )
+
+  // Manejar cambio en campo placa (SIN ESPACIOS)
+  const handlePlacaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Eliminar espacios y convertir a mayúsculas
+    let value = e.target.value.replace(/\s/g, '').toUpperCase()
+    
+    // Limitar a 8 caracteres
+    value = value.slice(0, 8)
+    
+    setForm(prev => ({ ...prev, placa: value }))
+    setMensajePlaca('')
+    setVehiculoEncontrado(null)
+    
+    // Resetear datos del cliente si se borra la placa
+    if (value.length < 5) {
+      setForm(prev => ({
+        ...prev,
+        nombre: '',
+        cedula: '',
+        telefono: '',
+        color: '',
+        tipoVehiculoId: ''
+      }))
+      setMostrarFormularioCompleto(false)
+      return
+    }
+
+    // Si la placa tiene al menos 5 caracteres, buscar
+    if (value.length >= 5) {
+      buscarPlaca(value)
+    }
+  }
+
+  // Manejar cambio general en formulario
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target
+
+    // Validaciones específicas por campo
+    let processedValue = value
+
+    if (name === 'cedula' || name === 'telefono' || name === 'referenciaPago') {
+      // Solo permitir números
+      processedValue = value.replace(/[^0-9]/g, '')
+    } else if (name === 'placa') {
+      // Eliminar espacios y convertir a mayúsculas
+      processedValue = value.replace(/\s/g, '').toUpperCase().slice(0, 8)
+    }
+
+    setForm(prev => ({ ...prev, [name]: processedValue }))
+  }
 
   // Filtrar servicios cuando cambia el tipo de vehículo
   useEffect(() => {
@@ -186,23 +247,6 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
     }
   }, [form.servicioId, serviciosExtrasSeleccionados, tasa, datos])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-
-    // Validaciones específicas por campo
-    let processedValue = value
-
-    if (name === 'cedula' || name === 'telefono' || name === 'referenciaPago') {
-      // Solo permitir números
-      processedValue = value.replace(/[^0-9]/g, '')
-    } else if (name === 'placa') {
-      // Máximo 8 caracteres y convertir a mayúsculas
-      processedValue = value.slice(0, 8).toUpperCase()
-    }
-
-    setForm(prev => ({ ...prev, [name]: processedValue }))
-  }
-
   const handleServicioExtraChange = (servicioExtra: ServicioExtra) => {
     const isSelected = serviciosExtrasSeleccionados.some(se => se.id === servicioExtra.id)
 
@@ -245,6 +289,12 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
       return
     }
 
+    if (!form.color || form.color.trim() === '') {
+      setError('El color del vehículo es requerido')
+      setSubmitting(false)
+      return
+    }
+
     try {
       const response = await fetch('/api/registros-vehiculos', {
         method: 'POST',
@@ -265,8 +315,8 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
       }
 
       // Encontrar IDs de estados "Pendiente" para resetear
-      const estadoPendienteCarro = datos?.estadosCarro.find(e => e.nombre.toLowerCase() === 'pendiente')
-      const estadoPendientePago = datos?.estadosPago.find(e => e.nombre.toLowerCase() === 'pendiente')
+      const estadoPendienteCarro = datos?.estadosCarro.find((e: any) => e.nombre.toLowerCase() === 'pendiente')
+      const estadoPendientePago = datos?.estadosPago.find((e: any) => e.nombre.toLowerCase() === 'pendiente')
 
       // Limpiar formulario
       setForm({
@@ -274,6 +324,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
         cedula: '',
         telefono: '',
         placa: '',
+        color: '',
         tipoVehiculoId: '',
         servicioId: '',
         estadoCarroId: estadoPendienteCarro ? estadoPendienteCarro.id.toString() : '',
@@ -282,6 +333,10 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
         notas: '',
         serviciosExtrasIds: []
       })
+      
+      setVehiculoEncontrado(null)
+      setMensajePlaca('')
+      setMostrarFormularioCompleto(false)
       setServiciosExtrasSeleccionados([])
       setServiciosExtrasAbierto(false)
       setInfoAdicionalAbierto(false)
@@ -295,8 +350,6 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
       setSubmitting(false)
     }
   }
-
-  const serviciosExtrasTotal = serviciosExtrasSeleccionados.reduce((sum, extra) => sum + Number(extra.precio), 0)
 
   // Función para obtener el precio del servicio seleccionado
   const getPrecioServicioSeleccionado = () => {
@@ -329,11 +382,12 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
           <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
           <div className="flex-1">
             <p className="text-red-700 font-medium">{error}</p>
-            {(form.cedula.length < 6 || form.telefono.length < 10 || form.placa.length < 5) && (
+            {(form.cedula.length < 6 || form.telefono.length < 10 || form.placa.length < 5 || !form.color) && (
               <ul className="mt-2 text-sm text-red-600 space-y-1">
                 {form.cedula.length < 6 && <li>• Cédula: mínimo 6 dígitos</li>}
                 {form.telefono.length < 10 && <li>• Teléfono: mínimo 10 dígitos</li>}
                 {form.placa.length < 5 && <li>• Placa: mínimo 5 caracteres</li>}
+                {!form.color && <li>• Color del vehículo: campo requerido</li>}
               </ul>
             )}
           </div>
@@ -341,472 +395,172 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
       )}
 
       <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-        {/* Información del Cliente */}
+        {/* Campo de Placa con Búsqueda (SIN ESPACIOS) */}
         <div>
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <User className="h-5 w-5 mr-2 text-blue-500" />
-            Información del Cliente
+            <Car className="h-5 w-5 mr-2 text-blue-500" />
+            Verificar Placa del Vehículo
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre Completo *
-              </label>
-              <input
-                type="text"
-                name="nombre"
-                value={form.nombre}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Cédula *
-                <span className="text-xs text-gray-500 ml-1">(solo números)</span>
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                name="cedula"
-                value={form.cedula}
-                onChange={handleChange}
-                required
-                minLength={6}
-                maxLength={8}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                placeholder="12345678"
-              />
-              {form.cedula && form.cedula.length < 6 && (
-                <p className="mt-1 text-xs text-red-500">Mínimo 6 dígitos</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Teléfono *
-                <span className="text-xs text-gray-500 ml-1">(solo números)</span>
-              </label>
-              <input
-                type="tel"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                name="telefono"
-                value={form.telefono}
-                onChange={handleChange}
-                required
-                minLength={10}
-                maxLength={11}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                placeholder="04121234567"
-              />
-              {form.telefono && form.telefono.length < 10 && (
-                <p className="mt-1 text-xs text-red-500">Mínimo 10 dígitos</p>
-              )}
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Placa del Vehículo *
-                <span className="text-xs text-gray-500 ml-1">(máx. 8 caracteres)</span>
-              </label>
-              <input
-                type="text"
-                name="placa"
-                value={form.placa}
-                onChange={handleChange}
-                required
-                minLength={5}
-                maxLength={8}
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition uppercase font-medium"
-                placeholder="ABC-123"
-              />
-              <div className="mt-1 flex justify-between">
-                {form.placa && form.placa.length < 5 && (
-                  <span className="text-xs text-red-500">Mínimo 5 caracteres</span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Información del Servicio */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <Calendar className="h-5 w-5 mr-2 text-blue-500" />
-            Información del Servicio
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tipo de Vehículo *
-              </label>
-              <select
-                name="tipoVehiculoId"
-                value={form.tipoVehiculoId}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
-              >
-                <option value="">Seleccionar tipo</option>
-                {datos?.tiposVehiculo.map(tipo => (
-                  <option key={tipo.id} value={tipo.id}>
-                    {tipo.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Servicio *
-              </label>
-              <select
-                name="servicioId"
-                value={form.servicioId}
-                onChange={handleChange}
-                required
-                disabled={!form.tipoVehiculoId}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
-                  !form.tipoVehiculoId
-                    ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed'
-                    : 'border-gray-300 bg-white'
-                }`}
-              >
-                <option value="">
-                  {form.tipoVehiculoId ? 'Seleccionar servicio' : 'Selecciona un tipo de vehículo primero'}
-                </option>
-                {serviciosFiltrados.map(servicio => (
-                  <option key={servicio.id} value={servicio.id}>
-                    {servicio.nombre} - ${Number(servicio.precio).toFixed(2)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Estado del Carro *
-              </label>
-              <select
-                name="estadoCarroId"
-                value={form.estadoCarroId}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
-              >
-                {datos?.estadosCarro.map(estado => (
-                  <option key={estado.id} value={estado.id}>
-                    {estado.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Estado de Pago *
-              </label>
-              <select
-                name="estadoPagoId"
-                value={form.estadoPagoId}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
-              >
-                {datos?.estadosPago.map(estado => (
-                  <option key={estado.id} value={estado.id}>
-                    {estado.nombre}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Servicios Extras - En tarjetas responsivas */}
-        {datos?.serviciosExtras && datos.serviciosExtras.length > 0 && (
-          <div>
-            <button
-              type="button"
-              onClick={() => setServiciosExtrasAbierto(!serviciosExtrasAbierto)}
-              className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition"
-            >
-              <div className="flex items-center">
-                <Plus className="h-5 w-5 text-blue-500 mr-3" />
-                <div className="text-left">
-                  <h3 className="font-semibold text-gray-900">Servicios Extras</h3>
-                  <p className="text-sm text-gray-600">
-                    {serviciosExtrasSeleccionados.length > 0
-                      ? `${serviciosExtrasSeleccionados.length} seleccionados - Total: $${serviciosExtrasTotal.toFixed(2)}`
-                      : 'Selecciona servicios adicionales'
-                    }
-                  </p>
-                </div>
-              </div>
-              {serviciosExtrasAbierto ? (
-                <ChevronUp className="h-5 w-5 text-gray-500" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500" />
-              )}
-            </button>
-
-            {serviciosExtrasAbierto && (
-              <div className="mt-4 bg-white border border-gray-200 rounded-xl p-4">
-                {/* Grid responsivo para servicios extras */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {datos.serviciosExtras.map(extra => {
-                    const isSelected = serviciosExtrasSeleccionados.some(se => se.id === extra.id)
-                    return (
-                      <div
-                        key={extra.id}
-                        className={`p-3 border rounded-xl cursor-pointer transition-all hover:shadow-sm ${
-                          isSelected
-                            ? 'border-blue-500 bg-blue-50'
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
-                        onClick={() => handleServicioExtraChange(extra)}
-                      >
-                        <div className="flex items-start justify-between h-full">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start">
-                              <div className={`mt-0.5 shrink-0 w-5 h-5 rounded border mr-3 flex items-center justify-center ${
-                                isSelected
-                                  ? 'bg-blue-500 border-blue-500'
-                                  : 'border-gray-300'
-                              }`}>
-                                {isSelected && (
-                                  <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                  </svg>
-                                )}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">
-                                  {extra.nombre}
-                                </h4>
-                                {extra.descripcion && (
-                                  <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                                    {extra.descripcion}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="ml-2 shrink-0 text-right">
-                            <div className="text-base sm:text-lg font-semibold text-blue-600 whitespace-nowrap">
-                              ${Number(extra.precio).toFixed(2)}
-                            </div>
-                            <div className="text-xs text-gray-500 mt-1 hidden sm:block">
-                              {isSelected ? 'Seleccionado' : 'Click para seleccionar'}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-
-                {serviciosExtrasSeleccionados.length > 0 && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <div className="flex flex-col gap-3">
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">Servicios extras seleccionados:</h4>
-                        <div className="flex flex-wrap gap-1.5">
-                          {serviciosExtrasSeleccionados.map(extra => (
-                            <span
-                              key={extra.id}
-                              className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-blue-100 text-blue-700 border border-blue-200"
-                            >
-                              <span className="truncate max-w-30">{extra.nombre}</span>
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  handleServicioExtraChange(extra)
-                                }}
-                                className="ml-1.5 text-blue-500 hover:text-blue-700 text-sm"
-                              >
-                                ×
-                              </button>
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700 font-medium text-sm sm:text-base">Total servicios extras:</span>
-                        <span className="text-base sm:text-lg font-bold text-blue-600">
-                          +${serviciosExtrasTotal.toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Información Adicional desplegable */}
-        <div>
-          <button
-            type="button"
-            onClick={() => setInfoAdicionalAbierto(!infoAdicionalAbierto)}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition"
-          >
-            <div className="flex items-center">
-              <FileText className="h-5 w-5 text-blue-500 mr-3" />
-              <div className="text-left">
-                <h3 className="font-semibold text-gray-900">Información Adicional </h3>
-                <p className="text-sm text-gray-600">
-                  Referencia de pago y notas adicionales (Opcional)
-                </p>
-              </div>
-            </div>
-            {infoAdicionalAbierto ? (
-              <ChevronUp className="h-5 w-5 text-gray-500" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            )}
-          </button>
-
-          {infoAdicionalAbierto && (
-            <div className="mt-4 bg-white border border-gray-200 rounded-xl p-4">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Referencia de Pago (Opcional)
-                  </label>
+          <div className="bg-blue-50 rounded-xl p-4 mb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Placa del Vehículo *
+                  <span className="text-xs text-gray-500 ml-1">(sin espacios)</span>
+                </label>
+                <div className="relative">
                   <input
                     type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    name="referenciaPago"
-                    value={form.referenciaPago}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                    placeholder="Ej: 123456789"
+                    name="placa"
+                    value={form.placa}
+                    onChange={handlePlacaChange}
+                    onKeyDown={(e) => {
+                      // Prevenir la tecla espacio
+                      if (e.key === ' ') {
+                        e.preventDefault()
+                      }
+                    }}
+                    onPaste={(e) => {
+                      // Limpiar espacios al pegar
+                      e.preventDefault()
+                      const pastedText = e.clipboardData.getData('text/plain')
+                      const cleanedText = pastedText.replace(/\s/g, '').toUpperCase().slice(0, 8)
+                      const syntheticEvent = {
+                        target: {
+                          name: 'placa',
+                          value: cleanedText
+                        }
+                      } as React.ChangeEvent<HTMLInputElement>
+                      handlePlacaChange(syntheticEvent)
+                    }}
+                    required
+                    minLength={5}
+                    maxLength={8}
+                    className="w-full px-4 py-3 pl-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition uppercase font-medium tracking-wider"
+                    placeholder="Ej: ABC123"
+                    disabled={submitting}
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notas
-                    <span className="text-xs text-gray-500 ml-1">(opcional)</span>
-                  </label>
-                  <textarea
-                    name="notas"
-                    value={form.notas}
-                    onChange={handleChange}
-                    rows={3}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"
-                    placeholder="Observaciones adicionales..."
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Información de Pago */}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <DollarSign className="h-5 w-5 mr-2 text-blue-500" />
-            Resumen de Pago
-          </h3>
-          <div className="bg-gray-50 rounded-xl p-4 sm:p-5 space-y-3">
-            {/* Servicio principal */}
-            <div className="flex justify-between items-center pb-2 border-b border-gray-200">
-              <div>
-                <span className="text-gray-700 text-sm sm:text-base">Servicio principal:</span>
-                {form.servicioId && (
-                  <div className="text-xs sm:text-sm text-gray-600 mt-1">
-                    {serviciosFiltrados.find(s => s.id === parseInt(form.servicioId))?.nombre}
+                  <Search className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                  {buscandoPlaca && (
+                    <Loader2 className="absolute right-3 top-3.5 h-4 w-4 text-blue-500 animate-spin" />
+                  )}
+                  {/* Contador de caracteres */}
+                  <div className="absolute right-3 top-3.5 text-xs text-gray-400 font-mono">
+                    {form.placa.length}/8
                   </div>
-                )}
-              </div>
-              <div className="text-right">
-                <span className="font-semibold text-base sm:text-lg">
-                  ${precioServicio.toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-            {/* Servicios extras */}
-            {serviciosExtrasSeleccionados.length > 0 && (
-              <>
-                <div className="space-y-1.5">
-                  <div className="text-sm font-medium text-gray-700">Servicios extras:</div>
-                  {serviciosExtrasSeleccionados.map(extra => (
-                    <div key={extra.id} className="flex justify-between text-xs sm:text-sm">
-                      <span className="text-gray-600 truncate max-w-37.5">• {extra.nombre}</span>
-                      <span className="font-medium whitespace-nowrap">${Number(extra.precio).toFixed(2)}</span>
+                </div>
+                
+                {/* Mensajes informativos */}
+                <div className="mt-2 space-y-1">
+                  {/* Mensaje sobre espacios */}
+                  <div className="flex items-center text-xs text-gray-500">
+                    <AlertCircle className="h-3 w-3 mr-1 shrink-0" />
+                    <span>No se permiten espacios. La placa se convertirá automáticamente a mayúsculas.</span>
+                  </div>
+                  
+                  {/* Mensaje de búsqueda */}
+                  {mensajePlaca && (
+                    <div className={`text-sm font-medium p-2 rounded-lg ${
+                      vehiculoEncontrado 
+                        ? 'bg-green-50 text-green-700 border border-green-200' 
+                        : form.placa.length >= 5 
+                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                          : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                    }`}>
+                      <div className="flex items-center">
+                        {vehiculoEncontrado ? (
+                          <>
+                            <Sparkles className="h-4 w-4 mr-2 shrink-0" />
+                            {mensajePlaca}
+                          </>
+                        ) : form.placa.length >= 5 ? (
+                          <>
+                            <ArrowRight className="h-4 w-4 mr-2 shrink-0" />
+                            {mensajePlaca}
+                          </>
+                        ) : (
+                          <>
+                            <AlertCircle className="h-4 w-4 mr-2 shrink-0" />
+                            Ingresa al menos 5 caracteres para buscar
+                          </>
+                        )}
+                      </div>
+                      {vehiculoEncontrado && (
+                        <div className="mt-1 text-xs text-green-600">
+                          Se han precargado los datos del cliente
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  )}
                 </div>
-                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                  <span className="text-gray-700 text-sm sm:text-base">Subtotal servicios extras:</span>
-                  <span className="font-semibold text-sm sm:text-base">${serviciosExtrasTotal.toFixed(2)}</span>
-                </div>
-              </>
-            )}
-
-            {/* Total en USD */}
-            <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-              <span className="text-gray-900 font-semibold text-base sm:text-lg">Total en USD:</span>
-              <span className="text-lg sm:text-xl font-bold text-blue-600">
-                ${precioTotal.toFixed(2)}
-              </span>
-            </div>
-
-            {/* Tasa BCV */}
-            <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-              <div>
-                <span className="text-gray-700 text-sm sm:text-base">Tasa BCV:</span>
-              </div>
-              <div>
-                {loadingTasa ? (
-                  <span className="text-sm text-gray-500">...</span>
-                ) : tasa ? (
-                  <span className="font-semibold text-sm sm:text-base">Bs {tasa.toFixed(2)}</span>
-                ) : (
-                  <span className="text-xs sm:text-sm text-yellow-600">—</span>
-                )}
               </div>
             </div>
-
-            {/* Total en Bs - TEXTO MÁS PEQUEÑO */}
-            {precioTotalBs !== null && (
-              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                <span className="text-gray-900 font-semibold text-sm sm:text-base">Total en Bolívares:</span>
-                <span className="text-base sm:text-lg font-bold text-green-600">
-                  Bs {precioTotalBs.toFixed(2)}
-                </span>
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Botón de enviar */}
-        <div className="pt-4 border-t border-gray-200">
-          <button
-            type="submit"
-            disabled={submitting || !form.servicioId}
-            className={`w-full px-6 py-3.5 rounded-xl font-semibold text-lg transition ${
-              submitting || !form.servicioId
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-linear-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg'
-            }`}
-          >
-            {submitting ? (
-              <span className="flex items-center justify-center">
-                <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Procesando...
-              </span>
-            ) : (
-              'Registrar Vehículo'
-            )}
-          </button>
-        </div>
+        {/* Componentes del formulario completo */}
+        {(mostrarFormularioCompleto || vehiculoEncontrado) && (
+          <>
+            {/* Componente CamposCliente */}
+            <CamposCliente
+              form={form}
+              vehiculoEncontrado={vehiculoEncontrado}
+              onChange={handleChange}
+            />
+
+            {/* Componente CamposServicio */}
+            <CamposServicio
+              form={form}
+              datos={datos!}
+              serviciosFiltrados={serviciosFiltrados}
+              serviciosExtrasSeleccionados={serviciosExtrasSeleccionados}
+              serviciosExtrasAbierto={serviciosExtrasAbierto}
+              infoAdicionalAbierto={infoAdicionalAbierto}
+              onServicioExtraChange={handleServicioExtraChange}
+              onChange={handleChange}
+              onToggleServiciosExtras={() => setServiciosExtrasAbierto(!serviciosExtrasAbierto)}
+              onToggleInfoAdicional={() => setInfoAdicionalAbierto(!infoAdicionalAbierto)}
+            />
+
+            {/* Componente CamposPago */}
+            <CamposPago
+              form={form}
+              datos={datos}
+              serviciosFiltrados={serviciosFiltrados}
+              serviciosExtrasSeleccionados={serviciosExtrasSeleccionados}
+              precioServicio={precioServicio}
+              precioTotal={precioTotal}
+              precioTotalBs={precioTotalBs}
+              tasa={tasa}
+              loadingTasa={loadingTasa}
+            />
+
+            {/* Botón de enviar */}
+            <div className="pt-4 border-t border-gray-200">
+              <button
+                type="submit"
+                disabled={submitting || !form.servicioId || !form.color}
+                className={`w-full px-6 py-3.5 rounded-xl font-semibold text-lg transition ${
+                  submitting || !form.servicioId || !form.color
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-linear-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md hover:shadow-lg'
+                }`}
+              >
+                {submitting ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Procesando...
+                  </span>
+                ) : (
+                  'Registrar Vehículo'
+                )}
+              </button>
+            </div>
+          </>
+        )}
       </form>
     </div>
   )
