@@ -34,8 +34,9 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
       try {
         const response = await fetch('/api/registros-vehiculos/datos-formulario')
         if (response.ok) {
-          const data = await response.json()
-          setDatosFormulario(data)
+          const result = await response.json()
+          // CORRECCIÓN: Acceder a result.datosFormulario en lugar de result
+          setDatosFormulario(result.datosFormulario)
         }
       } catch (err) {
         console.error('Error al cargar datos del formulario:', err)
@@ -608,13 +609,15 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
       </div>
 
       {/* Modal de edición */}
-      <ModalEditarRegistro
-        isOpen={modalEditarAbierto}
-        onClose={() => setModalEditarAbierto(false)}
-        registro={registroEditando}
-        onUpdate={handleUpdate}
-        datosFormulario={datosFormulario}
-      />
+      {datosFormulario && (
+        <ModalEditarRegistro
+          isOpen={modalEditarAbierto}
+          onClose={() => setModalEditarAbierto(false)}
+          registro={registroEditando}
+          onUpdate={handleUpdate}
+          datosFormulario={datosFormulario}
+        />
+      )}
 
       {/* Modal de confirmación para eliminar */}
       <ModalConfirmacion

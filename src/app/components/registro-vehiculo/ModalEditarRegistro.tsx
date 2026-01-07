@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, AlertCircle, Plus, ChevronDown, ChevronUp, FileText, Palette } from 'lucide-react'
 import useTasaBCV from '../../hooks/useTasaBCV'
-import { 
+import {
   ModalEditarRegistroProps,
   RegistroVehiculoCompleto,
   FormularioDatos,
@@ -49,6 +49,12 @@ export default function ModalEditarRegistro({
   // Inicializar formulario con datos del registro
   useEffect(() => {
     if (registro && datosFormulario) {
+      // Verificar que datosFormulario tiene la estructura esperada
+      if (!datosFormulario.serviciosExtras || !datosFormulario.tiposVehiculo) {
+        console.error('Estructura de datosFormulario incompleta:', datosFormulario)
+        return
+      }
+
       setForm({
         nombre: registro.nombre,
         cedula: registro.cedula,
@@ -86,8 +92,12 @@ export default function ModalEditarRegistro({
     const tipoSeleccionado = datosFormulario.tiposVehiculo.find(t => t.id === parseInt(tipoVehiculoId))
     if (!tipoSeleccionado) return
 
+    // Filtrar servicios por categoría del tipo de vehículo
+    // Agregar verificación de seguridad para categoria
     const serviciosFiltrados = datosFormulario.servicios.filter(
-      servicio => servicio.categoria.nombre === tipoSeleccionado.categoria
+      servicio => servicio.categoria && 
+                 servicio.categoria.nombre && 
+                 servicio.categoria.nombre === tipoSeleccionado.categoria
     )
 
     setServiciosFiltrados(serviciosFiltrados)
@@ -469,7 +479,7 @@ export default function ModalEditarRegistro({
                 </div>
 
                 {/* Servicios Extras - Desplegable y responsivo */}
-                {datosFormulario.serviciosExtras.length > 0 && (
+                {datosFormulario && datosFormulario.serviciosExtras && datosFormulario.serviciosExtras.length > 0 && (
                   <div>
                     <button
                       type="button"
@@ -667,7 +677,7 @@ export default function ModalEditarRegistro({
                         </span>
                       </div>
                     </div>
-                    
+
                     {serviciosExtrasSeleccionados.length > 0 && (
                       <>
                         <div className="flex justify-between items-center">
@@ -676,14 +686,14 @@ export default function ModalEditarRegistro({
                         </div>
                       </>
                     )}
-                    
+
                     <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                       <span className="text-gray-900 font-semibold text-base sm:text-lg">Total en USD:</span>
                       <span className="text-lg sm:text-xl font-bold text-blue-600">
                         ${precioTotal.toFixed(2)}
                       </span>
                     </div>
-                    
+
                     {precioTotalBs !== null && (
                       <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                         {/* TEXTO MÁS PEQUEÑO para Total en Bolívares */}

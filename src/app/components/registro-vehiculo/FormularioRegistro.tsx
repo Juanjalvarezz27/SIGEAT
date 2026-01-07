@@ -7,12 +7,12 @@ import { debounce } from 'lodash'
 import CamposCliente from './formulario/CamposCliente'
 import CamposServicio from './formulario/CamposServicio'
 import CamposPago from './formulario/CamposPago'
-import { 
-  FormularioDatos, 
-  RegistroForm, 
+import {
+  FormularioDatos,
+  RegistroForm,
   VehiculoEncontrado,
   ServicioExtra,
-  Servicio 
+  Servicio
 } from '../../types/formularioTypes'
 
 interface FormularioRegistroProps {
@@ -25,7 +25,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [datos, setDatos] = useState<FormularioDatos | null>(null)
-  
+
   const [form, setForm] = useState<RegistroForm>({
     nombre: '',
     cedula: '',
@@ -65,7 +65,8 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
 
         if (!response.ok) throw new Error('Error al cargar datos')
 
-        const data = await response.json()
+        const result = await response.json()
+        const data = result.datosFormulario // Acceder a datosFormulario
         setDatos(data)
 
         // Encontrar IDs de estados "Pendiente"
@@ -105,7 +106,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
 
       try {
         const response = await fetch(`/api/registros-vehiculos/verificar-placa?placa=${encodeURIComponent(placa)}`)
-        
+
         if (!response.ok) {
           throw new Error('Error al buscar placa')
         }
@@ -115,7 +116,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
         if (data.encontrado) {
           setVehiculoEncontrado(data.vehiculo)
           setMensajePlaca(data.mensaje)
-          
+
           // Auto-completar información del cliente y color
           setForm(prev => ({
             ...prev,
@@ -125,7 +126,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
             color: data.vehiculo.color || '',
             tipoVehiculoId: data.vehiculo.tipoVehiculoId.toString()
           }))
-          
+
           // Mostrar formulario completo
           setTimeout(() => {
             setMostrarFormularioCompleto(true)
@@ -150,14 +151,14 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
   const handlePlacaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Eliminar espacios y convertir a mayúsculas
     let value = e.target.value.replace(/\s/g, '').toUpperCase()
-    
+
     // Limitar a 8 caracteres
     value = value.slice(0, 8)
-    
+
     setForm(prev => ({ ...prev, placa: value }))
     setMensajePlaca('')
     setVehiculoEncontrado(null)
-    
+
     // Resetear datos del cliente si se borra la placa
     if (value.length < 5) {
       setForm(prev => ({
@@ -207,8 +208,11 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
     if (!tipoSeleccionado) return
 
     // Filtrar servicios por categoría del tipo de vehículo
+    // Agregar verificación de seguridad para categoria
     const serviciosFiltrados = datos.servicios.filter(
-      servicio => servicio.categoria.nombre === tipoSeleccionado.categoria
+      servicio => servicio.categoria && 
+                 servicio.categoria.nombre && 
+                 servicio.categoria.nombre === tipoSeleccionado.categoria
     )
 
     setServiciosFiltrados(serviciosFiltrados)
@@ -333,7 +337,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
         notas: '',
         serviciosExtrasIds: []
       })
-      
+
       setVehiculoEncontrado(null)
       setMensajePlaca('')
       setMostrarFormularioCompleto(false)
@@ -449,7 +453,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
                     {form.placa.length}/8
                   </div>
                 </div>
-                
+
                 {/* Mensajes informativos */}
                 <div className="mt-2 space-y-1">
                   {/* Mensaje sobre espacios */}
@@ -457,13 +461,13 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
                     <AlertCircle className="h-3 w-3 mr-1 shrink-0" />
                     <span>No se permiten espacios. La placa se convertirá automáticamente a mayúsculas.</span>
                   </div>
-                  
+
                   {/* Mensaje de búsqueda */}
                   {mensajePlaca && (
                     <div className={`text-sm font-medium p-2 rounded-lg ${
-                      vehiculoEncontrado 
-                        ? 'bg-green-50 text-green-700 border border-green-200' 
-                        : form.placa.length >= 5 
+                      vehiculoEncontrado
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : form.placa.length >= 5
                           ? 'bg-blue-50 text-blue-700 border border-blue-200'
                           : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
                     }`}>

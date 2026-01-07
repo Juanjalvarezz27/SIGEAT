@@ -18,7 +18,7 @@ export async function GET(
         tipoVehiculo: true,
         servicio: {
           include: {
-            categoria: true
+            categoria: true  // Asegúrate de incluir la categoría
           }
         },
         estadoCarro: true,
@@ -111,7 +111,7 @@ export async function PUT(
         notas: data.notas || null,
         serviciosExtras: {
           deleteMany: {}, // Eliminar todas las relaciones existentes
-          create: data.serviciosExtrasIds?.length > 0 
+          create: data.serviciosExtrasIds?.length > 0
             ? data.serviciosExtrasIds.map((id: number) => ({
                 servicioExtraId: id
               }))
@@ -138,7 +138,7 @@ export async function PUT(
     return NextResponse.json(registro)
   } catch (error: any) {
     console.error('Error al actualizar registro:', error)
-    
+
     // Manejar errores específicos
     if (error.code === 'P2002') {
       return NextResponse.json(
@@ -146,7 +146,7 @@ export async function PUT(
         { status: 400 }
       )
     }
-    
+
     if (error.code === 'P2025') {
       return NextResponse.json(
         { error: 'Registro no encontrado' },

@@ -20,7 +20,11 @@ export async function GET() {
       },
       include: {
         tipoVehiculo: true,
-        servicio: true,
+        servicio: {
+          include: {
+            categoria: true
+          }
+        },
         estadoCarro: true,
         estadoPago: true,
         serviciosExtras: {
@@ -34,13 +38,16 @@ export async function GET() {
       }
     })
 
-    // Obtener datos del formulario
+    // Obtener datos del formulario - INCLUIR CATEGORÍA EN SERVICIOS
     const [tiposVehiculo, servicios, estadosCarro, estadosPago, serviciosExtras] = await Promise.all([
       prisma.tipoVehiculo.findMany({
         orderBy: { nombre: 'asc' }
       }),
       prisma.servicio.findMany({
-        orderBy: { nombre: 'asc' }
+        orderBy: { nombre: 'asc' },
+        include: {  // Asegurar que incluya la categoría
+          categoria: true
+        }
       }),
       prisma.estadoCarro.findMany({
         orderBy: { nombre: 'asc' }
@@ -57,7 +64,7 @@ export async function GET() {
       registros,
       datosFormulario: {
         tiposVehiculo,
-        servicios,
+        servicios,  // Ahora con categoría incluida
         estadosCarro,
         estadosPago,
         serviciosExtras

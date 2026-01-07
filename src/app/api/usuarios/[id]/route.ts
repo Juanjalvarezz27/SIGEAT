@@ -1,37 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import prisma from '@/src/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from "@/src/lib/auth"
+import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
-export async function DELETE(
+const prisma = new PrismaClient()
+
+// GET: Obtener un usuario específico
+export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Obtener sesión actual
-    const session = await getServerSession(authOptions)
-    
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'No autorizado. Debes iniciar sesión.' },
-        { status: 401 }
-      )
-    }
-
-    // Obtener el ID de los params
     const { id } = await context.params
-    const userId = parseInt(id)
+    const usuarioId = parseInt(id)
 
-    if (isNaN(userId) || userId <= 0) {
-      return NextResponse.json(
-        { error: 'ID de usuario inválido' },
-        { status: 400 }
-      )
-    }
-
-    // Verificar si el usuario existe
+    // CORRECCIÓN: Usar prisma.usuarioSistema en lugar de prisma.usuario
     const usuario = await prisma.usuarioSistema.findUnique({
-      where: { id: userId }
+      where: { id: usuarioId },
+      select: {
+        id: true,
+        username: true, // CORRECCIÓN: username en lugar de nombre/email
+        createdAt: true
+      }
     })
 
     if (!usuario) {
@@ -41,52 +30,148 @@ export async function DELETE(
       )
     }
 
-    // Obtener ID del usuario en sesión desde el token
-    const usuarioSesionId = parseInt(session.user.id)
+    return NextResponse.json(usuario)
+  } catch (error) {
+    console.error('Error al obtener usuario:', error)
+    return NextResponse.json(
+      { error: 'Error al obtener usuario' },
+      { status: 500 }
+    )
+  }
+}
 
-    // Prevenir que el usuario se elimine a sí mismo
-    if (userId === usuarioSesionId) {
-      return NextResponse.json(
-        { error: 'No puedes eliminar tu propia cuenta' },
-        { status: 400 }
-      )
-    }
+// PUT: Actualizar un usuario existente
+export async function PUT(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params
+    const usuarioId = parseInt(id)
+    const data = await request.json()
 
-    // No permitir eliminar el último usuario del sistema
-    const totalUsuarios = await prisma.usuarioSistema.count()
-    if (totalUsuarios <= 1) {
-      return NextResponse.json(
-        { error: 'No se puede eliminar el último usuario del sistema' },
-        { status: 400 }
-      )
-    }
-
-    // Eliminar el usuario
-    await prisma.usuarioSistema.delete({
-      where: { id: userId }
+    // Validar que el usuario existe - CORRECCIÓN: Usar usuarioSistema
+    const usuarioExistente = await prisma.usuarioSistema.findUnique({
+      where: { id: usuarioId }
     })
 
-    return NextResponse.json({
-      success: true,
-      message: 'Usuario eliminado exitosamente',
-      idEliminado: userId
-    }, { status: 200 })
+    if (!usuarioExistente) {
+      return NextResponse.json(
+        { error: 'Usuario no encontrado' },
+        { status: 404 }
+      )
+    }
 
-  } catch (error) {
-    console.error('Error al eliminar usuario:', error)
-    
-    // Manejar error de integridad referencial
-    if (error instanceof Error) {
-      if (error.message.includes('Foreign key constraint') || error.message.includes('P2003')) {
+    // Validar campos requeridos - CORRECCIÓN: username en lugar de nombre/email
+    if (!data.username) {
+      return NextResponse.json(
+        { error: 'Username es requerido' },
+        { status: 400 }
+      )
+    }
+
+    // Verificar si el username ya existe en otro usuario
+    if (data.username !== usuarioExistente.username) {
+      const usernameExistente = await prisma.usuarioSistema.findFirst({
+        where: {
+          username: data.username,
+          id: { not: usuarioId }
+        }
+      })
+
+      if (usernameExistente) {
         return NextResponse.json(
-          { error: 'No se puede eliminar el usuario porque tiene registros asociados' },
-          { status: 409 }
+          { error: 'El username ya está registrado por otro usuario' },
+          { status: 400 }
         )
       }
     }
 
+    // Preparar datos para actualizar
+    const updateData: any = {
+      username: data.username, // CORRECCIÓN: username en lugar de nombre
+    }
+
+    // Actualizar contraseña si se proporciona
+    if (data.password && data.password.trim() !== '') {
+      const salt = await bcrypt.genSalt(10)
+      updateData.password = await bcrypt.hash(data.password, salt)
+    }
+
+    // CORRECCIÓN: Usar prisma.usuarioSistema.update
+    const usuario = await prisma.usuarioSistema.update({
+      where: { id: usuarioId },
+      data: updateData,
+      select: {
+        id: true,
+        username: true, // CORRECCIÓN: username en lugar de nombre/email/rol
+        createdAt: true
+      }
+    })
+
+    return NextResponse.json(usuario)
+  } catch (error: any) {
+    console.error('Error al actualizar usuario:', error)
+
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'El username ya está registrado' },
+        { status: 400 }
+      )
+    }
+
     return NextResponse.json(
-      { error: 'Error interno del servidor' },
+      { error: 'Error al actualizar usuario' },
+      { status: 500 }
+    )
+  }
+}
+
+// DELETE: Eliminar un usuario
+export async function DELETE(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params
+    const usuarioId = parseInt(id)
+
+    // Verificar que el usuario existe - CORRECCIÓN: Usar usuarioSistema
+    const usuarioExistente = await prisma.usuarioSistema.findUnique({
+      where: { id: usuarioId }
+    })
+
+    if (!usuarioExistente) {
+      return NextResponse.json(
+        { error: 'Usuario no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    // No permitir eliminar el último usuario (no hay rol en este esquema)
+    const totalUsuarios = await prisma.usuarioSistema.count()
+
+    if (totalUsuarios <= 1) {
+      return NextResponse.json(
+        { error: 'No se puede eliminar el único usuario del sistema' },
+        { status: 400 }
+      )
+    }
+
+    // Eliminar usuario - CORRECCIÓN: Usar usuarioSistema.delete
+    await prisma.usuarioSistema.delete({
+      where: { id: usuarioId }
+    })
+
+    return NextResponse.json({
+      success: true,
+      message: 'Usuario eliminado correctamente',
+      idEliminado: usuarioId
+    })
+  } catch (error) {
+    console.error('Error al eliminar usuario:', error)
+    return NextResponse.json(
+      { error: 'Error al eliminar usuario' },
       { status: 500 }
     )
   }
