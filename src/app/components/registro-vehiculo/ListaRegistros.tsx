@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useEffect, useRef } from 'react'
-import { Car, Clock, DollarSign, CheckCircle, XCircle, AlertCircle, RefreshCw, Edit, Trash2, Hourglass, Wrench, CheckCheck, User, Phone, CreditCard, MessageCircle, ChevronDown, ChevronUp, Receipt, FileText } from 'lucide-react'
+import { Car, Clock, DollarSign, CheckCircle, XCircle, AlertCircle, RefreshCw, Edit, Trash2, Hourglass, Wrench, CheckCheck, User, Phone, CreditCard, MessageCircle, ChevronDown, ChevronUp, Receipt, FileText, Palette } from 'lucide-react'
 import ModalEditarRegistro from './ModalEditarRegistro'
 import ModalConfirmacion from '../ui/ModalConfirmacion'
 import { toast } from 'react-toastify'
-import { 
-  RegistroVehiculoCompleto, 
+import {
+  RegistroVehiculoCompleto,
   ListaRegistrosProps,
-  FormularioDatos 
+  FormularioDatos
 } from '../../types/formularioTypes'
 
 export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: ListaRegistrosProps) {
@@ -21,7 +21,7 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
   const [modalEditarAbierto, setModalEditarAbierto] = useState(false)
   const [modalEliminarAbierto, setModalEliminarAbierto] = useState(false)
   const [registroAEliminar, setRegistroAEliminar] = useState<RegistroVehiculoCompleto | null>(null)
-  
+
   // Estado para controlar qué registros tienen el desplegable abierto
   const [desplegablesAbiertos, setDesplegablesAbiertos] = useState<{ [key: number]: boolean }>({})
 
@@ -306,8 +306,8 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
 
   // Verificar si un registro tiene información adicional
   const tieneInformacionAdicional = (registro: RegistroVehiculoCompleto) => {
-    return (registro.referenciaPago && registro.referenciaPago.trim() !== '') || 
-           (registro.notas && registro.notas.trim() !== '')
+    return (registro.referenciaPago && registro.referenciaPago.trim() !== '') ||
+      (registro.notas && registro.notas.trim() !== '')
   }
 
   if (loading && registros.length === 0) {
@@ -387,9 +387,21 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
                     <div>
                       <div className="flex flex-col">
                         <span className="font-bold text-base sm:text-lg text-gray-900">{registro.placa}</span>
-                        <span className="text-xs text-gray-500">
-                          {registro.tipoVehiculo.nombre}
-                        </span>
+                        
+                        {/* MODIFICADO: Cambiado de text-xs a text-sm */}
+                        <div className="flex flex-wrap items-center gap-1 text-sm text-gray-500">
+                          <span>{registro.tipoVehiculo.nombre}</span>
+                          {registro.color && (
+                            <>
+                              <span className="text-gray-300">•</span>
+                              <span className="flex items-center">
+                                <Palette className="h-3 w-3 mr-1 text-gray-400" />
+                                {registro.color}
+                              </span>
+                            </>
+                          )}
+                        </div>
+
                       </div>
                     </div>
                   </div>
@@ -419,7 +431,10 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
                       <User className="h-3.5 w-3.5 text-gray-400 shrink-0" />
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{registro.nombre}</p>
-                        <p className="text-xs text-gray-500 font-mono">{registro.cedula}</p>
+                        
+                        {/* MODIFICADO: Cambiado de text-xs a text-sm */}
+                        <p className="text-sm text-gray-500 font-mono">{registro.cedula}</p>
+                      
                       </div>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -552,7 +567,7 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
 
                       {/* Contenido del desplegable */}
                       {desplegableAbierto && (
-                        <div 
+                        <div
                           id={`info-adicional-${registro.id}`}
                           className="mt-2 space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
                         >

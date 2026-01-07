@@ -5,13 +5,41 @@ const prisma = new PrismaClient()
 
 export async function GET() {
   try {
-    // Obtener todos los datos necesarios para el formulario
-    const [tiposVehiculo, servicios, estadosCarro, estadosPago, serviciosExtras, categorias] = await Promise.all([
+    // Obtener todos los registros del día de hoy
+    const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0)
+    const manana = new Date(hoy)
+    manana.setDate(manana.getDate() + 1)
+
+    const registros = await prisma.registroVehiculo.findMany({
+      where: {
+        fechaHora: {
+          gte: hoy,
+          lt: manana
+        }
+      },
+      include: {
+        tipoVehiculo: true,
+        servicio: true,
+        estadoCarro: true,
+        estadoPago: true,
+        serviciosExtras: {
+          include: {
+            servicioExtra: true
+          }
+        }
+      },
+      orderBy: {
+        fechaHora: 'desc'
+      }
+    })
+
+    // Obtener datos del formulario
+    const [tiposVehiculo, servicios, estadosCarro, estadosPago, serviciosExtras] = await Promise.all([
       prisma.tipoVehiculo.findMany({
         orderBy: { nombre: 'asc' }
       }),
       prisma.servicio.findMany({
-        include: { categoria: true },
         orderBy: { nombre: 'asc' }
       }),
       prisma.estadoCarro.findMany({
@@ -22,30 +50,26 @@ export async function GET() {
       }),
       prisma.servicioExtra.findMany({
         orderBy: { nombre: 'asc' }
-      }),
-      prisma.categoriaServicio.findMany({
-        include: {
-          servicios: {
-            orderBy: { nombre: 'asc' }
-          }
-        },
-        orderBy: { nombre: 'asc' }
       })
     ])
 
     return NextResponse.json({
-      tiposVehiculo,
-      servicios,
-      estadosCarro,
-      estadosPago,
-      serviciosExtras,
-      categorias
+      registros,
+      datosFormulario: {
+        tiposVehiculo,
+        servicios,
+        estadosCarro,
+        estadosPago,
+        serviciosExtras
+      }
     })
   } catch (error) {
-    console.error('Error al obtener datos del formulario:', error)
+    console.error('Error al obtener registros:', error)
     return NextResponse.json(
-      { error: 'Error al obtener datos' },
+      { error: 'Error al obtener registros' },
       { status: 500 }
     )
+  } finally {
+    await prisma.$disconnect()
   }
 }
