@@ -184,23 +184,22 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
 
   const formatFecha = (fechaString: string) => {
     try {
-      // La fecha viene de la BD en formato ISO
       const fecha = new Date(fechaString)
-
-      // Verificar si es una fecha válida
+      
       if (isNaN(fecha.getTime())) {
         return 'Hora inválida'
       }
-
-      // Formatear la hora y fecha
-      return fecha.toLocaleString('es-VE', {
+      
+      // Ajustar 4 horas (diferencia entre UTC y Venezuela)
+      const fechaAjustada = new Date(fecha.getTime() + (4 * 60 * 60 * 1000))
+      
+      return fechaAjustada.toLocaleString('es-VE', {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',
-        hour12: true,
-        timeZone: 'America/Caracas'
+        hour12: true
       })
     } catch (error) {
       console.error('Error al formatear fecha:', error, fechaString)

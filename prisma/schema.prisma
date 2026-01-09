@@ -84,7 +84,7 @@ model RegistroVehiculoServicioExtra {
 
 model RegistroVehiculo {
   id                Int                               @id @default(autoincrement())
-  fechaHora DateTime @default(now()) 
+  fechaHora DateTime @default(dbgenerated("(now() AT TIME ZONE 'America/Caracas')")) 
   nombre            String
   cedula            String
   telefono          String
