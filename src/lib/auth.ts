@@ -34,7 +34,8 @@ export const authOptions: NextAuthOptions = {
 
         return {
           id: user.id.toString(),
-          username: user.username
+          username: user.username,
+          role: user.role // Agregar el rol
         }
       }
     })
@@ -53,6 +54,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.username = user.username
+        token.role = user.role // Agregar rol al token
       }
       return token
     },
@@ -60,6 +62,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.username = token.username as string
+        session.user.role = token.role as string // Agregar rol a la sesión
       }
       return session
     }

@@ -3,39 +3,77 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { 
-  Menu, X, Home, User, Car, Droplets, Users, Settings, 
+import {
+  Menu, X, Home, User, Car, Droplets, Users, Settings,
   ChartColumnDecreasing as CarIcon, ChartColumnDecreasing,
-  LogOut 
+  LogOut
 } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
-// Asegúrate de que la ruta de importación coincida con donde guardaste el archivo
-import ModalConfirmacion from './ui/ModalConfirmacion' 
+import ModalConfirmacion from './ui/ModalConfirmacion'
 
 interface NavRoute {
   name: string
   path: string
   icon: React.ReactNode
+  roles: string[] // Roles permitidos para esta ruta
 }
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
-  const [showLogoutModal, setShowLogoutModal] = useState(false) // Estado del modal
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+  const [filteredRoutes, setFilteredRoutes] = useState<NavRoute[]>([])
 
   const pathname = usePathname()
   const { data: session, status } = useSession()
   const isAuthenticated = status === 'authenticated'
   const isLoading = status === 'loading'
+  const userRole = session?.user?.role || 'usuario'
 
-  const routes: NavRoute[] = [
-    { name: 'Inicio', path: '/home', icon: <Home className="h-4 w-4" /> },
-    { name: 'Estadisticas', path: '/home/estadisticas', icon: <ChartColumnDecreasing className="h-4 w-4" /> },
-    { name: 'Configuracion', path: '/home/configuracion', icon: <Settings className="h-4 w-4" /> },
-    { name: 'Usuarios', path: '/home/usuarios', icon: <Users className="h-4 w-4" /> },
-    { name: 'Perfil', path: '/home/perfil', icon: <User className="h-4 w-4" /> },
+  // Definir todas las rutas con sus roles permitidos
+  const allRoutes: NavRoute[] = [
+    { 
+      name: 'Inicio', 
+      path: '/home', 
+      icon: <Home className="h-4 w-4" />,
+      roles: ['admin', 'usuario'] 
+    },
+    { 
+      name: 'Estadisticas', 
+      path: '/home/estadisticas', 
+      icon: <ChartColumnDecreasing className="h-4 w-4" />,
+      roles: ['admin'] // Solo admin
+    },
+    { 
+      name: 'Configuracion', 
+      path: '/home/configuracion', 
+      icon: <Settings className="h-4 w-4" />,
+      roles: ['admin'] // Solo admin
+    },
+    { 
+      name: 'Usuarios', 
+      path: '/home/usuarios', 
+      icon: <Users className="h-4 w-4" />,
+      roles: ['admin'] // Solo admin
+    },
+    { 
+      name: 'Perfil', 
+      path: '/home/perfil', 
+      icon: <User className="h-4 w-4" />,
+      roles: ['admin', 'usuario'] 
+    },
   ]
+
+  // Filtrar rutas basadas en el rol del usuario
+  useEffect(() => {
+    if (userRole) {
+      const filtered = allRoutes.filter(route => 
+        route.roles.includes(userRole)
+      )
+      setFilteredRoutes(filtered)
+    }
+  }, [userRole])
 
   useEffect(() => {
     setIsOpen(false)
@@ -59,8 +97,6 @@ export default function Navbar() {
     }
   }
 
-  // CORRECCIÓN: Solo ejecutamos signOut. 
-  // Tu componente ModalConfirmacion ya ejecuta onClose() automáticamente después de onConfirm().
   const handleLogoutConfirm = () => {
     signOut({ callbackUrl: '/' })
   }
@@ -89,6 +125,9 @@ export default function Navbar() {
     )
   }
 
+  // Mostrar rol actual (opcional, para depuración)
+  const showRoleBadge = false
+
   return (
     <>
       <nav className={`sticky top-0 z-50 w-full transition-all duration-200 ${
@@ -107,12 +146,19 @@ export default function Navbar() {
                   Autolavado
                 </span>
               </div>
+              
+              {/* Badge de rol (opcional) */}
+              {showRoleBadge && isAuthenticated && (
+                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600">
+                  {userRole}
+                </span>
+              )}
             </div>
 
             {/* Menú Desktop */}
             {isAuthenticated && (
               <div className="hidden md:flex items-center space-x-1">
-                {routes.map((route) => (
+                {filteredRoutes.map((route) => (
                   <Link
                     key={route.path}
                     href={route.path}
@@ -162,7 +208,7 @@ export default function Navbar() {
             }`}>
               <div className="border-t border-gray-100">
                 <div className="px-2 pt-2 pb-3 space-y-1">
-                  {routes.map((route) => (
+                  {filteredRoutes.map((route) => (
                     <Link
                       key={route.path}
                       href={route.path}

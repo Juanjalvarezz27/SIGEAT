@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from 'react'
-import { User, Calendar, Shield, Lock, Eye, EyeOff, CheckCircle, XCircle } from "lucide-react"
+import { User, Calendar, Shield, Lock, Eye, EyeOff, CheckCircle, XCircle, ShieldCheck } from "lucide-react"
 import { toast } from 'react-toastify'
+import { useAuth } from '../../hooks/useAuth' 
 
 interface PerfilUsuarioProps {
   usuario: {
@@ -28,12 +29,13 @@ interface PasswordValidation {
   hasSpecialChar: boolean
 }
 
-export default function PerfilUsuario({ 
-  usuario, 
-  loading, 
-  error, 
-  onRetry 
+export default function PerfilUsuario({
+  usuario,
+  loading,
+  error,
+  onRetry
 }: PerfilUsuarioProps) {
+  const { getRoleDisplayName } = useAuth() // Usar el hook
   const [showModal, setShowModal] = useState(false)
   const [showOldPassword, setShowOldPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -85,62 +87,17 @@ export default function PerfilUsuario({
     }
   }
 
-const handleSubmitPasswordChange = async (e: React.FormEvent) => {
-  e.preventDefault()
+  const handleSubmitPasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault()
 
-  if (!isFormValid) {
-    if (isSamePassword) {
-      toast.error('La nueva contraseña no puede ser igual a la actual', {
-        position: "top-right",
-        autoClose: 5000,
-      })
-    } else {
-      toast.error('Por favor, completa todos los campos correctamente', {
-        position: "top-right",
-        autoClose: 5000,
-      })
-    }
-    return
-  }
-
-  if (!usuario?.username) {
-    toast.error('No se pudo identificar el usuario', {
-      position: "top-right",
-      autoClose: 5000,
-    })
-    return
-  }
-
-  setIsChangingPassword(true)
-
-  try {
-    const response = await fetch('/api/usuarios/cambiar-password', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        username: usuario.username,
-        oldPassword: formData.oldPassword,
-        newPassword: formData.newPassword
-      })
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      // Mostrar mensaje específico para contraseña incorrecta
-      if (response.status === 401) {
-        toast.error('La contraseña actual es incorrecta. Inténtalo de nuevo.', {
+    if (!isFormValid) {
+      if (isSamePassword) {
+        toast.error('La nueva contraseña no puede ser igual a la actual', {
           position: "top-right",
           autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
         })
       } else {
-        toast.error(data.error || 'Error al cambiar la contraseña', {
+        toast.error('Por favor, completa todos los campos correctamente', {
           position: "top-right",
           autoClose: 5000,
         })
@@ -148,30 +105,75 @@ const handleSubmitPasswordChange = async (e: React.FormEvent) => {
       return
     }
 
-    // Éxito - Mostrar toast específico
-    toast.success('¡Contraseña cambiada exitosamente! Tu contraseña ha sido actualizada.', {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-    })
+    if (!usuario?.username) {
+      toast.error('No se pudo identificar el usuario', {
+        position: "top-right",
+        autoClose: 5000,
+      })
+      return
+    }
 
-    // Cerrar modal y limpiar formulario
-    setShowModal(false)
-    resetForm()
+    setIsChangingPassword(true)
 
-  } catch (error) {
-    console.error('Error:', error)
-    toast.error('Error de conexión. Inténtalo de nuevo más tarde.', {
-      position: "top-right",
-      autoClose: 5000,
-    })
-  } finally {
-    setIsChangingPassword(false)
+    try {
+      const response = await fetch('/api/usuarios/cambiar-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: usuario.username,
+          oldPassword: formData.oldPassword,
+          newPassword: formData.newPassword
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        // Mostrar mensaje específico para contraseña incorrecta
+        if (response.status === 401) {
+          toast.error('La contraseña actual es incorrecta. Inténtalo de nuevo.', {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          })
+        } else {
+          toast.error(data.error || 'Error al cambiar la contraseña', {
+            position: "top-right",
+            autoClose: 5000,
+          })
+        }
+        return
+      }
+
+      // Éxito - Mostrar toast específico
+      toast.success('¡Contraseña cambiada exitosamente! Tu contraseña ha sido actualizada.', {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      })
+
+      // Cerrar modal y limpiar formulario
+      setShowModal(false)
+      resetForm()
+
+    } catch (error) {
+      console.error('Error:', error)
+      toast.error('Error de conexión. Inténtalo de nuevo más tarde.', {
+        position: "top-right",
+        autoClose: 5000,
+      })
+    } finally {
+      setIsChangingPassword(false)
+    }
   }
-}
 
   const resetForm = () => {
     setFormData({
@@ -189,6 +191,19 @@ const handleSubmitPasswordChange = async (e: React.FormEvent) => {
   const handleCloseModal = () => {
     setShowModal(false)
     resetForm()
+  }
+
+  // Función para determinar el color del badge según el rol
+  const getRoleBadgeColor = () => {
+    const role = getRoleDisplayName()
+    switch (role) {
+      case 'Administrador':
+        return 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+      case 'Usuario':
+        return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
+      default:
+        return 'bg-gradient-to-r from-gray-500 to-gray-600 text-white'
+    }
   }
 
   return (
@@ -277,36 +292,36 @@ const handleSubmitPasswordChange = async (e: React.FormEvent) => {
                     <div className="mt-3 space-y-1.5">
                       <div className="flex flex-wrap gap-2">
                         <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.minLength ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {passwordValidations.minLength ? 
-                            <CheckCircle className="h-3 w-3" /> : 
+                          {passwordValidations.minLength ?
+                            <CheckCircle className="h-3 w-3" /> :
                             <XCircle className="h-3 w-3" />
                           }
                           <span>8+ caracteres</span>
                         </div>
                         <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasNumber ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {passwordValidations.hasNumber ? 
-                            <CheckCircle className="h-3 w-3" /> : 
+                          {passwordValidations.hasNumber ?
+                            <CheckCircle className="h-3 w-3" /> :
                             <XCircle className="h-3 w-3" />
                           }
                           <span>Número</span>
                         </div>
                         <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasUppercase ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {passwordValidations.hasUppercase ? 
-                            <CheckCircle className="h-3 w-3" /> : 
+                          {passwordValidations.hasUppercase ?
+                            <CheckCircle className="h-3 w-3" /> :
                             <XCircle className="h-3 w-3" />
                           }
                           <span>Mayúscula</span>
                         </div>
                         <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasLowercase ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {passwordValidations.hasLowercase ? 
-                            <CheckCircle className="h-3 w-3" /> : 
+                          {passwordValidations.hasLowercase ?
+                            <CheckCircle className="h-3 w-3" /> :
                             <XCircle className="h-3 w-3" />
                           }
                           <span>Minúscula</span>
                         </div>
                         <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasSpecialChar ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {passwordValidations.hasSpecialChar ? 
-                            <CheckCircle className="h-3 w-3" /> : 
+                          {passwordValidations.hasSpecialChar ?
+                            <CheckCircle className="h-3 w-3" /> :
                             <XCircle className="h-3 w-3" />
                           }
                           <span>Carácter especial</span>
@@ -328,8 +343,8 @@ const handleSubmitPasswordChange = async (e: React.FormEvent) => {
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
                       className={`w-full text-sm px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all pr-12 ${
-                        formData.confirmPassword ? 
-                          (passwordsMatch ? 'border-green-500 focus:border-green-500' : 'border-red-500 focus:border-red-500') : 
+                        formData.confirmPassword ?
+                          (passwordsMatch ? 'border-green-500 focus:border-green-500' : 'border-red-500 focus:border-red-500') :
                           'border-gray-300 focus:border-blue-500'
                       }`}
                       placeholder="Repite la nueva contraseña"
@@ -489,6 +504,21 @@ const handleSubmitPasswordChange = async (e: React.FormEvent) => {
                     <div className="flex-1">
                       <p className="text-sm text-gray-500">Username</p>
                       <p className="font-medium text-gray-900">{usuario.username}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rol del usuario */}
+                <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-blue-200 transition-colors">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-linear-to-r from-purple-50 to-purple-100 rounded-lg flex items-center justify-center">
+                      <ShieldCheck className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm text-gray-500">Rol del Usuario</p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <span className="font-medium text-gray-900">{getRoleDisplayName()}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
