@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/src/lib/prisma'
 import bcrypt from 'bcryptjs'
 
+// Endpoint POST actualizado para incluir el rol
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { username, password } = body
+    const { username, password, role = 'usuario' } = body 
 
     // Validaciones básicas
     if (!username || !password) {
@@ -28,6 +29,15 @@ export async function POST(request: NextRequest) {
     if (username.length < 3 || username.length > 30) {
       return NextResponse.json(
         { error: 'Username debe tener entre 3 y 30 caracteres' },
+        { status: 400 }
+      )
+    }
+
+    // Validar rol (solo 'admin' o 'usuario' permitidos)
+    const validRoles = ['admin', 'usuario']
+    if (!validRoles.includes(role)) {
+      return NextResponse.json(
+        { error: 'Rol inválido. Los roles válidos son: admin, usuario' },
         { status: 400 }
       )
     }
@@ -85,15 +95,17 @@ export async function POST(request: NextRequest) {
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
-    // Crear el usuario
+    // Crear el usuario con el rol especificado
     const nuevoUsuario = await prisma.usuarioSistema.create({
       data: {
         username,
-        password: hashedPassword
+        password: hashedPassword,
+        role // Agregar el rol
       },
       select: {
         id: true,
         username: true,
+        role: true,
         createdAt: true
       }
     })
@@ -116,7 +128,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error al crear usuario:', error)
-    
+
     // Manejar errores específicos de Prisma
     if (error instanceof Error) {
       if (error.message.includes('Unique constraint') || error.message.includes('P2002')) {
@@ -134,13 +146,14 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Opcional: Endpoint GET para listar usuarios (solo para desarrollo)
+// Endpoint GET actualizado para incluir el rol
 export async function GET(request: NextRequest) {
   try {
     const usuarios = await prisma.usuarioSistema.findMany({
       select: {
         id: true,
         username: true,
+        role: true,
         createdAt: true
       },
       orderBy: {
@@ -149,7 +162,7 @@ export async function GET(request: NextRequest) {
       take: 50 // Limitar a 50 usuarios
     })
 
-    const usuariosFormateados = usuarios.map((usuario: { createdAt: { toLocaleDateString: (arg0: string, arg1: { year: string; month: string; day: string }) => any } }) => ({
+    const usuariosFormateados = usuarios.map((usuario) => ({
       ...usuario,
       fechaCreacionFormateada: usuario.createdAt.toLocaleDateString('es-ES', {
         year: 'numeric',
