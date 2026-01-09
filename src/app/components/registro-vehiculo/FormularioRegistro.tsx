@@ -92,10 +92,37 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
     fetchDatosFormulario()
   }, [])
 
+  // Efecto para limpiar datos del cliente cuando se borra la placa
+  useEffect(() => {
+    // CAMBIO: De 5 a 6 caracteres
+    const MIN_CARACTERES_BUSQUEDA = 6
+    
+    // Si la placa está vacía o tiene menos de 6 caracteres y hay datos de cliente cargados
+    if ((form.placa === '' || form.placa.length < MIN_CARACTERES_BUSQUEDA) && 
+        (form.nombre || form.cedula || form.telefono || form.color || form.tipoVehiculoId)) {
+      // Solo limpiar datos del cliente, mantener otros campos
+      setForm(prev => ({
+        ...prev,
+        nombre: '',
+        cedula: '',
+        telefono: '',
+        color: '',
+        tipoVehiculoId: ''
+        // No limpiar: servicioId, referenciaPago, notas, serviciosExtrasIds
+      }))
+      setVehiculoEncontrado(null)
+      setMostrarFormularioCompleto(false)
+      setMensajePlaca('')
+    }
+  }, [form.placa]) // Solo se ejecuta cuando cambia la placa
+
   // Función debounced para buscar placa
   const buscarPlaca = useCallback(
     debounce(async (placa: string) => {
-      if (!placa || placa.length < 5) {
+      // CAMBIO: De 5 a 6 caracteres
+      const MIN_CARACTERES_BUSQUEDA = 6
+      
+      if (!placa || placa.length < MIN_CARACTERES_BUSQUEDA) {
         setVehiculoEncontrado(null)
         setMensajePlaca('')
         return
@@ -156,26 +183,14 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
     value = value.slice(0, 8)
 
     setForm(prev => ({ ...prev, placa: value }))
-    setMensajePlaca('')
-    setVehiculoEncontrado(null)
-
-    // Resetear datos del cliente si se borra la placa
-    if (value.length < 5) {
-      setForm(prev => ({
-        ...prev,
-        nombre: '',
-        cedula: '',
-        telefono: '',
-        color: '',
-        tipoVehiculoId: ''
-      }))
-      setMostrarFormularioCompleto(false)
-      return
-    }
-
-    // Si la placa tiene al menos 5 caracteres, buscar
-    if (value.length >= 5) {
+    
+    // CAMBIO: Solo buscar si hay al menos 6 caracteres
+    const MIN_CARACTERES_BUSQUEDA = 6
+    if (value.length >= MIN_CARACTERES_BUSQUEDA) {
       buscarPlaca(value)
+    } else {
+      // Si hay menos de 6 caracteres, limpiar mensaje
+      setMensajePlaca('')
     }
   }
 
@@ -274,6 +289,9 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
     setSubmitting(true)
     setError(null)
 
+    // CAMBIO: Validación actualizada a 6 caracteres mínimos para placa
+    const MIN_CARACTERES_PLACA = 6
+    
     // Validación adicional
     if (!form.cedula || form.cedula.length < 6) {
       setError('La cédula debe tener al menos 6 dígitos')
@@ -287,8 +305,9 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
       return
     }
 
-    if (!form.placa || form.placa.length < 5) {
-      setError('La placa debe tener entre 5 y 8 caracteres')
+    // CAMBIO: Actualizado a 6-8 caracteres
+    if (!form.placa || form.placa.length < MIN_CARACTERES_PLACA || form.placa.length > 8) {
+      setError('La placa debe tener entre 6 y 8 caracteres')
       setSubmitting(false)
       return
     }
@@ -322,7 +341,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
       const estadoPendienteCarro = datos?.estadosCarro.find((e: any) => e.nombre.toLowerCase() === 'pendiente')
       const estadoPendientePago = datos?.estadosPago.find((e: any) => e.nombre.toLowerCase() === 'pendiente')
 
-      // Limpiar formulario
+      // Limpiar formulario completamente
       setForm({
         nombre: '',
         cedula: '',
@@ -344,6 +363,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
       setServiciosExtrasSeleccionados([])
       setServiciosExtrasAbierto(false)
       setInfoAdicionalAbierto(false)
+      setError(null)
 
       // Notificar a la página principal
       onRegistroCreado()
@@ -379,6 +399,9 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
     )
   }
 
+  // Constante para mínimo de caracteres (reutilizable)
+  const MIN_CARACTERES_BUSQUEDA = 6
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
       {error && (
@@ -386,11 +409,11 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
           <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
           <div className="flex-1">
             <p className="text-red-700 font-medium">{error}</p>
-            {(form.cedula.length < 6 || form.telefono.length < 10 || form.placa.length < 5 || !form.color) && (
+            {(form.cedula.length < 6 || form.telefono.length < 10 || form.placa.length < MIN_CARACTERES_BUSQUEDA || !form.color) && (
               <ul className="mt-2 text-sm text-red-600 space-y-1">
                 {form.cedula.length < 6 && <li>• Cédula: mínimo 6 dígitos</li>}
                 {form.telefono.length < 10 && <li>• Teléfono: mínimo 10 dígitos</li>}
-                {form.placa.length < 5 && <li>• Placa: mínimo 5 caracteres</li>}
+                {form.placa.length < MIN_CARACTERES_BUSQUEDA && <li>• Placa: mínimo 6 caracteres</li>}
                 {!form.color && <li>• Color del vehículo: campo requerido</li>}
               </ul>
             )}
@@ -438,7 +461,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
                       handlePlacaChange(syntheticEvent)
                     }}
                     required
-                    minLength={5}
+                    minLength={MIN_CARACTERES_BUSQUEDA} // CAMBIO: 6 caracteres mínimos
                     maxLength={8}
                     className="w-full px-4 py-3 pl-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition uppercase font-medium tracking-wider"
                     placeholder="Ej: ABC123"
@@ -467,7 +490,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
                     <div className={`text-sm font-medium p-2 rounded-lg ${
                       vehiculoEncontrado
                         ? 'bg-green-50 text-green-700 border border-green-200'
-                        : form.placa.length >= 5
+                        : form.placa.length >= MIN_CARACTERES_BUSQUEDA
                           ? 'bg-blue-50 text-blue-700 border border-blue-200'
                           : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
                     }`}>
@@ -477,7 +500,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
                             <Sparkles className="h-4 w-4 mr-2 shrink-0" />
                             {mensajePlaca}
                           </>
-                        ) : form.placa.length >= 5 ? (
+                        ) : form.placa.length >= MIN_CARACTERES_BUSQUEDA ? (
                           <>
                             <ArrowRight className="h-4 w-4 mr-2 shrink-0" />
                             {mensajePlaca}
@@ -485,7 +508,8 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
                         ) : (
                           <>
                             <AlertCircle className="h-4 w-4 mr-2 shrink-0" />
-                            Ingresa al menos 5 caracteres para buscar
+                            {/* CAMBIO: Actualizado a 6 caracteres */}
+                            Ingresa al menos 6 caracteres para buscar
                           </>
                         )}
                       </div>
