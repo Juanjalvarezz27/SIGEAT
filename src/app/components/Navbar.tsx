@@ -46,6 +46,12 @@ export default function Navbar() {
       roles: ['admin'] // Solo admin
     },
     { 
+      name: 'Vehiculos', 
+      path: '/home/vehiculos', 
+      icon: <Car className="h-4 w-4" />,
+      roles: ['admin'] // Solo admin
+    },
+    { 
       name: 'Configuracion', 
       path: '/home/configuracion', 
       icon: <Settings className="h-4 w-4" />,

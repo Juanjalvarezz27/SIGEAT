@@ -33,7 +33,7 @@ export async function seedServicios() {
     categoriaMap[cat.nombre] = cat.id
   })
 
-  // 3. Crear servicios - ACTUALIZADO CON NUEVOS PRECIOS
+  // 3. Datos de servicios actualizados
   const serviciosData = [
     // CARRO - Sencillo
     { 
@@ -171,28 +171,87 @@ export async function seedServicios() {
       precio: 6.00, 
       descripcion: 'Lavado y desengrasado de cadena' 
     }
-    // NOTA: Se eliminó el servicio "Especial Premium Moto 650"
   ]
 
-  // 4. Primero eliminar servicios existentes para evitar duplicados
-  console.log('Eliminando servicios existentes...')
-  await prisma.servicio.deleteMany({})
-  console.log('Servicios eliminados')
-
-  // 5. Crear los nuevos servicios
-  console.log('Creando nuevos servicios...')
+  // 4. Usar upsert en lugar de delete/create para evitar problemas de clave foránea
+  console.log('Procesando servicios...')
   
+  let serviciosCreados = 0
+  let serviciosActualizados = 0
+
   for (const servicio of serviciosData) {
-    await prisma.servicio.create({
-      data: {
-        nombre: servicio.nombre,
-        descripcion: servicio.descripcion,
-        precio: servicio.precio,
-        categoriaId: categoriaMap[servicio.categoria]
+    try {
+      // Verificar si el servicio ya existe
+      const existingService = await prisma.servicio.findUnique({
+        where: { nombre: servicio.nombre }
+      })
+
+      if (existingService) {
+        // Actualizar servicio existente
+        await prisma.servicio.update({
+          where: { id: existingService.id },
+          data: {
+            descripcion: servicio.descripcion,
+            precio: servicio.precio,
+            categoriaId: categoriaMap[servicio.categoria]
+          }
+        })
+        serviciosActualizados++
+      } else {
+        // Crear nuevo servicio
+        await prisma.servicio.create({
+          data: {
+            nombre: servicio.nombre,
+            descripcion: servicio.descripcion,
+            precio: servicio.precio,
+            categoriaId: categoriaMap[servicio.categoria]
+          }
+        })
+        serviciosCreados++
       }
-    })
+    } catch (error) {
+      console.error(`Error procesando servicio ${servicio.nombre}:`, error)
+    }
   }
 
-  console.log(`${serviciosData.length} servicios creados`)
+  // 5. Eliminar servicios que ya no existen en la nueva estructura
+  // Primero obtenemos todos los servicios actuales
+  const serviciosActualesNombres = serviciosData.map(s => s.nombre)
+  
+  // Buscar servicios que existen en la BD pero no en nuestra nueva lista
+  const serviciosAEliminar = await prisma.servicio.findMany({
+    where: {
+      NOT: {
+        nombre: {
+          in: serviciosActualesNombres
+        }
+      }
+    }
+  })
+
+  // Solo eliminamos servicios que no tienen registros relacionados
+  for (const servicio of serviciosAEliminar) {
+    try {
+      // Verificar si tiene registros relacionados
+      const registrosRelacionados = await prisma.registroVehiculo.count({
+        where: { servicioId: servicio.id }
+      })
+
+      if (registrosRelacionados === 0) {
+        // No tiene registros, podemos eliminar
+        await prisma.servicio.delete({
+          where: { id: servicio.id }
+        })
+        console.log(`Servicio eliminado: ${servicio.nombre}`)
+      } else {
+        // Tiene registros, solo desactivar o mantener
+        console.log(`Servicio ${servicio.nombre} tiene ${registrosRelacionados} registros, no se puede eliminar`)
+      }
+    } catch (error) {
+      console.error(`Error al procesar servicio ${servicio.nombre}:`, error)
+    }
+  }
+
+  console.log(`Servicios procesados: ${serviciosCreados} creados, ${serviciosActualizados} actualizados`)
   console.log('Seed completado')
 }
