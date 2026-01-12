@@ -273,12 +273,12 @@ export default function Estadisticas() {
                 </div>
                 <div className="text-left">
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Calculadora Semanal
+                    Calculadora Semanal 
                   </h3>
                 </div>
               </div>
-              <div className="flex items-center">
-                <span className="mr-3 text-sm text-gray-500">
+              <div className="flex items-center ">
+                <span className="mr-3 p-0.5 text-sm text-gray-500">
                   {mostrarCalculadora ? 'Ocultar' : 'Mostrar'}
                 </span>
                 {mostrarCalculadora ? (
