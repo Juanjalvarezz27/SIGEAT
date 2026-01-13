@@ -157,52 +157,57 @@ export default function FiltroFecha({
       </div>
 
       {/* Filtros Avanzados */}
-      {mostrarFiltrosAvanzados && (
-        <div className="pt-4 border-t border-gray-200">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">
-                Rango de fechas específico
-              </p>
+        {mostrarFiltrosAvanzados && (
+          <div className="pt-4 border-t border-gray-200">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-4 overflow-hidden">
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
+                {/* Fecha inicio */}
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500">
                     Fecha inicio
                   </label>
-                  <input
-                    type="date"
-                    value={fechaInicio}
-                    onChange={e => setFechaInicio(e.target.value)}
-                    className="w-full max-w-full box-border border border-gray-300 rounded-xl px-3 md:px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+
+                  <div className="relative overflow-hidden rounded-xl border border-gray-300 bg-white px-3 py-2">
+                    <input
+                      type="date"
+                      value={fechaInicio}
+                      onChange={e => setFechaInicio(e.target.value)}
+                      className="w-full bg-transparent text-sm outline-none appearance-none"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">
+                {/* Fecha fin */}
+                <div className="space-y-1">
+                  <label className="text-xs text-gray-500">
                     Fecha fin
                   </label>
-                  <input
-                    type="date"
-                    value={fechaFin}
-                    onChange={e => setFechaFin(e.target.value)}
-                    className="w-full max-w-full box-border border border-gray-300 rounded-xl px-3 md:px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+
+                  <div className="relative overflow-hidden rounded-xl border border-gray-300 bg-white px-3 py-2">
+                    <input
+                      type="date"
+                      value={fechaFin}
+                      onChange={e => setFechaFin(e.target.value)}
+                      className="w-full bg-transparent text-sm outline-none appearance-none"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={cargando}
-              className="w-full sm:w-auto px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl flex items-center justify-center gap-2 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Search className="h-4 w-4" />
-              {cargando ? "Buscando..." : "Buscar registros"}
-            </button>
-          </form>
-        </div>
-      )}
+              {/* Botón */}
+              <button
+                type="submit"
+                disabled={cargando}
+                className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-xl flex items-center justify-center gap-2 font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Search className="h-4 w-4" />
+                {cargando ? "Buscando..." : "Buscar registros"}
+              </button>
+            </form>
+          </div>
+        )}
+
     </div>
   )
 }
