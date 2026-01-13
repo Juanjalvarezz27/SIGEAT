@@ -5,7 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '40')
+    const limit = parseInt(searchParams.get('limit') || '20')
     const search = searchParams.get('search') || ''
     const searchType = searchParams.get('searchType') || 'placa'
     const skip = (page - 1) * limit

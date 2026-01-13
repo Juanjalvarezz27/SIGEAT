@@ -94,12 +94,11 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
 
   // Efecto para limpiar datos del cliente cuando se borra la placa
   useEffect(() => {
-    // CAMBIO: De 5 a 6 caracteres
     const MIN_CARACTERES_BUSQUEDA = 6
-    
+
     // Si la placa está vacía o tiene menos de 6 caracteres y hay datos de cliente cargados
-    if ((form.placa === '' || form.placa.length < MIN_CARACTERES_BUSQUEDA) && 
-        (form.nombre || form.cedula || form.telefono || form.color || form.tipoVehiculoId)) {
+    if ((form.placa === '' || form.placa.length < MIN_CARACTERES_BUSQUEDA) &&
+      (form.nombre || form.cedula || form.telefono || form.color || form.tipoVehiculoId)) {
       // Solo limpiar datos del cliente, mantener otros campos
       setForm(prev => ({
         ...prev,
@@ -114,14 +113,13 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
       setMostrarFormularioCompleto(false)
       setMensajePlaca('')
     }
-  }, [form.placa]) // Solo se ejecuta cuando cambia la placa
+  }, [form.placa])
 
   // Función debounced para buscar placa
   const buscarPlaca = useCallback(
     debounce(async (placa: string) => {
-      // CAMBIO: De 5 a 6 caracteres
       const MIN_CARACTERES_BUSQUEDA = 6
-      
+
       if (!placa || placa.length < MIN_CARACTERES_BUSQUEDA) {
         setVehiculoEncontrado(null)
         setMensajePlaca('')
@@ -170,7 +168,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
       } finally {
         setBuscandoPlaca(false)
       }
-    }, 800), // Debounce de 800ms
+    }, 800),
     []
   )
 
@@ -183,8 +181,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
     value = value.slice(0, 8)
 
     setForm(prev => ({ ...prev, placa: value }))
-    
-    // CAMBIO: Solo buscar si hay al menos 6 caracteres
+
     const MIN_CARACTERES_BUSQUEDA = 6
     if (value.length >= MIN_CARACTERES_BUSQUEDA) {
       buscarPlaca(value)
@@ -223,11 +220,10 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
     if (!tipoSeleccionado) return
 
     // Filtrar servicios por categoría del tipo de vehículo
-    // Agregar verificación de seguridad para categoria
     const serviciosFiltrados = datos.servicios.filter(
-      servicio => servicio.categoria && 
-                 servicio.categoria.nombre && 
-                 servicio.categoria.nombre === tipoSeleccionado.categoria
+      servicio => servicio.categoria &&
+        servicio.categoria.nombre &&
+        servicio.categoria.nombre === tipoSeleccionado.categoria
     )
 
     setServiciosFiltrados(serviciosFiltrados)
@@ -289,9 +285,8 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
     setSubmitting(true)
     setError(null)
 
-    // CAMBIO: Validación actualizada a 6 caracteres mínimos para placa
     const MIN_CARACTERES_PLACA = 6
-    
+
     // Validación adicional
     if (!form.cedula || form.cedula.length < 6) {
       setError('La cédula debe tener al menos 6 dígitos')
@@ -305,7 +300,6 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
       return
     }
 
-    // CAMBIO: Actualizado a 6-8 caracteres
     if (!form.placa || form.placa.length < MIN_CARACTERES_PLACA || form.placa.length > 8) {
       setError('La placa debe tener entre 6 y 8 caracteres')
       setSubmitting(false)
@@ -399,7 +393,6 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
     )
   }
 
-  // Constante para mínimo de caracteres (reutilizable)
   const MIN_CARACTERES_BUSQUEDA = 6
 
   return (
@@ -442,13 +435,11 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
                     value={form.placa}
                     onChange={handlePlacaChange}
                     onKeyDown={(e) => {
-                      // Prevenir la tecla espacio
                       if (e.key === ' ') {
                         e.preventDefault()
                       }
                     }}
                     onPaste={(e) => {
-                      // Limpiar espacios al pegar
                       e.preventDefault()
                       const pastedText = e.clipboardData.getData('text/plain')
                       const cleanedText = pastedText.replace(/\s/g, '').toUpperCase().slice(0, 8)
@@ -461,7 +452,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
                       handlePlacaChange(syntheticEvent)
                     }}
                     required
-                    minLength={MIN_CARACTERES_BUSQUEDA} // CAMBIO: 6 caracteres mínimos
+                    minLength={MIN_CARACTERES_BUSQUEDA}
                     maxLength={8}
                     className="w-full px-4 py-3 pl-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition uppercase font-medium tracking-wider"
                     placeholder="Ej: ABC123"
@@ -471,7 +462,6 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
                   {buscandoPlaca && (
                     <Loader2 className="absolute right-3 top-3.5 h-4 w-4 text-blue-500 animate-spin" />
                   )}
-                  {/* Contador de caracteres */}
                   <div className="absolute right-3 top-3.5 text-xs text-gray-400 font-mono">
                     {form.placa.length}/8
                   </div>
@@ -479,7 +469,6 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
 
                 {/* Mensajes informativos */}
                 <div className="mt-2 space-y-1">
-                  {/* Mensaje sobre espacios */}
                   <div className="flex items-center text-xs text-gray-500">
                     <AlertCircle className="h-3 w-3 mr-1 shrink-0" />
                     <span>No se permiten espacios. La placa se convertirá automáticamente a mayúsculas.</span>
@@ -491,8 +480,8 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
                       vehiculoEncontrado
                         ? 'bg-green-50 text-green-700 border border-green-200'
                         : form.placa.length >= MIN_CARACTERES_BUSQUEDA
-                          ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                          : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                        : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
                     }`}>
                       <div className="flex items-center">
                         {vehiculoEncontrado ? (
@@ -508,7 +497,6 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
                         ) : (
                           <>
                             <AlertCircle className="h-4 w-4 mr-2 shrink-0" />
-                            {/* CAMBIO: Actualizado a 6 caracteres */}
                             Ingresa al menos 6 caracteres para buscar
                           </>
                         )}
@@ -544,6 +532,7 @@ export default function FormularioRegistro({ onRegistroCreado }: FormularioRegis
               serviciosExtrasSeleccionados={serviciosExtrasSeleccionados}
               serviciosExtrasAbierto={serviciosExtrasAbierto}
               infoAdicionalAbierto={infoAdicionalAbierto}
+              vehiculoEncontrado={vehiculoEncontrado}
               onServicioExtraChange={handleServicioExtraChange}
               onChange={handleChange}
               onToggleServiciosExtras={() => setServiciosExtrasAbierto(!serviciosExtrasAbierto)}

@@ -44,7 +44,7 @@ export default function Vehiculos() {
     paginaActual: 1,
     totalPaginas: 1,
     totalVehiculos: 0,
-    porPagina: 40
+    porPagina: 20
   })
   const [estadisticas, setEstadisticas] = useState({
     totalClientes: 0,
@@ -96,7 +96,7 @@ export default function Vehiculos() {
         paginaActual: 1,
         totalPaginas: 1,
         totalVehiculos: 0,
-        porPagina: 40
+        porPagina: 20
       })
     } finally {
       setCargando(false)
@@ -189,23 +189,6 @@ export default function Vehiculos() {
                 </div>
               </div>
 
-              {/* Separador */}
-              <div className="hidden md:block h-8 w-px bg-gray-200"></div>
-
-              {/* Estado de carga */}
-              <div className="flex-1">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                    <TrendingUp className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 font-medium">Estado</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {cargando ? 'Buscando...' : 'Listo'}
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>

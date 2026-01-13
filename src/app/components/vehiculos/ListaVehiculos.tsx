@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from 'react'
-import { 
-  Car, User, Calendar, DollarSign, Phone, Hash, 
+import {
+  Car, User, Calendar, DollarSign, Phone, Hash,
   ChevronDown, ChevronUp, CheckCircle, Clock, Tag,
   FileText, MessageSquare, Wrench, TrendingUp
 } from 'lucide-react'
@@ -50,11 +50,11 @@ interface ListaVehiculosProps {
   onCambiarPagina: (pagina: number) => void
 }
 
-export default function ListaVehiculos({ 
-  vehiculos, 
-  cargando, 
+export default function ListaVehiculos({
+  vehiculos,
+  cargando,
   paginacion,
-  onCambiarPagina 
+  onCambiarPagina
 }: ListaVehiculosProps) {
   const [vehiculoExpandido, setVehiculoExpandido] = useState<string | null>(null)
   const [historialExpandido, setHistorialExpandido] = useState<number | null>(null)
@@ -97,6 +97,15 @@ export default function ListaVehiculos({
     })
   }
 
+  const formatFechaCorta = (fecha: Date) => {
+    const date = new Date(fecha)
+    return date.toLocaleDateString('es-VE', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    })
+  }
+
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat('es-VE', {
       minimumFractionDigits: 2,
@@ -126,69 +135,69 @@ export default function ListaVehiculos({
             key={vehiculo.placa}
             className="border border-gray-200 rounded-xl hover:border-gray-300 transition-colors overflow-hidden"
           >
-            {/* Header del vehículo */}
-            <div 
+            {/* Header del vehículo - FLEX REORGANIZADO PARA RESPONSIVE */}
+            <div
               className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
               onClick={() => setVehiculoExpandido(vehiculoExpandido === vehiculo.placa ? null : vehiculo.placa)}
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                {/* Información principal */}
+                {/* Información principal - OCUPA TODO EL ESPACIO EN MOBILE */}
                 <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
-                      <Car className="h-5 w-5 text-blue-600" />
+                  {/* Primera línea: Placa y badge */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
+                        <Car className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-gray-900 text-lg">
+                            {vehiculo.placa}
+                          </span>
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            vehiculo.estadisticas.totalVisitas > 5
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : vehiculo.estadisticas.totalVisitas > 2
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {vehiculo.estadisticas.totalVisitas} visita{vehiculo.estadisticas.totalVisitas !== 1 ? 's' : ''}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-4 mt-1 text-sm text-gray-600">
+                          <span className="flex items-center">
+                            <User className="h-3 w-3 mr-1" />
+                            <span className="truncate max-w-30">{vehiculo.cliente.nombre}</span>
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-gray-900 text-lg">
-                          {vehiculo.placa}
-                        </span>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          vehiculo.estadisticas.totalVisitas > 5 
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : vehiculo.estadisticas.totalVisitas > 2
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {vehiculo.estadisticas.totalVisitas} visita{vehiculo.estadisticas.totalVisitas !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-gray-600">
-                        <span className="flex items-center">
-                          <User className="h-3 w-3 mr-1" />
-                          {vehiculo.cliente.nombre}
-                        </span>
-                        <span className="flex items-center">
-                          <Hash className="h-3 w-3 mr-1" />
-                          {vehiculo.cliente.cedula}
-                        </span>
-                      </div>
+                    
+                    {/* FECHA EXPANDIR EN MOBILE - AHORA A LA DERECHA */}
+                    <div className="flex md:hidden items-center">
+                      {vehiculoExpandido === vehiculo.placa ? (
+                        <ChevronUp className="h-5 w-5 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="h-5 w-5 text-gray-400" />
+                      )}
                     </div>
                   </div>
 
                   {/* Información secundaria */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
-                    <div className="flex items-center">
+                  <div className="grid grid-cols-2 gap-2 text-sm mt-5">
+                    <div className="flex items-center justify-center">
                       <Car className="h-3 w-3 text-gray-400 mr-1 shrink-0" />
                       <span className="truncate">{vehiculo.vehiculo.tipo}</span>
                     </div>
-                    <div className="flex items-center">
-                      <Tag className="h-3 w-3 text-gray-400 mr-1 shrink-0" />
-                      <span className="truncate">{vehiculo.vehiculo.estado}</span>
-                    </div>
-                    <div className="flex items-center">
-                      <Calendar className="h-3 w-3 text-gray-400 mr-1 shrink-0" />
-                      <span className="truncate">Última: {formatFecha(vehiculo.estadisticas.ultimaVisita)}</span>
-                    </div>
-                    <div className="flex items-center">
+                    <div className="flex items-center justify-center">
                       <DollarSign className="h-3 w-3 text-gray-400 mr-1 shrink-0" />
-                      <span className="truncate">Total: ${formatNumber(vehiculo.estadisticas.totalGastado)}</span>
+                      <span className="truncate">${formatNumber(vehiculo.estadisticas.totalGastado)}</span>
                     </div>
                   </div>
                 </div>
 
-                {/* Flecha expandir */}
-                <div className="flex items-center">
+                {/* Flecha expandir - SOLO EN DESKTOP (ahora a la derecha) */}
+                <div className="hidden md:flex items-center ml-4">
                   {vehiculoExpandido === vehiculo.placa ? (
                     <ChevronUp className="h-5 w-5 text-gray-400" />
                   ) : (
@@ -202,7 +211,7 @@ export default function ListaVehiculos({
             {vehiculoExpandido === vehiculo.placa && (
               <div className="border-t border-gray-100 p-4 bg-gray-50">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {/* Columna 1 - Información del cliente - MEJORADA */}
+                  {/* Columna 1 - Información del cliente */}
                   <div className="space-y-3">
                     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                       <div className="flex items-center space-x-2 mb-3">
@@ -218,7 +227,7 @@ export default function ListaVehiculos({
                             {vehiculo.cliente.nombre}
                           </p>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <p className="text-xs text-gray-500 mb-1">Cédula</p>
                             <div className="flex items-center space-x-1 bg-gray-50 p-2 rounded-lg">
@@ -250,7 +259,7 @@ export default function ListaVehiculos({
                     </div>
                   </div>
 
-                  {/* Columna 2 - Estadísticas - MEJORADA */}
+                  {/* Columna 2 - Estadísticas - SIN PROMEDIO, CON ÚLTIMA VISITA MÁS GRANDE */}
                   <div className="space-y-3">
                     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                       <div className="flex items-center space-x-2 mb-3">
@@ -262,27 +271,23 @@ export default function ListaVehiculos({
                       <div className="space-y-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div className="bg-green-50 p-3 rounded-lg">
-                            <p className="text-xs text-green-700 mb-1">Total de visitas</p>
+                            <p className="text-xs text-green-700 mb-1">Visitas</p>
                             <p className="text-lg font-bold text-green-900">
                               {vehiculo.estadisticas.totalVisitas}
                             </p>
                           </div>
                           <div className="bg-blue-50 p-3 rounded-lg">
-                            <p className="text-xs text-blue-700 mb-1">Total gastado</p>
+                            <p className="text-xs text-blue-700 mb-1">Gastado</p>
                             <p className="text-lg font-bold text-blue-900">
                               ${formatNumber(vehiculo.estadisticas.totalGastado)}
                             </p>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="bg-purple-50 p-3 rounded-lg">
-                            <p className="text-xs text-purple-700 mb-1">Promedio por visita</p>
-                            <p className="text-lg font-bold text-purple-900">
-                              ${formatNumber(vehiculo.estadisticas.totalGastado / vehiculo.estadisticas.totalVisitas)}
-                            </p>
-                          </div>
-                          <div className="bg-amber-50 p-3 rounded-lg">
-                            <p className="text-xs text-amber-700 mb-1">Última visita</p>
+                        {/* ÚLTIMA VISITA OCUPANDO TODO EL ESPACIO */}
+                        <div className="bg-amber-50 p-3 rounded-lg">
+                          <p className="text-xs text-amber-700 mb-1">Última visita</p>
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="h-4 w-4 text-amber-600" />
                             <p className="text-sm font-bold text-amber-900">
                               {formatFecha(vehiculo.estadisticas.ultimaVisita)}
                             </p>
@@ -292,7 +297,7 @@ export default function ListaVehiculos({
                     </div>
                   </div>
 
-                  {/* Columna 3 - Servicios usados - MEJORADA */}
+                  {/* Columna 3 - Servicios usados */}
                   <div className="space-y-3">
                     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
                       <div className="flex items-center space-x-2 mb-3">
@@ -303,7 +308,7 @@ export default function ListaVehiculos({
                       </div>
                       <div className="space-y-3">
                         <div className="bg-emerald-50 p-3 rounded-lg">
-                          <p className="text-xs text-emerald-700 mb-1">Cantidad de servicios distintos</p>
+                          <p className="text-sm text-emerald-700 mb-1">Servicios distintos</p>
                           <p className="text-lg font-bold text-emerald-900">
                             {vehiculo.estadisticas.serviciosUsados.length}
                           </p>
@@ -312,13 +317,13 @@ export default function ListaVehiculos({
                           <p className="text-xs text-gray-600 font-medium">Lista de servicios:</p>
                           <div className="max-h-32 overflow-y-auto pr-1 space-y-1">
                             {vehiculo.estadisticas.serviciosUsados.map((servicio, index) => (
-                              <div 
-                                key={index} 
+                              <div
+                                key={index}
                                 className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                               >
                                 <CheckCircle className="h-3 w-3 text-emerald-500 shrink-0" />
-                                <span className="text-xs text-gray-700 truncate">{servicio}</span>
-                                <span className="text-xs text-gray-500 ml-auto shrink-0">
+                                <span className="text-xs text-gray-700 truncate flex-1">{servicio}</span>
+                                <span className="text-xs text-gray-500 shrink-0">
                                   {vehiculo.historial.filter(h => h.servicio === servicio).length}x
                                 </span>
                               </div>
@@ -330,7 +335,7 @@ export default function ListaVehiculos({
                   </div>
                 </div>
 
-                {/* Historial de visitas */}
+                {/* Historial de visitas - REORGANIZADO PARA RESPONSIVE */}
                 <div className="mt-4">
                   <button
                     onClick={() => setHistorialExpandido(historialExpandido === vehiculo.estadisticas.totalVisitas ? null : vehiculo.estadisticas.totalVisitas)}
@@ -350,46 +355,53 @@ export default function ListaVehiculos({
                   </button>
 
                   {historialExpandido === vehiculo.estadisticas.totalVisitas && (
-                    <div className="mt-2 space-y-2 max-h-60 overflow-y-auto pr-1">
+                    <div className="mt-3 space-y-3">
                       {vehiculo.historial.map((registro, index) => (
                         <div key={registro.id} className="bg-white border border-gray-200 rounded-lg p-3">
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <Calendar className="h-3 w-3 text-gray-400" />
-                                <span className="text-sm font-medium text-gray-900">
-                                  {formatFecha(registro.fecha)}
-                                </span>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Wrench className="h-3 w-3 text-gray-400" />
-                                <span className="text-sm text-gray-700">{registro.servicio}</span>
-                              </div>
-                              {registro.notas && (
-                                <div className="flex items-start space-x-2 mt-1">
-                                  <MessageSquare className="h-3 w-3 text-gray-400 mt-0.5" />
-                                  <span className="text-xs text-gray-600">{registro.notas}</span>
-                                </div>
-                              )}
+                          {/* Fecha y precio en header */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2">
+                            <div className="flex items-center space-x-2">
+                              <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
+                              <span className="text-sm font-medium text-gray-900">
+                                {formatFecha(registro.fecha)}
+                              </span>
                             </div>
-                            <div className="text-right space-y-1">
-                              <div className="font-semibold text-gray-900">
-                                ${formatNumber(registro.precio)}
-                              </div>
-                              <div className={`text-xs px-2 py-1 rounded-full inline-block ${
-                                registro.estadoPago === 'Pagado' 
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-yellow-100 text-yellow-800'
-                              }`}>
-                                {registro.estadoPago}
-                              </div>
-                              {registro.referenciaPago && (
-                                <div className="flex items-center space-x-1 text-xs text-purple-600">
-                                  <FileText className="h-3 w-3" />
-                                  <span>Ref: {registro.referenciaPago}</span>
-                                </div>
-                              )}
+                            <div className="font-semibold text-gray-900 text-lg">
+                              ${formatNumber(registro.precio)}
                             </div>
+                          </div>
+                          
+                          {/* Servicio y estado */}
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                            <div className="flex items-center space-x-2">
+                              <Wrench className="h-4 w-4 text-gray-400 shrink-0" />
+                              <span className="text-sm text-gray-700">{registro.servicio}</span>
+                            </div>
+                          </div>
+                          
+                          {/* Referencia y notas - APILADAS EN MOBILE */}
+                          <div className="space-y-2">
+                            {registro.referenciaPago && (
+                              <div className="flex items-start space-x-2">
+                                <FileText className="h-3 w-3 text-purple-500 mt-0.5 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs text-purple-600 truncate">
+                                    Ref: {registro.referenciaPago}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {registro.notas && (
+                              <div className="flex items-start space-x-2">
+                                <MessageSquare className="h-3 w-3 text-gray-400 mt-0.5 shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs text-gray-600 wrap-break-word">
+                                    {registro.notas}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
