@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/cron/cerrar-sesiones",
-      "schedule": "59 3 * * *"
-    }
-  ]
-}

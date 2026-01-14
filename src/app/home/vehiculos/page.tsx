@@ -140,7 +140,7 @@ export default function Vehiculos() {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
             <Car className="h-6 w-6 mr-3 text-blue-500" />
-            lientes y Vehículos
+            Base de Datos de Clientes y Vehículos
           </h1>
           <p className="text-gray-600 mt-2">
             Gestiona y consulta toda la información de clientes y sus vehículos
