@@ -2,36 +2,38 @@ import prisma from '@/src/lib/prisma'
 import bcrypt from 'bcryptjs'
 
 export async function seedUsuarios() {
-  console.log('Verificando usuarios...')
+  console.log('Iniciando carga de usuarios administradores...')
 
-  const usuariosExistentes = await prisma.usuarioSistema.count()
+  // 1. Creamos el hash de la contraseña '1234' una sola vez
+  const hash = await bcrypt.hash('1234', 10)
 
-  if (usuariosExistentes === 0) {
-    const hash = await bcrypt.hash('1234', 10)
-
-    await prisma.usuarioSistema.create({
-      data: {
-        username: 'admin',
-        password: hash,
-        role: 'admin' 
-      }
-    })
-
-    console.log('Usuario admin creado con rol "admin"')
-  } else {
-    console.log(`${usuariosExistentes} usuario(s) ya existen`)
-    
-    // Opcional: Actualizar usuario admin existente
-    const adminExists = await prisma.usuarioSistema.findUnique({
-      where: { username: 'admin' }
-    })
-    
-    if (adminExists && adminExists.role !== 'admin') {
-      await prisma.usuarioSistema.update({
-        where: { id: adminExists.id },
-        data: { role: 'admin' }
-      })
-      console.log('Usuario admin actualizado con rol "admin"')
+  // 2. Asegurar usuario: Danielcegarra
+  await prisma.usuarioSistema.upsert({
+    where: { username: 'Danielcegarra' },
+    update: { 
+      role: 'admin', // Si ya existe, nos aseguramos que sea admin
+    },
+    create: {
+      username: 'Danielcegarra',
+      password: hash,
+      role: 'admin'
     }
-  }
+  })
+  console.log('Usuario Danielcegarra verificado')
+
+  // 3. Asegurar usuario: AdminJuan
+  await prisma.usuarioSistema.upsert({
+    where: { username: 'AdminJuan' },
+    update: { 
+      role: 'admin', // Si ya existe, nos aseguramos que sea admin
+    },
+    create: {
+      username: 'AdminJuan',
+      password: hash,
+      role: 'admin'
+    }
+  })
+  console.log('Usuario AdminJuan verificado')
+  
+  console.log('Carga de usuarios completada.')
 }
