@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
-import { Search, Car, User, Hash, Filter } from 'lucide-react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Search, Car, User, Hash } from 'lucide-react'
 
 interface BuscadorVehiculosProps {
   onBuscar: (search: string, searchType: string) => void
@@ -15,7 +15,7 @@ interface BuscadorVehiculosProps {
 export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }: BuscadorVehiculosProps) {
   const [terminoBusqueda, setTerminoBusqueda] = useState(busquedaActual.termino)
   const [tipoBusqueda, setTipoBusqueda] = useState(busquedaActual.tipo)
-  const [mostrarFiltros, setMostrarFiltros] = useState(false)
+  const [tiempoEspera, setTiempoEspera] = useState<NodeJS.Timeout | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Sincronizar con cambios externos
@@ -24,25 +24,86 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
     setTipoBusqueda(busquedaActual.tipo)
   }, [busquedaActual])
 
-  // Búsqueda automática después de 3 caracteres o vacío
-  useEffect(() => {
-    if (terminoBusqueda.length === 0 || terminoBusqueda.length >= 3) {
-      const timer = setTimeout(() => {
-        onBuscar(terminoBusqueda, tipoBusqueda)
-      }, 300)
+  // Función para manejar cambios en el input
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const nuevoTermino = e.target.value
+    setTerminoBusqueda(nuevoTermino)
 
-      return () => clearTimeout(timer)
+    // Cancelar el timer anterior si existe
+    if (tiempoEspera) {
+      clearTimeout(tiempoEspera)
     }
-  }, [terminoBusqueda, tipoBusqueda, onBuscar])
 
-  const handleLimpiar = () => {
+    // Si está vacío, buscar inmediatamente
+    if (nuevoTermino.trim() === '') {
+      onBuscar('', tipoBusqueda)
+      return
+    }
+
+    // Configurar un nuevo timer para buscar después de 500ms sin escribir
+    const nuevoTimer = setTimeout(() => {
+      // Solo buscar si tiene al menos 3 caracteres
+      if (nuevoTermino.length >= 3) {
+        onBuscar(nuevoTermino, tipoBusqueda)
+      }
+    }, 500)
+
+    setTiempoEspera(nuevoTimer)
+  }, [tiempoEspera, tipoBusqueda, onBuscar])
+
+  // Función para manejar cambio de tipo
+  const handleTipoChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    const nuevoTipo = e.target.value
+    setTipoBusqueda(nuevoTipo)
+    
+    // Si hay término de búsqueda, ejecutar búsqueda con el nuevo tipo
+    if (terminoBusqueda.trim() !== '') {
+      onBuscar(terminoBusqueda, nuevoTipo)
+    }
+  }, [terminoBusqueda, onBuscar])
+
+  // Ejecutar búsqueda cuando se presiona Enter
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && terminoBusqueda.trim() !== '') {
+      // Cancelar cualquier timer pendiente
+      if (tiempoEspera) {
+        clearTimeout(tiempoEspera)
+        setTiempoEspera(null)
+      }
+      
+      // Ejecutar búsqueda inmediatamente
+      onBuscar(terminoBusqueda, tipoBusqueda)
+    }
+  }, [terminoBusqueda, tipoBusqueda, tiempoEspera, onBuscar])
+
+  // Limpiar timer al desmontar
+  useEffect(() => {
+    return () => {
+      if (tiempoEspera) {
+        clearTimeout(tiempoEspera)
+      }
+    }
+  }, [tiempoEspera])
+
+  const handleLimpiar = useCallback(() => {
     setTerminoBusqueda('')
+    
+    // Cancelar timer si existe
+    if (tiempoEspera) {
+      clearTimeout(tiempoEspera)
+      setTiempoEspera(null)
+    }
+    
+    // Ejecutar búsqueda inmediatamente (vacía)
+    onBuscar('', tipoBusqueda)
+    
+    // Enfocar el input
     if (inputRef.current) {
       inputRef.current.focus()
     }
-  }
+  }, [tiempoEspera, tipoBusqueda, onBuscar])
 
-  const getPlaceholder = () => {
+  const getPlaceholder = useCallback(() => {
     switch (tipoBusqueda) {
       case 'placa':
         return 'Ej: ABC123, XYZ789...'
@@ -53,9 +114,9 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
       default:
         return 'Buscar...'
     }
-  }
+  }, [tipoBusqueda])
 
-  const getTipoTexto = () => {
+  const getTipoTexto = useCallback(() => {
     switch (tipoBusqueda) {
       case 'placa':
         return 'Placa'
@@ -66,7 +127,10 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
       default:
         return 'Placa'
     }
-  }
+  }, [tipoBusqueda])
+
+  // Calcular si debería mostrar el indicador de búsqueda pendiente
+  const mostrarBusquedaPendiente = terminoBusqueda.length > 0 && terminoBusqueda.length < 3
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
@@ -74,10 +138,10 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
         <div className="flex-1">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center mb-1">
             <Search className="h-5 w-5 mr-2 text-blue-500 shrink-0" />
-            Buscar en la base de datos
+            Buscar en los registros
           </h3>
           <p className="text-sm text-gray-600">
-            Escribe al menos 3 caracteres para iniciar la búsqueda automática
+            Escribe para buscar - La búsqueda se ejecuta automáticamente después de 500ms
           </p>
         </div>
       </div>
@@ -94,7 +158,7 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
             </div>
             <select
               value={tipoBusqueda}
-              onChange={(e) => setTipoBusqueda(e.target.value)}
+              onChange={handleTipoChange}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
               disabled={cargando}
             >
@@ -116,7 +180,8 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
               ref={inputRef}
               type="text"
               value={terminoBusqueda}
-              onChange={(e) => setTerminoBusqueda(e.target.value)}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
               placeholder={getPlaceholder()}
               className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={cargando}
@@ -142,9 +207,9 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
             {terminoBusqueda.length > 0 && (
               <>
                 Buscando por <span className="font-medium">{getTipoTexto()}</span>
-                {terminoBusqueda.length < 3 && (
+                {mostrarBusquedaPendiente && (
                   <span className="text-amber-600 ml-1">
-                    (escribe {3 - terminoBusqueda.length} caracter{3 - terminoBusqueda.length !== 1 ? 'es' : ''} más)
+                    (escribe al menos 3 caracteres para buscar)
                   </span>
                 )}
               </>
@@ -152,8 +217,9 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
           </div>
           <div className="text-xs text-gray-500">
             {terminoBusqueda.length > 0 && (
-              <span className={terminoBusqueda.length < 3 ? 'text-amber-600' : 'text-green-600'}>
-                {terminoBusqueda.length}/3 caracteres
+              <span className="text-blue-600">
+                {terminoBusqueda.length} caracter{terminoBusqueda.length !== 1 ? 'es' : ''}
+                {mostrarBusquedaPendiente && ' (mínimo 3)'}
               </span>
             )}
           </div>
@@ -170,14 +236,26 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
         </div>
       )}
 
+      {/* Indicador de búsqueda pendiente (menos de 3 caracteres) */}
+      {mostrarBusquedaPendiente && !cargando && (
+        <div className="flex items-center justify-center p-3 bg-amber-50 border border-amber-200 rounded-xl mb-4">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
+            <span className="text-sm text-amber-700">
+              Escribe al menos 3 caracteres para buscar automáticamente
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Información de búsqueda actual */}
-      {terminoBusqueda.length >= 3 && !cargando && (
+      {terminoBusqueda.length >= 3 && !cargando && busquedaActual.termino === terminoBusqueda && (
         <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mb-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <Search className="h-4 w-4 text-gray-500" />
               <span className="text-sm text-gray-700">
-                Búsqueda activa: "<span className="font-medium">{terminoBusqueda}</span>"
+                Mostrando resultados para: "<span className="font-medium">{terminoBusqueda}</span>"
               </span>
             </div>
             <button

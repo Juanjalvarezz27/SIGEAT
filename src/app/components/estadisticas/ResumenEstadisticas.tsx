@@ -105,9 +105,6 @@ export default function ResumenEstadisticas({ estadisticas, cargando }: ResumenE
               <Car className="h-5 w-5 text-blue-700" />
             </div>
           </div>
-          <div className="mt-3 text-xs text-blue-600 truncate">
-            {estadisticas.vehiculosPorDia.toFixed(1)} por día
-          </div>
         </div>
 
         {/* Tarjeta 2: Total USD */}
@@ -122,9 +119,6 @@ export default function ResumenEstadisticas({ estadisticas, cargando }: ResumenE
             <div className="w-10 h-10 bg-green-200 rounded-lg flex items-center justify-center shrink-0 ml-2">
               <DollarSign className="h-5 w-5 text-green-700" />
             </div>
-          </div>
-          <div className="mt-3 text-xs text-green-600 truncate">
-            ${estadisticas.promedioPorVehiculo.toFixed(2)} por vehículo
           </div>
         </div>
 
@@ -141,9 +135,6 @@ export default function ResumenEstadisticas({ estadisticas, cargando }: ResumenE
               <DollarSign className="h-5 w-5 text-purple-700" />
             </div>
           </div>
-          <div className="mt-3 text-xs text-purple-600 truncate">
-            En moneda nacional
-          </div>
         </div>
 
         {/* Tarjeta 4: Promedio USD */}
@@ -158,9 +149,6 @@ export default function ResumenEstadisticas({ estadisticas, cargando }: ResumenE
             <div className="w-10 h-10 bg-orange-200 rounded-lg flex items-center justify-center shrink-0 ml-2">
               <TrendingUp className="h-5 w-5 text-orange-700" />
             </div>
-          </div>
-          <div className="mt-3 text-xs text-orange-600 truncate">
-            Por vehículo atendido
           </div>
         </div>
       </div>

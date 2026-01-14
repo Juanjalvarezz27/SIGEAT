@@ -195,11 +195,6 @@ export default function ListaRegistrosFecha({ registros, cargando }: ListaRegist
                   <div className="flex flex-col items-end">
                     <div className="font-semibold text-gray-900 text-sm md:text-base">
                       ${Number(registro.precioTotal).toFixed(2)}
-                      {registro.totalExtras > 0 && (
-                        <span className="text-emerald-600 text-xs ml-1">
-                          (+${registro.totalExtras.toFixed(2)} extras)
-                        </span>
-                      )}
                     </div>
                     <div className="text-xs text-gray-500 mt-1 flex items-center">
                       <Calendar className="h-3 w-3 mr-1" />

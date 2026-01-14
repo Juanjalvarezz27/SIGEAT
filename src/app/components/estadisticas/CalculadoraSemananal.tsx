@@ -140,7 +140,7 @@ export default function CalculadoraSemananal({ totalSemanaUSD, cargando }: Calcu
                     Bs {formatNumber(totalSemanaBS)}
                   </p>
                   <p className="text-sm text-green-600 mt-1">
-                    Tasa: Bs {tasa ? formatNumber(tasa, 5) : '0.00'} por $
+                    Tasa: Bs {tasa ? formatNumber(tasa, 2) : '0.00'} por $
                   </p>
                 </div>
               </div>
