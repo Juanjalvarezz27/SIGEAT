@@ -1,9 +1,11 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "./prisma"
 import bcrypt from "bcryptjs"
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
       name: "credentials",
@@ -35,13 +37,13 @@ export const authOptions: NextAuthOptions = {
         return {
           id: user.id.toString(),
           username: user.username,
-          role: user.role // Agregar el rol
+          role: user.role
         }
       }
     })
   ],
   session: {
-    strategy: "jwt",
+    strategy: "database",
     maxAge: 30 * 24 * 60 * 60, // 30 días
   },
   secret: process.env.NEXTAUTH_SECRET,
@@ -54,7 +56,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.username = user.username
-        token.role = user.role // Agregar rol al token
+        token.role = user.role
       }
       return token
     },
@@ -62,7 +64,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string
         session.user.username = token.username as string
-        session.user.role = token.role as string // Agregar rol a la sesión
+        session.user.role = token.role as string
       }
       return session
     }

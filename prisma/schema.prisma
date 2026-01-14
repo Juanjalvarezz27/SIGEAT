@@ -11,12 +11,34 @@ model UsuarioSistema {
   id        Int      @id @default(autoincrement())
   username  String   @unique
   password  String   // Hash bcrypt
-  role      String   @default("usuario") 
+  role      String   @default("usuario")
   createdAt DateTime @default(now())
+  sesiones  Sesion[]
 
   @@index([username])
   @@map("usuarios_sistema")
 }
+
+model Sesion {
+  id           String   @id @default(cuid())
+  userId       Int
+  expires      DateTime
+  sessionToken String   @unique
+  usuario      UsuarioSistema @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activa       Boolean  @default(true)
+  creada       DateTime @default(now())
+  actualizada  DateTime @updatedAt
+  userAgent    String?
+  ip           String?
+  
+  @@index([userId])
+  @@index([sessionToken])
+  @@index([expires])
+  @@index([activa])
+  @@index([actualizada])
+  @@map("sesiones")
+}
+
 
 model CategoriaServicio {
   id        Int        @id @default(autoincrement())

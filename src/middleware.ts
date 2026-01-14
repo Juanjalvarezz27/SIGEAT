@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { getToken } from "next-auth/jwt"
+import prisma from "@/src/lib/prisma"
 
-// forzar Node runtime
 export const runtime = "nodejs"
 
-// Rutas que requieren rol de admin
 const ADMIN_ONLY_ROUTES = [
   '/home/estadisticas',
   '/home/configuracion',
   '/home/usuarios'
 ]
 
-// Rutas que son públicas para usuarios autenticados (todos los roles)
 const AUTHENTICATED_ROUTES = [
   '/home',
   '/home/perfil'
@@ -21,68 +19,98 @@ const AUTHENTICATED_ROUTES = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Permitir acceso a rutas de API de autenticación y archivos estáticos
+  // Permitir acceso a rutas públicas
   if (
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/cron') ||
     pathname.startsWith('/_next') ||
-    pathname.includes('.') || // Archivos estáticos
+    pathname.includes('.') ||
     pathname === '/favicon.ico'
   ) {
     return NextResponse.next()
   }
 
-  // Ruta pública (login) - permitir acceso
+  // Ruta pública (login)
   if (pathname === "/") {
     return NextResponse.next()
   }
 
-  // Obtener token usando next-auth/jwt
-  const token = await getToken({ 
+  // Obtener token de sesión
+  const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET
   })
 
   // Si no hay token → redirect al login
   if (!token) {
-    return NextResponse.redirect(new URL("/", request.url))
+    const loginUrl = new URL("/", request.url)
+    loginUrl.searchParams.set("callbackUrl", encodeURI(request.url))
+    return NextResponse.redirect(loginUrl)
   }
 
-  // Agregar información del usuario a los headers
+  // VERIFICACIÓN CRÍTICA: Revisar si la sesión sigue activa en BD
+  if (token.sessionToken) {
+    try {
+      const session = await prisma.sesion.findUnique({
+        where: { 
+          sessionToken: token.sessionToken as string 
+        }
+      })
+
+      // Verificar tres condiciones:
+      // 1. Sesión existe
+      // 2. Está marcada como activa
+      // 3. No ha expirado
+      if (!session || !session.activa || session.expires < new Date()) {
+        console.log(`⚠️ Sesión ${token.sessionToken} inválida o expirada`)
+        
+        const loginUrl = new URL("/", request.url)
+        loginUrl.searchParams.set("error", "SesiónExpirada")
+        loginUrl.searchParams.set("callbackUrl", encodeURI(request.url))
+        return NextResponse.redirect(loginUrl)
+      }
+      
+      // Sesión válida, continuar
+      
+    } catch (error) {
+      console.error("Error al verificar sesión:", error)
+      const loginUrl = new URL("/", request.url)
+      loginUrl.searchParams.set("error", "ErrorVerificacion")
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
+  // Agregar headers de usuario
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set('x-user-id', token.id as string)
   requestHeaders.set('x-user-username', token.username as string)
   requestHeaders.set('x-user-role', token.role as string)
 
-  // Verificar permisos basados en roles
+  // Verificar permisos de rol
   const userRole = (token.role as string) || 'usuario'
-  
-  // Verificar si la ruta requiere rol de admin
+
+  // Verificar rutas de admin
   const isAdminRoute = ADMIN_ONLY_ROUTES.some(route => pathname.startsWith(route))
   const isAuthenticatedRoute = AUTHENTICATED_ROUTES.some(route => pathname.startsWith(route))
 
-  // Si es una ruta de admin y el usuario no es admin → redirigir a home
   if (isAdminRoute && userRole !== 'admin') {
     return NextResponse.redirect(new URL("/home", request.url))
   }
 
-  // Si es una ruta que requiere autenticación (todos los roles)
+  // Permitir acceso a rutas autenticadas
   if (isAuthenticatedRoute || isAdminRoute) {
-    // Permitir acceso
-    const response = NextResponse.next({
+    return NextResponse.next({
       request: {
         headers: requestHeaders,
       },
     })
-    return response
   }
 
-  // Para cualquier otra ruta no definida, verificar si está dentro de /home
+  // Redirigir rutas /home no definidas
   if (pathname.startsWith('/home')) {
-    // Rutas dentro de /home que no están en las listas → denegar por defecto
     return NextResponse.redirect(new URL("/home", request.url))
   }
 
-  // Para rutas fuera de /home, permitir si está autenticado
   return NextResponse.next({
     request: {
       headers: requestHeaders,
