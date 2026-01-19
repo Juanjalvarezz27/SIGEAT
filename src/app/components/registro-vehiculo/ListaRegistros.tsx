@@ -301,7 +301,7 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
   const abrirWhatsApp = (telefono: string, nombre: string, placa: string) => {
     const numeroWhatsApp = formatTelefonoWhatsApp(telefono)
     const mensaje = encodeURIComponent(
-      `Hola ${nombre}, somos del taller. Le escribimos respecto al vehículo con placa ${placa}. Su vehículo ya esta listo y puede pasar a recogerlo`
+      `Hola ${nombre}, somos Nova Cars. Le escribimos respecto al vehículo con placa ${placa}. Su vehículo ya esta listo y puede pasar a recogerlo cuando desee`
     )
 
     window.open(`https://wa.me/${numeroWhatsApp}?text=${mensaje}`, '_blank')
