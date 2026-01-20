@@ -22,7 +22,7 @@ export async function GET() {
         tipoVehiculo: true,
         servicio: {
           include: {
-            categoria: true
+            categoria: true 
           }
         },
         estadoCarro: true,
@@ -45,7 +45,7 @@ export async function GET() {
       }),
       prisma.servicio.findMany({
         orderBy: { nombre: 'asc' },
-        include: {  // Asegurar que incluya la categoría
+        include: {
           categoria: true
         }
       }),
@@ -64,7 +64,7 @@ export async function GET() {
       registros,
       datosFormulario: {
         tiposVehiculo,
-        servicios,  // Ahora con categoría incluida
+        servicios, 
         estadosCarro,
         estadosPago,
         serviciosExtras

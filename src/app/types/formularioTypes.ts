@@ -88,7 +88,7 @@ export interface RegistroVehiculoCompleto {
   estadoPagoId: number
   referenciaPago: string | null
   notas: string | null
-  color: string | null 
+  color: string | null
   tipoVehiculo: TipoVehiculo
   servicio: Servicio
   estadoCarro: EstadoCarro

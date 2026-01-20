@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Car, Clock, DollarSign, CheckCircle, XCircle, AlertCircle, RefreshCw, Edit, Trash2, Hourglass, Wrench, CheckCheck, User, Phone, CreditCard, MessageCircle, ChevronDown, ChevronUp, Receipt, FileText, Palette, Search } from 'lucide-react'
 import ModalEditarRegistro from './ModalEditarRegistro'
 import ModalConfirmacion from '../ui/ModalConfirmacion'
-import BuscadorVehiculos from '../vehiculos/BuscadorVehiculos' 
+import BuscadorVehiculos from '../vehiculos/BuscadorVehiculos'
 import { toast } from 'react-toastify'
 import {
   RegistroVehiculoCompleto,
@@ -23,7 +23,7 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
   const [modalEditarAbierto, setModalEditarAbierto] = useState(false)
   const [modalEliminarAbierto, setModalEliminarAbierto] = useState(false)
   const [registroAEliminar, setRegistroAEliminar] = useState<RegistroVehiculoCompleto | null>(null)
-  
+
   // Estados para el buscador
   const [buscando, setBuscando] = useState(false)
   const [busqueda, setBusqueda] = useState({
@@ -40,7 +40,7 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
   // Función para normalizar texto (sin acentos, minúsculas)
   const normalizarTexto = useCallback((texto: string): string => {
     if (!texto) return ''
-    
+
     return texto
       .toLowerCase()
       .normalize('NFD') // Separar acentos
@@ -106,7 +106,7 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
     if (termino.trim() === '') {
       setRegistros(registrosOriginales)
       setBuscando(false)
-      
+
       // Actualizar estadísticas
       if (onRegistrosChange && registrosOriginales.length > 0) {
         const totalRegistros = registrosOriginales.length
@@ -124,7 +124,7 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
     // Filtrar registros
     const resultados = registrosOriginales.filter(registro => {
       let valor: string = ''
-      
+
       switch (tipo) {
         case 'placa':
           valor = normalizarTexto(registro.placa || '')
@@ -138,19 +138,19 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
         default:
           valor = normalizarTexto(registro.placa || '')
       }
-      
+
       return valor.includes(terminoNormalizado)
     })
 
     setRegistros(resultados)
-    
+
     // Actualizar estadísticas con resultados filtrados
     if (onRegistrosChange) {
       const totalRegistros = resultados.length
       const totalIngresos = resultados.reduce((sum, reg) => sum + Number(reg.precioTotal), 0)
       onRegistrosChange({ totalRegistros, totalIngresos })
     }
-    
+
     setBuscando(false)
   }, [registrosOriginales, onRegistrosChange, normalizarTexto])
 
@@ -158,7 +158,7 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
   const handleBuscar = useCallback((termino: string, tipo: string) => {
     // Actualizar estado de búsqueda
     setBusqueda({ termino, tipo })
-    
+
     // Ejecutar búsqueda
     realizarBusqueda(termino, tipo)
   }, [realizarBusqueda])
@@ -298,14 +298,47 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
     return numeroLimpio
   }
 
-  const abrirWhatsApp = (telefono: string, nombre: string, placa: string) => {
-    const numeroWhatsApp = formatTelefonoWhatsApp(telefono)
-    const mensaje = encodeURIComponent(
-      `Hola ${nombre}, somos Nova Cars. Le escribimos respecto al vehículo con placa ${placa}. Su vehículo ya esta listo y puede pasar a recogerlo cuando desee`
-    )
-
-    window.open(`https://wa.me/${numeroWhatsApp}?text=${mensaje}`, '_blank')
+const abrirWhatsApp = (registro: RegistroVehiculoCompleto) => {
+  const numeroWhatsApp = formatTelefonoWhatsApp(registro.telefono);
+  
+  const categoriaServicio = registro.servicio.categoria?.nombre || '';
+  
+  // Construir sección de servicios extras si existen
+  let serviciosExtrasTexto = '';
+  if (registro.serviciosExtras.length > 0) {
+    const extras = registro.serviciosExtras.map(extra => extra.servicioExtra.nombre).join(', ');
+    serviciosExtrasTexto = `\n• *Servicios extras:* ${extras}`;
   }
+  
+  // Construir sección de precio
+  const precioTexto = registro.precioTotalBs 
+    ? `\n• *Total:* $${Number(registro.precioTotal).toFixed(2)} (Bs ${Number(registro.precioTotalBs).toFixed(2)})`
+    : `\n• *Total:* $${Number(registro.precioTotal).toFixed(2)}`;
+  
+  // Construir sección de notas si existen
+  let notasTexto = '';
+  if (registro.notas && registro.notas.trim() !== '') {
+    notasTexto = `\n\n*Notas adicionales:*\n${registro.notas}`;
+  }
+  
+  const mensaje = encodeURIComponent(
+`Hola ${registro.nombre}, somos Nova Cars.
+
+Le informamos que su vehículo ya está listo y puede pasar a recogerlo cuando desee.
+
+*Detalles del servicio:*
+
+• *Vehículo:* ${registro.placa} (${registro.tipoVehiculo.nombre})
+• *Color:* ${registro.color || 'No especificado'}
+• *Servicio:* ${registro.servicio.nombre}${categoriaServicio ? ` (${categoriaServicio})` : ''}${serviciosExtrasTexto}${precioTexto}
+• *Estado:* ${registro.estadoCarro.nombre}
+• *Estado de pago:* ${registro.estadoPago.nombre}${notasTexto}
+
+*¡Gracias por confiar en Nova Cars!*`
+  );
+
+  window.open(`https://wa.me/${numeroWhatsApp}?text=${mensaje}`, '_blank');
+};
 
   const getEstadoPagoColor = (estado: string) => {
     switch (estado.toLowerCase()) {
@@ -411,7 +444,7 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
   return (
     <>
       {/* Componente de búsqueda separado */}
-      <BuscadorVehiculos 
+      <BuscadorVehiculos
         onBuscar={handleBuscar}
         cargando={buscando}
         busquedaActual={busqueda}
@@ -445,7 +478,7 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
                 <Search className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                 <h3 className="text-base font-semibold text-gray-900 mb-1">No se encontraron resultados</h3>
                 <p className="text-gray-600 text-sm mb-4">
-                  No hay registros que coincidan con "<span className="font-medium">{busqueda.termino}</span>" 
+                  No hay registros que coincidan con "<span className="font-medium">{busqueda.termino}</span>"
                   en {busqueda.tipo === 'placa' ? 'placas' : busqueda.tipo === 'nombre' ? 'nombres' : 'cédulas'}
                 </p>
                 <button
@@ -595,7 +628,7 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
                           </div>
 
                           <button
-                            onClick={() => abrirWhatsApp(registro.telefono, registro.nombre, registro.placa)}
+                            onClick={() => abrirWhatsApp(registro)}
                             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg border border-green-200 transition-colors w-full sm:w-auto"
                             aria-label="Enviar mensaje por WhatsApp"
                           >
