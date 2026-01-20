@@ -228,7 +228,7 @@ export default function MonederoPage() {
         onConfirm={handleConfirmarEliminacion}
         titulo="Eliminar Gasto"
         mensaje={`¿Estás seguro de que quieres eliminar el gasto "${gastoSeleccionado?.descripcion}"?`}
-        confirmarTexto="Eliminar Definitivamente"
+        confirmarTexto="Eliminar"
         esDestructivo={true}
         loading={eliminando}
       />

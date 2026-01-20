@@ -16,15 +16,26 @@ export async function seedEstados() {
     console.log('Estados de carro creados')
   }
   
-  const estadosPago = await prisma.estadoPago.findMany()
+const estadosPago = await prisma.estadoPago.findMany()
+
+if (estadosPago.length === 0) {
+  await prisma.estadoPago.createMany({
+    data: [
+      { nombre: 'Pendiente' },
+      { nombre: 'Pagado' },
+      { nombre: 'Colaboración' } 
+    ]
+  })
+  console.log('Estados de pago creados')
+} else {
+  const existeColaboracion = await prisma.estadoPago.findFirst({
+    where: { nombre: 'Colaboración' }
+  })
   
-  if (estadosPago.length === 0) {
-    await prisma.estadoPago.createMany({
-      data: [
-        { nombre: 'Pendiente' },
-        { nombre: 'Pagado' }
-      ]
+  if (!existeColaboracion) {
+    await prisma.estadoPago.create({
+      data: { nombre: 'Colaboración' }
     })
-    console.log('Estados de pago creados')
+    console.log('Estado "Colaboración" agregado')
   }
-}
+}}

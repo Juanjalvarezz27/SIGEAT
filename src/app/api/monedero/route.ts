@@ -13,16 +13,22 @@ export async function GET(request: NextRequest) {
     // Obtener ingresos (precioTotalBs de registros)
     const registros = await prisma.registroVehiculo.findMany({
       where: {
-        precioTotalBs: {
-          not: null
+        precioTotalBs: { not: null },
+        estadoPago: {
+          nombre: { not: "Colaboración" } 
         }
       },
       select: {
-        precioTotalBs: true
+        precioTotalBs: true,
+        estadoPago: { 
+          select: {
+            nombre: true
+          }
+        }
       }
     })
 
-    // Calcular total de ingresos en Bs
+    // El cálculo sigue igual:
     const totalIngresosBs = registros.reduce((sum, registro) => {
       return sum + Number(registro.precioTotalBs)
     }, 0)
