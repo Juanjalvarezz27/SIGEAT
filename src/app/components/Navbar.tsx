@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   Menu, X, Home, User, Car, Droplets, Users, Settings,
   ChartColumnDecreasing as CarIcon, ChartColumnDecreasing,
-  LogOut
+  LogOut, CircleDollarSign 
 } from 'lucide-react'
 import { useSession, signOut } from 'next-auth/react'
 import ModalConfirmacion from './ui/ModalConfirmacion'
@@ -15,7 +15,7 @@ interface NavRoute {
   name: string
   path: string
   icon: React.ReactNode
-  roles: string[] // Roles permitidos para esta ruta
+  roles: string[] 
 }
 
 export default function Navbar() {
@@ -43,6 +43,12 @@ export default function Navbar() {
       name: 'Estadisticas', 
       path: '/home/estadisticas', 
       icon: <ChartColumnDecreasing className="h-4 w-4" />,
+      roles: ['admin'] // Solo admin
+    },
+    { 
+      name: 'Monedero', 
+      path: '/home/monedero', 
+      icon: <CircleDollarSign  className="h-4 w-4" />,
       roles: ['admin'] // Solo admin
     },
     { 

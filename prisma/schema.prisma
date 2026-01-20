@@ -115,3 +115,35 @@ model RegistroVehiculo {
   @@index([estadoPagoId])
   @@index([telefono])
 }
+
+
+//Monedero
+
+model MetodoPago {
+  id        Int       @id @default(autoincrement())
+  nombre    String    @unique
+  tipo      String    // "BS" o "USD" o "AMBOS"
+  descripcion String?
+  gastos    Gasto[]
+  
+  @@index([tipo])
+}
+
+model Gasto {
+  id          Int       @id @default(autoincrement())
+  fechaHora   DateTime  @default(dbgenerated("(now() AT TIME ZONE 'America/Caracas')"))
+  descripcion String
+  monto       Decimal   @db.Decimal(15, 2)
+  moneda      String    // "USD" o "BS"
+  tasaBCV     Decimal?  @db.Decimal(10, 2) // Solo para gastos en Bs
+  montoUSD    Decimal   @db.Decimal(15, 2) // Monto convertido a USD
+  montoBS     Decimal   @db.Decimal(15, 2) // Monto convertido a Bs
+  notas       String?
+  metodoPagoId Int
+  
+  metodoPago  MetodoPago @relation(fields: [metodoPagoId], references: [id], onDelete: Cascade)
+  
+  @@index([fechaHora])
+  @@index([moneda])
+  @@index([metodoPagoId])
+}
