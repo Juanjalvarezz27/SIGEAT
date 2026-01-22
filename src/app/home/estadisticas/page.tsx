@@ -249,12 +249,20 @@ export default function Estadisticas() {
 
             {/* Contenido desplegable */}
             {mostrarRegistros && (
-              <div className="border-t border-gray-200">
-                <ListaRegistrosFecha
-                  registros={registros}
-                  cargando={cargando}
-                />
-              </div>
+            <div className="border-t border-gray-200">
+              <ListaRegistrosFecha
+                registros={registros}
+                cargando={cargando}
+                onActualizarEstado={(id, nuevoEstado) => {
+                  // Actualizar el estado local si es necesario
+                  setRegistros(prev => prev.map(registro =>
+                    registro.id === id 
+                      ? { ...registro, estadoPago: nuevoEstado }
+                      : registro
+                  ))
+                }}
+              />
+            </div>
             )}
           </div>
         </div>

@@ -196,3 +196,55 @@ export async function DELETE(
     )
   }
 }
+
+// PATCH: Actualizar SOLO el estado de pago
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params
+    const registroId = parseInt(id)
+    const body = await request.json()
+
+    if (!body.estadoPagoId) {
+      return NextResponse.json(
+        { error: 'estadoPagoId es requerido' },
+        { status: 400 }
+      )
+    }
+
+    // Verificar existencia
+    const existe = await prisma.registroVehiculo.findUnique({
+      where: { id: registroId }
+    })
+
+    if (!existe) {
+      return NextResponse.json(
+        { error: 'Registro no encontrado' },
+        { status: 404 }
+      )
+    }
+
+    const actualizado = await prisma.registroVehiculo.update({
+      where: { id: registroId },
+      data: {
+        estadoPagoId: parseInt(body.estadoPagoId)
+      },
+      include: {
+        estadoPago: true
+      }
+    })
+
+    return NextResponse.json({
+      success: true,
+      estadoPago: actualizado.estadoPago
+    })
+  } catch (error) {
+    console.error('Error PATCH estadoPago:', error)
+    return NextResponse.json(
+      { error: 'Error al actualizar estado de pago' },
+      { status: 500 }
+    )
+  }
+}
