@@ -7,20 +7,6 @@ export async function seedUsuarios() {
   // 1. Creamos el hash de la contraseña '1234' una sola vez
   const hash = await bcrypt.hash('1234', 10)
 
-  // 2. Asegurar usuario: Danielcegarra
-  await prisma.usuarioSistema.upsert({
-    where: { username: 'Danielcegarra' },
-    update: { 
-      role: 'admin', // Si ya existe, nos aseguramos que sea admin
-    },
-    create: {
-      username: 'Danielcegarra',
-      password: hash,
-      role: 'admin'
-    }
-  })
-  console.log('Usuario Danielcegarra verificado')
-
   // 3. Asegurar usuario: AdminJuan
   await prisma.usuarioSistema.upsert({
     where: { username: 'AdminJuan' },
