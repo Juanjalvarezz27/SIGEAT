@@ -20,7 +20,7 @@ interface FormData {
   username: string
   password: string
   confirmPassword: string
-  role: string // Agregar campo role
+  role: string
 }
 
 interface PasswordValidation {
@@ -32,13 +32,13 @@ interface PasswordValidation {
 }
 
 export default function AgregarUsuario() {
-  const { isAdmin } = useAuth() // Usar el hook para obtener si es admin
+  const { isAdmin } = useAuth()
   
   const [formData, setFormData] = useState<FormData>({
     username: '',
     password: '',
     confirmPassword: '',
-    role: 'usuario' // Valor por defecto CAMBIADO A 'usuario' 👈
+    role: 'usuario'
   })
 
   const [showPassword, setShowPassword] = useState(false)
@@ -50,7 +50,6 @@ export default function AgregarUsuario() {
     confirmPassword: false
   })
 
-  // Ocultar validaciones cuando la contraseña está vacía
   useEffect(() => {
     if (formData.password.length > 0) {
       setShowValidations(true)
@@ -59,7 +58,6 @@ export default function AgregarUsuario() {
     }
   }, [formData.password])
 
-  // Validaciones de contraseña
   const passwordValidations: PasswordValidation = {
     minLength: formData.password.length >= 8,
     hasNumber: /\d/.test(formData.password),
@@ -79,7 +77,6 @@ export default function AgregarUsuario() {
       [name]: value
     }))
 
-    // Marcar campo como "touched" cuando se empieza a escribir
     if (name === 'password' && !touchedFields.password) {
       setTouchedFields(prev => ({ ...prev, password: true }))
     }
@@ -100,7 +97,6 @@ export default function AgregarUsuario() {
       return
     }
 
-    // Si el usuario no es admin, no debería poder crear usuarios (esto ya debería estar protegido por el middleware)
     if (!isAdmin) {
       toast.error('No tienes permisos para crear usuarios')
       return
@@ -117,7 +113,7 @@ export default function AgregarUsuario() {
         body: JSON.stringify({
           username: formData.username.trim(),
           password: formData.password,
-          role: formData.role // Enviar el rol seleccionado
+          role: formData.role
         })
       })
 
@@ -127,7 +123,6 @@ export default function AgregarUsuario() {
         throw new Error(data.error || 'Error al crear el usuario')
       }
 
-      // Mostrar toast de éxito
       toast.success(`Usuario "${formData.username}" creado exitosamente como ${formData.role === 'admin' ? 'Administrador' : 'Usuario Estándar'}!`, {
         position: "top-right",
         autoClose: 5000,
@@ -137,12 +132,11 @@ export default function AgregarUsuario() {
         draggable: true,
       })
 
-      // Limpiar formulario
       setFormData({
         username: '',
         password: '',
         confirmPassword: '',
-        role: 'usuario' // Resetear a usuario por defecto 👈
+        role: 'usuario'
       })
       setShowValidations(false)
       setTouchedFields({
@@ -163,21 +157,8 @@ export default function AgregarUsuario() {
     }
   }
 
-  // Función para obtener el ícono según el rol
-  const getRoleIcon = () => {
-    return formData.role === 'admin' ? <ShieldCheck className="h-4 w-4" /> : <User className="h-4 w-4" />
-  }
-
-  // Función para obtener el color del badge según el rol
-  const getRoleBadgeColor = () => {
-    return formData.role === 'admin' 
-      ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white' 
-      : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
-  }
-
   return (
     <>
-      {/* Toast Container */}
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -191,44 +172,44 @@ export default function AgregarUsuario() {
         theme="light"
       />
 
-      <div className="bg-linear-to-br from-gray-50 to-gray-100 rounded-2xl shadow-sm border border-gray-200 overflow-hidden h-full">
-        {/* Header del Bento */}
-        <div className="bg-linear-to-r from-blue-500 to-blue-700 p-6">
-          <div className="flex items-center justify-between">
+      <div className="bg-white rounded-[2.5rem] shadow-xl border border-[#869dfc]/10 overflow-hidden h-full">
+        {/* Header del Bento con colores del sistema */}
+        <div className="bg-[#122a4e] p-8 relative overflow-hidden">
+          {/* Elemento decorativo de fondo */}
+          <div className="absolute right-0 top-0 h-full w-1/3 bg-white/5 skew-x-12 transform translate-x-8"></div>
+          
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white">Agregar Nuevo Usuario</h2>
-              <p className="text-blue-100 text-sm mt-1">
-                {isAdmin ? 'Puedes crear usuarios con diferentes roles' : 'No tienes permisos para crear usuarios'}
+              <h2 className="text-2xl font-black text-white tracking-tight">Nuevo Usuario</h2>
+              <p className="text-[#869dfc] text-sm mt-1 font-medium">
+                {isAdmin ? 'Crea credenciales de acceso seguras' : 'Acceso restringido'}
               </p>
             </div>
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-              <UserPlus className="h-6 w-6 text-white" />
+            <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm shadow-inner border border-white/10">
+              <UserPlus className="h-7 w-7 text-white" />
             </div>
           </div>
         </div>
 
         {/* Contenido del formulario */}
-        <div className="p-6">
-          {/* Verificar si el usuario actual es admin */}
+        <div className="p-8 bg-[#fcfdff]">
           {!isAdmin ? (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-8 w-8 text-red-500" />
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-100">
+                <Shield className="h-10 w-10 text-red-500" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Acceso Restringido</h3>
-              <p className="text-gray-600 mb-4">Solo los administradores pueden crear nuevos usuarios.</p>
-              <p className="text-sm text-gray-500">
-                Contacta con un administrador si necesitas crear un nuevo usuario.
-              </p>
+              <h3 className="text-xl font-bold text-[#140f07] mb-2">Acceso Restringido</h3>
+              <p className="text-slate-500 mb-6 font-medium">Solo los administradores pueden crear nuevos usuarios.</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Campo Username */}
+              
+              {/* Username */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4" />
-                    <span>Username</span>
+                <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-widest mb-2 ml-1">
+                  <div className="flex items-center gap-2">
+                    <User className="h-3.5 w-3.5" />
+                    Username
                   </div>
                 </label>
                 <input
@@ -236,48 +217,52 @@ export default function AgregarUsuario() {
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className="w-full text-sm px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  placeholder="Ingresa el nombre de usuario"
+                  className="w-full text-sm px-5 py-3.5 bg-white border border-slate-200 rounded-2xl focus:border-[#4260ad] focus:ring-4 focus:ring-[#4260ad]/10 outline-none transition-all font-medium text-[#140f07] placeholder-slate-400"
+                  placeholder="Ej: operador_caja"
                   required
                 />
               </div>
 
-              {/* Campo Rol (solo visible para admins) */}
+              {/* Rol */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <div className="flex items-center space-x-2">
-                    <Shield className="h-4 w-4" />
-                    <span>Rol del Usuario</span>
+                <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-widest mb-2 ml-1">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-3.5 w-3.5" />
+                    Nivel de Acceso
                   </div>
                 </label>
-                <div className="space-y-3">
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleInputChange}
-                    className="w-full text-sm px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                  >
-                    <option value="usuario">Usuario Estándar</option>
-                    <option value="admin">Administrador</option>
-                  </select>
+                <div className="space-y-4">
+                  <div className="relative">
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleInputChange}
+                      className="w-full text-sm px-5 py-3.5 bg-white border border-slate-200 rounded-2xl focus:border-[#4260ad] focus:ring-4 focus:ring-[#4260ad]/10 outline-none transition-all appearance-none font-bold text-[#140f07] cursor-pointer"
+                    >
+                      <option value="usuario">Usuario Estándar</option>
+                      <option value="admin">Administrador</option>
+                    </select>
+                    <div className="absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none">
+                      {formData.role === 'admin' ? <ShieldCheck className="h-5 w-5 text-[#4260ad]" /> : <User className="h-5 w-5 text-slate-400" />}
+                    </div>
+                  </div>
                   
-                  {/* Descripción según el rol */}
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-gray-600">
+                  <div className={`rounded-xl p-4 text-sm font-medium border ${formData.role === 'admin' ? 'bg-[#e2e2f6] text-[#122a4e] border-[#869dfc]/20' : 'bg-slate-50 text-slate-600 border-slate-100'}`}>
+                    <p>
                       {formData.role === 'admin' 
-                        ? 'Los administradores tienen acceso completo a todas las funcionalidades del sistema, incluyendo la gestión de usuarios y configuración.'
-                        : 'Los usuarios estándar tienen acceso limitado a las funcionalidades básicas del sistema.'}
+                        ? '⚡ Acceso total: Gestión de usuarios, configuración del sistema y reportes financieros completos.'
+                        : '👤 Acceso limitado: Registro de operaciones básicas y consulta de movimientos diarios.'}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Campo Contraseña */}
+              {/* Contraseña */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <div className="flex items-center space-x-2">
-                    <Key className="h-4 w-4" />
-                    <span>Contraseña</span>
+                <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-widest mb-2 ml-1">
+                  <div className="flex items-center gap-2">
+                    <Key className="h-3.5 w-3.5" />
+                    Contraseña
                   </div>
                 </label>
                 <div className="relative">
@@ -287,67 +272,50 @@ export default function AgregarUsuario() {
                     value={formData.password}
                     onChange={handleInputChange}
                     onBlur={() => handleBlur('password')}
-                    className="w-full text-sm px-4 py-3 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all pr-12"
-                    placeholder="Crea una contraseña segura"
+                    className="w-full text-sm px-5 py-3.5 bg-white border border-slate-200 rounded-2xl focus:border-[#4260ad] focus:ring-4 focus:ring-[#4260ad]/10 outline-none transition-all pr-12 font-medium placeholder-slate-400"
+                    placeholder="Mínimo 8 caracteres"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-[#4260ad] transition-colors p-1"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
 
-                {/* Validaciones de contraseña - Solo se muestran cuando hay texto */}
+                {/* Validaciones */}
                 {showValidations && (
-                  <div className="mt-3 space-y-1.5">
-                    <div className="flex flex-wrap gap-2">
-                      <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.minLength ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {passwordValidations.minLength ?
-                          <CheckCircle className="h-3 w-3" /> :
-                          <XCircle className="h-3 w-3" />
-                        }
-                        <span>8+ caracteres</span>
-                      </div>
-                      <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasNumber ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {passwordValidations.hasNumber ?
-                          <CheckCircle className="h-3 w-3" /> :
-                          <XCircle className="h-3 w-3" />
-                        }
-                        <span>Número</span>
-                      </div>
-                      <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasUppercase ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {passwordValidations.hasUppercase ?
-                          <CheckCircle className="h-3 w-3" /> :
-                          <XCircle className="h-3 w-3" />
-                        }
-                        <span>Mayúscula</span>
-                      </div>
-                      <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasLowercase ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {passwordValidations.hasLowercase ?
-                          <CheckCircle className="h-3 w-3" /> :
-                          <XCircle className="h-3 w-3" />
-                        }
-                        <span>Minúscula</span>
-                      </div>
-                      <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasSpecialChar ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                        {passwordValidations.hasSpecialChar ?
-                          <CheckCircle className="h-3 w-3" /> :
-                          <XCircle className="h-3 w-3" />
-                        }
-                        <span>Carácter especial</span>
-                      </div>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-bold border ${passwordValidations.minLength ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                      {passwordValidations.minLength ? <CheckCircle className="h-3.5 w-3.5" /> : <div className="h-1.5 w-1.5 rounded-full bg-slate-300 ml-1 mr-1"></div>}
+                      <span>8+ Caracteres</span>
+                    </div>
+                    <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-bold border ${passwordValidations.hasNumber ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                      {passwordValidations.hasNumber ? <CheckCircle className="h-3.5 w-3.5" /> : <div className="h-1.5 w-1.5 rounded-full bg-slate-300 ml-1 mr-1"></div>}
+                      <span>Número</span>
+                    </div>
+                    <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-bold border ${passwordValidations.hasUppercase ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                      {passwordValidations.hasUppercase ? <CheckCircle className="h-3.5 w-3.5" /> : <div className="h-1.5 w-1.5 rounded-full bg-slate-300 ml-1 mr-1"></div>}
+                      <span>Mayúscula</span>
+                    </div>
+                    <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-bold border ${passwordValidations.hasLowercase ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                      {passwordValidations.hasLowercase ? <CheckCircle className="h-3.5 w-3.5" /> : <div className="h-1.5 w-1.5 rounded-full bg-slate-300 ml-1 mr-1"></div>}
+                      <span>Minúscula</span>
+                    </div>
+                    <div className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-xs font-bold border col-span-2 ${passwordValidations.hasSpecialChar ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                      {passwordValidations.hasSpecialChar ? <CheckCircle className="h-3.5 w-3.5" /> : <div className="h-1.5 w-1.5 rounded-full bg-slate-300 ml-1 mr-1"></div>}
+                      <span>Carácter Especial (!@#$...)</span>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Campo Confirmar Contraseña */}
+              {/* Confirmar Contraseña */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirmar Contraseña
+                <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-widest mb-2 ml-1">
+                  Confirmar
                 </label>
                 <div className="relative">
                   <input
@@ -356,10 +324,10 @@ export default function AgregarUsuario() {
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
                     onBlur={() => handleBlur('confirmPassword')}
-                    className={`w-full px-4 text-sm py-3 bg-white border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all pr-12 ${
+                    className={`w-full text-sm px-5 py-3.5 bg-white border rounded-2xl outline-none transition-all pr-12 font-medium ${
                       touchedFields.confirmPassword && formData.confirmPassword
-                        ? (passwordsMatch ? 'border-green-500 focus:border-green-500' : 'border-red-500 focus:border-red-500')
-                        : 'border-gray-300 focus:border-blue-500'
+                        ? (passwordsMatch ? 'border-emerald-500 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10' : 'border-red-500 focus:border-red-500 focus:ring-4 focus:ring-red-500/10')
+                        : 'border-slate-200 focus:border-[#4260ad] focus:ring-4 focus:ring-[#4260ad]/10'
                     }`}
                     placeholder="Repite la contraseña"
                     required
@@ -367,49 +335,48 @@ export default function AgregarUsuario() {
                   <button
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-[#4260ad] transition-colors p-1"
                   >
                     {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
 
-                {/* Mensaje de coincidencia - Solo se muestra cuando hay texto y se ha salido del campo */}
                 {touchedFields.confirmPassword && formData.confirmPassword && (
-                  <div className="mt-2 flex items-center space-x-2">
+                  <div className="mt-2 ml-1 flex items-center space-x-2">
                     {passwordsMatch ? (
                       <>
-                        <CheckCircle className="h-4 w-4 text-green-500" />
-                        <span className="text-xs text-green-600">Las contraseñas coinciden</span>
+                        <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
+                        <span className="text-xs font-bold text-emerald-600">Coinciden correctamente</span>
                       </>
                     ) : (
                       <>
-                        <XCircle className="h-4 w-4 text-red-500" />
-                        <span className="text-xs text-red-600">Las contraseñas no coinciden</span>
+                        <XCircle className="h-3.5 w-3.5 text-red-500" />
+                        <span className="text-xs font-bold text-red-600">No coinciden</span>
                       </>
                     )}
                   </div>
                 )}
               </div>
 
-              {/* Botón de submit - CON CURSOR POINTER */}
+              {/* Botón Submit */}
               <button
                 type="submit"
                 disabled={!isFormValid || isSubmitting}
-                className={`w-full py-3.5 rounded-xl font-medium transition-all flex items-center justify-center space-x-2 ${
+                className={`w-full py-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center space-x-2 shadow-lg active:scale-[0.98] ${
                   isFormValid && !isSubmitting
-                    ? 'bg-linear-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-sm hover:shadow cursor-pointer'
-                    : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    ? 'bg-[#4260ad] hover:bg-[#122a4e] text-white shadow-[#4260ad]/25 cursor-pointer'
+                    : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
                 }`}
               >
                 {isSubmitting ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Creando usuario...</span>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Procesando...</span>
                   </>
                 ) : (
                   <>
                     <UserPlus className="h-5 w-5" />
-                    <span>Registrar Usuario</span>
+                    <span>Crear Usuario</span>
                   </>
                 )}
               </button>

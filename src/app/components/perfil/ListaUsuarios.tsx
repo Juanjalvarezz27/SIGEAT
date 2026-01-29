@@ -5,14 +5,14 @@ import {
   Users,
   User,
   Calendar,
-  Shield,
   ShieldCheck,
   Search,
   Hash,
   Trash2,
   AlertTriangle,
-  Eye,
-  EyeOff
+  Loader2,
+  Filter,
+  X
 } from "lucide-react"
 import { toast } from 'react-toastify'
 import { useAuth } from '../../hooks/useAuth'
@@ -91,22 +91,19 @@ export default function ListaUsuarios() {
   const getRoleColor = (role: string) => {
     switch (role) {
       case 'admin':
-        return 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
+        return 'bg-[#122a4e] text-white border-[#122a4e]'
       case 'usuario':
-        return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
+        return 'bg-[#e2e2f6] text-[#4260ad] border-[#e2e2f6]'
       default:
-        return 'bg-gray-500 text-white'
+        return 'bg-gray-100 text-gray-500 border-gray-200'
     }
   }
 
   const getRoleDisplayName = (role: string) => {
     switch (role) {
-      case 'admin':
-        return 'Admin'
-      case 'usuario':
-        return 'Usuario'
-      default:
-        return role
+      case 'admin': return 'Administrador'
+      case 'usuario': return 'Estándar'
+      default: return role
     }
   }
 
@@ -118,13 +115,11 @@ export default function ListaUsuarios() {
     const matchesSearch = usuario.username.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesAdminFilter = !showSoloAdmins || usuario.role === 'admin'
     const matchesUserFilter = !showSoloUsuarios || usuario.role === 'usuario'
-    
     return matchesSearch && matchesAdminFilter && matchesUserFilter
   })
 
   const handleEliminarUsuario = async () => {
     if (!usuarioAEliminar) return
-
     setEliminando(true)
 
     try {
@@ -167,96 +162,62 @@ export default function ListaUsuarios() {
 
   return (
     <>
+      {/* Modal Confirmación Eliminación */}
       {usuarioAEliminar && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full">
-            <div className="bg-linear-to-r from-red-500 to-red-600 p-6 rounded-t-2xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Confirmar Eliminación</h3>
-                  <p className="text-red-100 text-sm mt-1">Esta acción no se puede deshacer</p>
-                </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <AlertTriangle className="h-6 w-6 text-white" />
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 mx-auto mb-4 bg-red-100 rounded-full flex items-center justify-center">
-                  <Trash2 className="h-8 w-8 text-red-600" />
-                </div>
-
-                <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                  ¿Eliminar usuario <span className="text-red-600">{usuarioAEliminar.username}</span>?
-                </h4>
-
-                {usuarioActualId === usuarioAEliminar.id && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mt-4 mb-4">
-                    <div className="flex items-start space-x-3">
-                      <AlertTriangle className="h-5 w-5 text-yellow-600 shrink-0 mt-0.5" />
-                      <div className="text-left">
-                        <p className="text-sm font-medium text-yellow-800 mb-1">¡Esta es tu propia cuenta!</p>
-                        <p className="text-xs text-yellow-700">
-                          No puedes eliminar tu propia cuenta.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {usuarioAEliminar.role === 'admin' && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 mt-4 mb-4">
-                    <div className="flex items-start space-x-3">
-                      <ShieldCheck className="h-5 w-5 text-purple-600 shrink-0 mt-0.5" />
-                      <div className="text-left">
-                        <p className="text-sm font-medium text-purple-800 mb-1">Usuario Administrador</p>
-                        <p className="text-xs text-purple-700">
-                          Estás a punto de eliminar un administrador.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="bg-red-50 border border-red-200 rounded-xl p-4 mt-4">
-                  <div className="flex items-start space-x-3">
-                    <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
-                    <div className="text-left">
-                      <p className="text-sm font-medium text-red-800 mb-1">Advertencia</p>
-                      <ul className="text-xs text-red-700 space-y-1">
-                        <li>• Esta acción eliminará permanentemente el usuario</li>
-                        <li>• El usuario no podrá acceder al sistema</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-4xl shadow-2xl max-w-md w-full overflow-hidden border border-white/20">
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <AlertTriangle className="h-8 w-8 text-red-500" />
               </div>
 
-              <div className="flex space-x-3">
+              <h3 className="text-xl font-black text-[#140f07] mb-2">
+                ¿Eliminar acceso?
+              </h3>
+              
+              <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+                Estás a punto de eliminar al usuario <strong className="text-[#122a4e]">{usuarioAEliminar.username}</strong>. 
+                Esta acción es irreversible y perderá todo acceso al sistema.
+              </p>
+
+              {/* Advertencias específicas */}
+              {usuarioActualId === usuarioAEliminar.id && (
+                <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-6 flex items-start gap-3 text-left">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-amber-800">Acción no permitida</p>
+                    <p className="text-xs text-amber-700 mt-0.5">No puedes eliminar tu propia cuenta.</p>
+                  </div>
+                </div>
+              )}
+
+              {usuarioAEliminar.role === 'admin' && usuarioActualId !== usuarioAEliminar.id && (
+                <div className="bg-[#f4f6fc] border border-[#e2e2f6] rounded-xl p-3 mb-6 flex items-start gap-3 text-left">
+                  <ShieldCheck className="h-5 w-5 text-[#4260ad] shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-[#122a4e]">Usuario Administrador</p>
+                    <p className="text-xs text-slate-600 mt-0.5">Verifica si es necesario reasignar sus responsabilidades.</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3">
                 <button
-                  type="button"
                   onClick={() => setUsuarioAEliminar(null)}
                   disabled={eliminando}
-                  className="flex-1 cursor-pointer py-3 bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3.5 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button
-                  type="button"
                   onClick={handleEliminarUsuario}
                   disabled={eliminando || usuarioActualId === usuarioAEliminar.id || !isAdmin}
-                  className={`flex-1 cursor-pointer py-3 rounded-xl font-medium transition-all flex items-center justify-center space-x-2 ${
-                    usuarioActualId === usuarioAEliminar.id || !isAdmin
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-linear-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700'
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  className="flex-1 py-3.5 bg-red-600 text-white rounded-xl font-bold text-sm hover:bg-red-700 shadow-lg shadow-red-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {eliminando ? (
                     <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Eliminando...</span>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Procesando...</span>
                     </>
                   ) : (
                     <>
@@ -271,225 +232,172 @@ export default function ListaUsuarios() {
         </div>
       )}
 
-      <div className="bg-linear-to-br from-gray-50 to-gray-100 rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="bg-linear-to-r from-blue-500 to-blue-700 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-white">Gestión de Usuarios</h2>
-              <p className="text-blue-100 text-sm mt-1">
-                {isAdmin ? 'Administra todos los usuarios del sistema' : 'Consulta la lista de usuarios'}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-              <Users className="h-6 w-6 text-white" />
-            </div>
+      {/* Contenedor Principal */}
+      <div className="space-y-6">
+        
+        {/* Estadísticas Rápidas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+             <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Usuarios</p>
+                <p className="text-2xl font-black text-[#140f07]">{totalUsuarios}</p>
+             </div>
+             <div className="w-10 h-10 bg-[#f4f6fc] rounded-xl flex items-center justify-center text-[#122a4e]">
+                <Users className="h-5 w-5" />
+             </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+             <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Admins</p>
+                <p className="text-2xl font-black text-[#122a4e]">{totalAdmins}</p>
+             </div>
+             <div className="w-10 h-10 bg-[#e2e2f6] rounded-xl flex items-center justify-center text-[#4260ad]">
+                <ShieldCheck className="h-5 w-5" />
+             </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between">
+             <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Estándar</p>
+                <p className="text-2xl font-black text-[#122a4e]">{totalUsuariosEstandar}</p>
+             </div>
+             <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500">
+                <User className="h-5 w-5" />
+             </div>
           </div>
         </div>
 
-        <div className="p-6">
-          <div className="mb-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Buscar por username..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => handleFilterChange('admins')}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-1 ${
-                    showSoloAdmins
-                      ? 'bg-purple-100 text-purple-700 border border-purple-300'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
-                  <span>Admins ({totalAdmins})</span>
-                </button>
-                <button
-                  onClick={() => handleFilterChange('usuarios')}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center space-x-1 ${
-                    showSoloUsuarios
-                      ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <User className="h-3.5 w-3.5 shrink-0" />
-                  <span>Usuarios ({totalUsuariosEstandar})</span>
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 md:grid-cols-3 gap-3">
-              <div className="bg-white rounded-xl p-4 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Total usuarios</p>
-                    <p className="text-2xl font-bold text-gray-900">{totalUsuarios}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center">
-                    <Users className="h-5 w-5 text-gray-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl p-4 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Administradores</p>
-                    <p className="text-2xl font-bold text-gray-900">{totalAdmins}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-purple-50 rounded-lg flex items-center justify-center">
-                    <ShieldCheck className="h-5 w-5 text-purple-600" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl p-4 border border-gray-200">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-500">Usuarios estándar</p>
-                    <p className="text-2xl font-bold text-gray-900">{totalUsuariosEstandar}</p>
-                  </div>
-                  <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                    <User className="h-5 w-5 text-blue-600" />
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Buscador y Filtros */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1 group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#4260ad]" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre de usuario..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl focus:border-[#869dfc] focus:ring-0 text-sm font-medium outline-none transition-all"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-500 rounded-lg"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
 
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleFilterChange('admins')}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
+                showSoloAdmins
+                  ? 'bg-[#122a4e] text-white border-[#122a4e] shadow-md shadow-[#122a4e]/20'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-[#4260ad] hover:text-[#4260ad]'
+              }`}
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Admins
+            </button>
+            <button
+              onClick={() => handleFilterChange('usuarios')}
+              className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border ${
+                showSoloUsuarios
+                  ? 'bg-[#4260ad] text-white border-[#4260ad] shadow-md shadow-[#4260ad]/20'
+                  : 'bg-white text-slate-600 border-slate-200 hover:border-[#4260ad] hover:text-[#4260ad]'
+              }`}
+            >
+              <User className="h-3.5 w-3.5" />
+              Usuarios
+            </button>
+          </div>
+        </div>
+
+        {/* Lista de Usuarios */}
+        <div className="bg-white rounded-4xl border border-slate-100 shadow-sm overflow-hidden min-h-75">
           {loading ? (
-            <div className="py-10 flex flex-col items-center justify-center">
-              <div className="w-12 h-12 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-gray-600 font-medium">Cargando lista de usuarios...</p>
-              <p className="text-gray-500 text-sm mt-2">Obteniendo información del sistema</p>
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="h-10 w-10 text-[#4260ad] animate-spin mb-3" />
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Cargando directorio...</p>
             </div>
           ) : error ? (
-            <div className="py-8 text-center">
-              <div className="text-red-500 mb-4">
-                <Shield className="h-12 w-12 mx-auto" />
+            <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                <ShieldCheck className="h-8 w-8 text-red-500" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error al cargar</h3>
-              <p className="text-gray-600 mb-6">{error}</p>
-              <button
+              <h3 className="text-lg font-bold text-[#140f07]">Error de Carga</h3>
+              <p className="text-slate-500 text-sm mt-1 mb-6 max-w-xs">{error}</p>
+              <button 
                 onClick={fetchUsuarios}
-                className="px-4 py-2 bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all"
+                className="px-6 py-2.5 bg-[#122a4e] text-white rounded-xl font-bold text-sm shadow-lg hover:bg-[#0f2240] transition-colors"
               >
                 Reintentar
               </button>
             </div>
+          ) : filteredUsuarios.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <div className="w-16 h-16 bg-[#f4f6fc] rounded-full flex items-center justify-center mb-4">
+                <Search className="h-8 w-8 text-[#869dfc]" />
+              </div>
+              <h3 className="text-lg font-bold text-[#140f07]">Sin resultados</h3>
+              <p className="text-slate-500 text-sm mt-1">
+                {searchTerm ? `No se encontraron usuarios para "${searchTerm}"` : 'No hay usuarios registrados'}
+              </p>
+            </div>
           ) : (
-            <>
-              {filteredUsuarios.length === 0 ? (
-                <div className="py-10 text-center">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                    <User className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {searchTerm ? 'No se encontraron resultados' : 'No hay usuarios registrados'}
-                  </h3>
-                  <p className="text-gray-600">
-                    {searchTerm
-                      ? `No se encontraron usuarios que coincidan con "${searchTerm}"`
-                      : 'Registra el primer usuario usando el formulario de agregar usuario'
-                    }
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-                  {filteredUsuarios.map((usuario) => (
-                    <div
-                      key={usuario.id}
-                      className="bg-white rounded-xl border border-gray-200 p-4 hover:border-blue-200 transition-colors group"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="relative">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getRoleColor(usuario.role)}`}>
-                              {getRoleIcon(usuario.role)}
-                            </div>
-                          </div>
-                          <div>
-                            <div className="flex items-center space-x-2">
-                              <p className="font-medium text-gray-900">{usuario.username}</p>
-                              {usuarioActualId === usuario.id && (
-                                <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded-full whitespace-nowrap">
-                                  Tú
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <Calendar className="h-3 w-3 text-gray-400 shrink-0" />
-                              <p className="text-xs text-gray-500">{usuario.fechaCreacionFormateada}</p>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center space-x-3">
-                          {/* Badge del rol e ID - SOLO para desktop */}
-                          <div className="hidden sm:flex items-center space-x-3">
-                            {/* Badge del rol */}
-                            <div className={`px-2.5 py-1 rounded-lg text-xs font-medium ${getRoleColor(usuario.role)} whitespace-nowrap`}>
-                              <div className="flex items-center space-x-1">
-                                {getRoleIcon(usuario.role)}
-                                <span className="truncate">{getRoleDisplayName(usuario.role)}</span>
-                              </div>
-                            </div>
-
-                            {/* Información de ID */}
-                            <div className="flex items-center space-x-1 text-gray-500">
-                              <Hash className="h-3 w-3 shrink-0" />
-                              <span className="text-xs font-mono whitespace-nowrap">ID: {usuario.id}</span>
-                            </div>
-                          </div>
-
-                          {/* Botón de eliminar - SOLO para admins y no para sí mismo */}
-                          {isAdmin && usuarioActualId !== usuario.id && (
-                            <button
-                              onClick={() => setUsuarioAEliminar(usuario)}
-                              className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors shrink-0"
-                              title="Eliminar usuario"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Información adicional para móviles */}
-                      <div className="sm:hidden mt-3 pt-3 border-t border-gray-100 flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <div className="flex items-center space-x-1 text-gray-500">
-                            <Hash className="h-3 w-3 shrink-0" />
-                            <span className="text-xs font-mono">ID: {usuario.id}</span>
-                          </div>
-                          
-                          <div className={`px-2.5 py-1 rounded-lg text-xs font-medium ${getRoleColor(usuario.role)} whitespace-nowrap`}>
-                            <div className="flex items-center space-x-1">
-                              {getRoleIcon(usuario.role)}
-                              <span className="truncate">{getRoleDisplayName(usuario.role)}</span>
-                            </div>
-                          </div>
-                        </div>
-
+            <div className="divide-y divide-slate-50">
+              {filteredUsuarios.map((usuario) => (
+                <div 
+                  key={usuario.id} 
+                  className="p-5 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-[#fcfdff] transition-colors group gap-4"
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Avatar / Inicial */}
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black uppercase shrink-0 ${
+                      usuario.role === 'admin' ? 'bg-[#122a4e] text-white' : 'bg-[#e2e2f6] text-[#4260ad]'
+                    }`}>
+                      {usuario.username.charAt(0)}
+                    </div>
+                    
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-base font-bold text-[#140f07]">{usuario.username}</h4>
                         {usuarioActualId === usuario.id && (
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded-full whitespace-nowrap">
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase tracking-wider border border-emerald-100">
                             Tú
                           </span>
                         )}
                       </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="flex items-center gap-1 text-xs font-medium text-slate-400">
+                          <Hash className="h-3 w-3" /> ID: {usuario.id}
+                        </span>
+                        <span className="flex items-center gap-1 text-xs font-medium text-slate-400">
+                          <Calendar className="h-3 w-3" /> {usuario.fechaCreacionFormateada}
+                        </span>
+                      </div>
                     </div>
-                  ))}
+                  </div>
+
+                  <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-0 border-slate-50">
+                    <div className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 ${getRoleColor(usuario.role)}`}>
+                      {getRoleIcon(usuario.role)}
+                      {getRoleDisplayName(usuario.role)}
+                    </div>
+
+                    {isAdmin && usuarioActualId !== usuario.id && (
+                      <button
+                        onClick={() => setUsuarioAEliminar(usuario)}
+                        className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all opacity-100 sm:opacity-0 group-hover:opacity-100"
+                        title="Eliminar usuario"
+                      >
+                        <Trash2 className="h-5 w-5" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              )}
-            </>
+              ))}
+            </div>
           )}
         </div>
       </div>
