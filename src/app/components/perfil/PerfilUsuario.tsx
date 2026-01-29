@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { User, Calendar, Shield, Lock, Eye, EyeOff, CheckCircle, XCircle, ShieldCheck } from "lucide-react"
+import { User, Calendar, Lock, Eye, EyeOff, CheckCircle, XCircle, ShieldCheck, Key } from "lucide-react"
 import { toast } from 'react-toastify'
 import { useAuth } from '../../hooks/useAuth' 
 
@@ -35,7 +35,7 @@ export default function PerfilUsuario({
   error,
   onRetry
 }: PerfilUsuarioProps) {
-  const { getRoleDisplayName } = useAuth() // Usar el hook
+  const { getRoleDisplayName } = useAuth()
   const [showModal, setShowModal] = useState(false)
   const [showOldPassword, setShowOldPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
@@ -49,7 +49,6 @@ export default function PerfilUsuario({
   const [showValidations, setShowValidations] = useState(false)
   const [showSamePasswordError, setShowSamePasswordError] = useState(false)
 
-  // Validaciones de nueva contraseña
   const passwordValidations: PasswordValidation = {
     minLength: formData.newPassword.length >= 8,
     hasNumber: /\d/.test(formData.newPassword),
@@ -65,19 +64,12 @@ export default function PerfilUsuario({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    setFormData(prev => ({ ...prev, [name]: value }))
 
-    if (name === 'newPassword' && value.length > 0 && !showValidations) {
-      setShowValidations(true)
-    }
-    if (name === 'newPassword' && value.length === 0) {
-      setShowValidations(false)
+    if (name === 'newPassword') {
+      setShowValidations(value.length > 0)
     }
 
-    // Mostrar error si la nueva contraseña es igual a la actual
     if (name === 'newPassword' || name === 'oldPassword') {
       if (formData.oldPassword && formData.newPassword && formData.oldPassword === formData.newPassword) {
         setShowSamePasswordError(true)
@@ -92,24 +84,15 @@ export default function PerfilUsuario({
 
     if (!isFormValid) {
       if (isSamePassword) {
-        toast.error('La nueva contraseña no puede ser igual a la actual', {
-          position: "top-right",
-          autoClose: 5000,
-        })
+        toast.error('La nueva contraseña no puede ser igual a la actual', { position: "top-right" })
       } else {
-        toast.error('Por favor, completa todos los campos correctamente', {
-          position: "top-right",
-          autoClose: 5000,
-        })
+        toast.error('Por favor, completa todos los campos correctamente', { position: "top-right" })
       }
       return
     }
 
     if (!usuario?.username) {
-      toast.error('No se pudo identificar el usuario', {
-        position: "top-right",
-        autoClose: 5000,
-      })
+      toast.error('No se pudo identificar el usuario', { position: "top-right" })
       return
     }
 
@@ -118,9 +101,7 @@ export default function PerfilUsuario({
     try {
       const response = await fetch('/api/usuarios/cambiar-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: usuario.username,
           oldPassword: formData.oldPassword,
@@ -131,56 +112,27 @@ export default function PerfilUsuario({
       const data = await response.json()
 
       if (!response.ok) {
-        // Mostrar mensaje específico para contraseña incorrecta
         if (response.status === 401) {
-          toast.error('La contraseña actual es incorrecta. Inténtalo de nuevo.', {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          })
+          toast.error('La contraseña actual es incorrecta.', { position: "top-right" })
         } else {
-          toast.error(data.error || 'Error al cambiar la contraseña', {
-            position: "top-right",
-            autoClose: 5000,
-          })
+          toast.error(data.error || 'Error al cambiar la contraseña', { position: "top-right" })
         }
         return
       }
 
-      // Éxito - Mostrar toast específico
-      toast.success('¡Contraseña cambiada exitosamente! Tu contraseña ha sido actualizada.', {
-        position: "top-right",
-        autoClose: 5000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      })
-
-      // Cerrar modal y limpiar formulario
+      toast.success('¡Contraseña cambiada exitosamente!', { position: "top-right" })
       setShowModal(false)
       resetForm()
 
     } catch (error) {
-      console.error('Error:', error)
-      toast.error('Error de conexión. Inténtalo de nuevo más tarde.', {
-        position: "top-right",
-        autoClose: 5000,
-      })
+      toast.error('Error de conexión.', { position: "top-right" })
     } finally {
       setIsChangingPassword(false)
     }
   }
 
   const resetForm = () => {
-    setFormData({
-      oldPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    })
+    setFormData({ oldPassword: '', newPassword: '', confirmPassword: '' })
     setShowValidations(false)
     setShowSamePasswordError(false)
     setShowOldPassword(false)
@@ -193,261 +145,141 @@ export default function PerfilUsuario({
     resetForm()
   }
 
-  // Función para determinar el color del badge según el rol
-  const getRoleBadgeColor = () => {
-    const role = getRoleDisplayName()
-    switch (role) {
-      case 'Administrador':
-        return 'bg-gradient-to-r from-purple-500 to-purple-600 text-white'
-      case 'Usuario':
-        return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white'
-      default:
-        return 'bg-gradient-to-r from-gray-500 to-gray-600 text-white'
-    }
-  }
-
   return (
     <>
-      {/* Modal para cambiar contraseña */}
+      {/* Modal Cambio de Contraseña */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#122a4e]/60 backdrop-blur-sm">
+          <div className="bg-[#fcfdff] rounded-4xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto border border-white/20 animate-in zoom-in-95 duration-200">
             {/* Header del modal */}
-            <div className="bg-linear-to-r from-blue-500 to-blue-600 p-6 rounded-t-2xl">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Cambiar Contraseña</h3>
-                  <p className="text-blue-100 text-sm mt-1">Actualiza tu contraseña de acceso</p>
+            <div className="bg-white px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-[#e2e2f6] rounded-xl text-[#4260ad]">
+                  <Lock className="h-5 w-5" />
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                  <Lock className="h-6 w-6 text-white" />
+                <div>
+                  <h3 className="text-lg font-black text-[#140f07]">Cambiar Contraseña</h3>
+                  <p className="text-xs font-medium text-slate-400">Actualiza tus credenciales de acceso</p>
                 </div>
               </div>
             </div>
 
-            {/* Contenido del modal */}
             <div className="p-6">
               <form onSubmit={handleSubmitPasswordChange} className="space-y-5">
-                {/* Contraseña actual */}
+                {/* Contraseña Actual */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Contraseña actual
-                  </label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1.5">Actual</label>
                   <div className="relative">
                     <input
                       type={showOldPassword ? "text" : "password"}
                       name="oldPassword"
                       value={formData.oldPassword}
                       onChange={handleInputChange}
-                      className="w-full text-sm px-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all pr-12"
-                      placeholder="Ingresa tu contraseña actual"
+                      className="w-full px-4 py-3 bg-white border border-transparent rounded-xl focus:border-[#4260ad] focus:ring-0 text-sm font-bold text-[#140f07] outline-none shadow-sm"
+                      placeholder="••••••••"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowOldPassword(!showOldPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#4260ad]"
                     >
-                      {showOldPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showOldPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
 
-                {/* Nueva contraseña */}
+                {/* Nueva Contraseña */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Nueva contraseña
-                  </label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1.5">Nueva</label>
                   <div className="relative">
                     <input
                       type={showNewPassword ? "text" : "password"}
                       name="newPassword"
                       value={formData.newPassword}
                       onChange={handleInputChange}
-                      className={`w-full text-sm px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all pr-12 ${
-                        showSamePasswordError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'
+                      className={`w-full px-4 py-3 bg-white border border-transparent rounded-xl focus:ring-0 text-sm font-bold text-[#140f07] outline-none shadow-sm ${
+                        showSamePasswordError ? 'border-red-500 text-red-600' : 'focus:border-[#4260ad]'
                       }`}
-                      placeholder="Crea una nueva contraseña"
+                      placeholder="Nueva contraseña segura"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#4260ad]"
                     >
-                      {showNewPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-
-                  {/* Error si la contraseña es igual */}
+                  
                   {showSamePasswordError && (
-                    <div className="mt-2 flex items-center space-x-2 text-red-600">
-                      <XCircle className="h-4 w-4" />
-                      <span className="text-xs">La nueva contraseña no puede ser igual a la actual</span>
+                    <div className="mt-2 flex items-center gap-1.5 text-red-500">
+                      <XCircle className="h-3.5 w-3.5" />
+                      <span className="text-xs font-bold">No puede ser igual a la actual</span>
                     </div>
                   )}
 
-                  {/* Validaciones de contraseña */}
                   {showValidations && (
-                    <div className="mt-3 space-y-1.5">
-                      <div className="flex flex-wrap gap-2">
-                        <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.minLength ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {passwordValidations.minLength ?
-                            <CheckCircle className="h-3 w-3" /> :
-                            <XCircle className="h-3 w-3" />
-                          }
-                          <span>8+ caracteres</span>
-                        </div>
-                        <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasNumber ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {passwordValidations.hasNumber ?
-                            <CheckCircle className="h-3 w-3" /> :
-                            <XCircle className="h-3 w-3" />
-                          }
-                          <span>Número</span>
-                        </div>
-                        <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasUppercase ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {passwordValidations.hasUppercase ?
-                            <CheckCircle className="h-3 w-3" /> :
-                            <XCircle className="h-3 w-3" />
-                          }
-                          <span>Mayúscula</span>
-                        </div>
-                        <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasLowercase ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {passwordValidations.hasLowercase ?
-                            <CheckCircle className="h-3 w-3" /> :
-                            <XCircle className="h-3 w-3" />
-                          }
-                          <span>Minúscula</span>
-                        </div>
-                        <div className={`flex items-center space-x-1.5 px-2 py-1 rounded-lg text-xs ${passwordValidations.hasSpecialChar ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
-                          {passwordValidations.hasSpecialChar ?
-                            <CheckCircle className="h-3 w-3" /> :
-                            <XCircle className="h-3 w-3" />
-                          }
-                          <span>Carácter especial</span>
-                        </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold ${passwordValidations.minLength ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                        {passwordValidations.minLength ? <CheckCircle className="h-3 w-3" /> : <div className="w-1.5 h-1.5 bg-slate-300 rounded-full mx-0.5"></div>} 8+ Caracteres
+                      </div>
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold ${passwordValidations.hasNumber ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                        {passwordValidations.hasNumber ? <CheckCircle className="h-3 w-3" /> : <div className="w-1.5 h-1.5 bg-slate-300 rounded-full mx-0.5"></div>} Número
+                      </div>
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold ${passwordValidations.hasUppercase ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                        {passwordValidations.hasUppercase ? <CheckCircle className="h-3 w-3" /> : <div className="w-1.5 h-1.5 bg-slate-300 rounded-full mx-0.5"></div>} Mayúscula
+                      </div>
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[10px] font-bold ${passwordValidations.hasSpecialChar ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                        {passwordValidations.hasSpecialChar ? <CheckCircle className="h-3 w-3" /> : <div className="w-1.5 h-1.5 bg-slate-300 rounded-full mx-0.5"></div>} Símbolo
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Confirmar nueva contraseña */}
+                {/* Confirmar */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Confirmar nueva contraseña
-                  </label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1.5">Confirmar</label>
                   <div className="relative">
                     <input
                       type={showConfirmPassword ? "text" : "password"}
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      className={`w-full text-sm px-4 py-3 bg-gray-50 border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all pr-12 ${
-                        formData.confirmPassword ?
-                          (passwordsMatch ? 'border-green-500 focus:border-green-500' : 'border-red-500 focus:border-red-500') :
-                          'border-gray-300 focus:border-blue-500'
+                      className={`w-full px-4 py-3 bg-white border border-transparent rounded-xl focus:ring-0 text-sm font-bold text-[#140f07] outline-none shadow-sm ${
+                        formData.confirmPassword && !passwordsMatch ? 'border-red-500 text-red-600' : 'focus:border-[#4260ad]'
                       }`}
-                      placeholder="Repite la nueva contraseña"
+                      placeholder="Repite la contraseña"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#4260ad]"
                     >
-                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
-                  {formData.confirmPassword && (
-                    <div className="mt-2 flex items-center space-x-2">
-                      {passwordsMatch ? (
-                        <>
-                          <CheckCircle className="h-4 w-4 text-green-500" />
-                          <span className="text-xs text-green-600">Las contraseñas coinciden</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="h-4 w-4 text-red-500" />
-                          <span className="text-xs text-red-600">Las contraseñas no coinciden</span>
-                        </>
-                      )}
-                    </div>
-                  )}
                 </div>
 
-                {/* Resumen de validaciones */}
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                      <Lock className="h-3 w-3 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-blue-800 mb-1">Requisitos para cambiar contraseña:</p>
-                      <ul className="text-xs text-blue-700 space-y-1">
-                        <li className="flex items-center space-x-1">
-                          {formData.oldPassword ? (
-                            <CheckCircle className="h-3 w-3 text-green-500" />
-                          ) : (
-                            <XCircle className="h-3 w-3 text-gray-400" />
-                          )}
-                          <span>Contraseña actual ingresada</span>
-                        </li>
-                        <li className="flex items-center space-x-1">
-                          {isPasswordValid ? (
-                            <CheckCircle className="h-3 w-3 text-green-500" />
-                          ) : (
-                            <XCircle className="h-3 w-3 text-gray-400" />
-                          )}
-                          <span>Nueva contraseña válida</span>
-                        </li>
-                        <li className="flex items-center space-x-1">
-                          {passwordsMatch ? (
-                            <CheckCircle className="h-3 w-3 text-green-500" />
-                          ) : (
-                            <XCircle className="h-3 w-3 text-gray-400" />
-                          )}
-                          <span>Contraseñas coinciden</span>
-                        </li>
-                        <li className="flex items-center space-x-1">
-                          {!isSamePassword ? (
-                            <CheckCircle className="h-3 w-3 text-green-500" />
-                          ) : (
-                            <XCircle className="h-3 w-3 text-red-500" />
-                          )}
-                          <span>Nueva contraseña diferente</span>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Botones del modal */}
-                <div className="flex space-x-3 pt-4">
+                <div className="flex gap-3 pt-2">
                   <button
                     type="button"
                     onClick={handleCloseModal}
                     disabled={isChangingPassword}
-                    className="flex-1 py-3 cursor-pointer bg-gray-200 text-gray-700 rounded-xl font-medium hover:bg-gray-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-colors"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={!isFormValid || isChangingPassword}
-                    className={`flex-1 py-3 cursor-pointer rounded-xl font-medium transition-all flex items-center justify-center ${
-                      isFormValid && !isChangingPassword
-                        ? 'bg-linear-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700'
-                        : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    className={`flex-1 py-3 bg-[#4260ad] text-white rounded-xl font-bold text-sm shadow-lg shadow-[#4260ad]/20 transition-all ${
+                      !isFormValid || isChangingPassword ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#122a4e]'
                     }`}
                   >
-                    {isChangingPassword ? (
-                      <>
-                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                        Cambiando...
-                      </>
-                    ) : (
-                      'Cambiar'
-                    )}
+                    {isChangingPassword ? 'Guardando...' : 'Confirmar'}
                   </button>
                 </div>
               </form>
@@ -456,95 +288,81 @@ export default function PerfilUsuario({
         </div>
       )}
 
-      {/* Componente principal del perfil */}
-      <div className="bg-linear-to-br from-gray-50 to-gray-100 rounded-2xl shadow-sm border border-gray-200 overflow-hidden h-full">
-        {/* Header con azul degradado (solo azul) */}
-        <div className="bg-linear-to-r from-blue-500 to-blue-700 p-6">
-          <div className="flex items-center justify-between">
+      {/* Tarjeta de Perfil */}
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-[#869dfc]/10 overflow-hidden h-full">
+        {/* Header Visual */}
+        <div className="bg-[#122a4e] p-8 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl"></div>
+          
+          <div className="relative z-10 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white">Información del Perfil</h2>
+              <h2 className="text-2xl font-black text-white tracking-tight">Ficha de Usuario</h2>
+              <p className="text-[#869dfc] text-sm font-medium mt-1">Datos personales y seguridad</p>
             </div>
-            <div className="w-12 ml-4 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
               <User className="h-6 w-6 text-white" />
             </div>
           </div>
         </div>
 
         {/* Contenido */}
-        <div className="p-6">
+        <div className="p-8 bg-[#fcfdff]">
           {loading ? (
-            <div className="py-10 flex flex-col items-center justify-center">
-              <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-gray-600">Cargando perfil...</p>
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-10 h-10 border-4 border-[#4260ad] border-t-transparent rounded-full animate-spin mb-4"></div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cargando...</p>
             </div>
           ) : error ? (
-            <div className="py-8 text-center">
-              <div className="text-red-500 mb-4">
-                <Shield className="h-12 w-12 mx-auto" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Error</h3>
-              <p className="text-gray-600 mb-4">{error}</p>
-              <button
-                onClick={onRetry}
-                className="px-4 py-2 bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-blue-700 transition-all"
-              >
-                Reintentar
-              </button>
+            <div className="text-center py-10">
+              <ShieldCheck className="h-10 w-10 text-red-400 mx-auto mb-3" />
+              <p className="text-slate-600 font-medium mb-4">{error}</p>
+              <button onClick={onRetry} className="px-6 py-2 bg-[#122a4e] text-white rounded-xl font-bold text-sm">Reintentar</button>
             </div>
           ) : usuario ? (
             <div className="space-y-6">
-              {/* Campos de información */}
-              <div className="space-y-4">
-                {/* Username */}
-                <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-blue-200 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                      <User className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-500">Username</p>
-                      <p className="font-medium text-gray-900">{usuario.username}</p>
-                    </div>
-                  </div>
+              
+              {/* Username Field */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#f4f6fc] rounded-xl flex items-center justify-center text-[#122a4e]">
+                  <User className="h-5 w-5" />
                 </div>
-
-                {/* Rol del usuario */}
-                <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-blue-200 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-linear-to-r from-purple-50 to-purple-100 rounded-lg flex items-center justify-center">
-                      <ShieldCheck className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-500">Rol del Usuario</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className="font-medium text-gray-900">{getRoleDisplayName()}</span>
-                      </div>
-                    </div>
-                  </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Usuario</p>
+                  <p className="text-lg font-bold text-[#140f07]">{usuario.username}</p>
                 </div>
-
-                {/* Cuenta creada */}
-                <div className="bg-white rounded-xl p-4 border border-gray-200 hover:border-blue-200 transition-colors">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-500">Cuenta creada</p>
-                      <p className="font-medium text-gray-900">{usuario.fechaCreacionFormateada}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Botón para cambiar contraseña */}
-                <button
-                  onClick={() => setShowModal(true)}
-                  className="w-full py-3 bg-linear-to-r cursor-pointer from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all flex items-center justify-center space-x-2"
-                >
-                  <Lock className="h-4 w-4" />
-                  <span>Cambiar contraseña</span>
-                </button>
               </div>
+
+              {/* Rol Field */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#e2e2f6] rounded-xl flex items-center justify-center text-[#4260ad]">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nivel de Acceso</p>
+                  <p className="text-lg font-bold text-[#140f07]">{getRoleDisplayName()}</p>
+                </div>
+              </div>
+
+              {/* Fecha Creación */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
+                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-500">
+                  <Calendar className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Miembro desde</p>
+                  <p className="text-lg font-bold text-[#140f07]">{usuario.fechaCreacionFormateada}</p>
+                </div>
+              </div>
+
+              {/* Acción Cambiar Contraseña */}
+              <button
+                onClick={() => setShowModal(true)}
+                className="w-full py-4 mt-4 bg-[#122a4e] hover:bg-[#0f2240] text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-[#122a4e]/20 flex items-center justify-center gap-2 active:scale-[0.98]"
+              >
+                <Key className="h-4 w-4" />
+                Actualizar Contraseña
+              </button>
+
             </div>
           ) : null}
         </div>
