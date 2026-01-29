@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Filter, Search, ChevronDown, ChevronUp, Info } from "lucide-react"
+import { Filter, Search, ChevronDown, ChevronUp, CalendarRange, Calendar } from "lucide-react"
 
 interface FiltroFechaProps {
   onFiltrar: (fechaInicio: string, fechaFin: string) => void
@@ -95,22 +95,28 @@ export default function FiltroFecha({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 md:p-6 mb-6 overflow-hidden">
+    <div className="bg-white rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-[#869dfc]/10 p-5 mb-6 overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-6 gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-4">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold flex items-center mb-1">
-            <Filter className="h-5 w-5 mr-2 text-blue-500 shrink-0" />
+          <h3 className="text-lg font-black text-[#140f07] flex items-center gap-2">
+            <div className="p-1.5 bg-[#e2e2f6] rounded-lg">
+                <Filter className="h-4 w-4 text-[#4260ad]" />
+            </div>
             Filtro por Fecha
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-xs font-medium text-slate-500 mt-1 ml-1">
             Consulta registros por período específico
           </p>
         </div>
 
         <button
           onClick={() => setMostrarFiltrosAvanzados(!mostrarFiltrosAvanzados)}
-          className="flex items-center justify-center sm:justify-start gap-1 text-sm text-gray-700 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors w-full sm:w-auto"
+          className={`flex items-center justify-center sm:justify-start gap-2 text-sm font-bold px-4 py-2.5 rounded-xl transition-all w-full sm:w-auto ${
+             mostrarFiltrosAvanzados 
+             ? 'bg-[#122a4e] text-white shadow-lg shadow-[#122a4e]/20' 
+             : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-[#122a4e]'
+          }`}
         >
           {mostrarFiltrosAvanzados ? (
             <ChevronUp className="h-4 w-4" />
@@ -123,15 +129,19 @@ export default function FiltroFecha({
 
       {/* Info Periodo */}
       {infoPeriodo && (
-        <div className="mb-4 md:mb-6 bg-blue-50 border border-blue-100 rounded-xl p-3 md:p-4 text-sm">
-          <div className="flex items-start">
-            <Info className="mr-2 text-blue-500 shrink-0 mt-0.5" />
-            <div className="flex flex-wrap items-center gap-1">
-              <strong className="whitespace-nowrap">{infoPeriodo.fechaInicio}</strong>
-              <span className="text-blue-400 mx-1">→</span>
-              <strong className="whitespace-nowrap">{infoPeriodo.fechaFin}</strong>
-              <span className="text-gray-600 ml-1 whitespace-nowrap">
-                ({infoPeriodo.totalDias} días)
+        <div className="mb-6 bg-[#f8f9fc] border border-slate-100 rounded-2xl p-4 text-sm shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 p-1 bg-white rounded-md border border-slate-100 shadow-sm shrink-0">
+               <CalendarRange className="h-4 w-4 text-[#4260ad]" />
+            </div>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-[#140f07]">
+              <div className="flex items-center gap-2 font-bold">
+                 <span>{infoPeriodo.fechaInicio}</span>
+                 <span className="text-[#4260ad]">→</span>
+                 <span>{infoPeriodo.fechaFin}</span>
+              </div>
+              <span className="text-xs font-bold text-[#4260ad] bg-[#e2e2f6] px-2 py-0.5 rounded-md w-fit mt-1 sm:mt-0">
+                {infoPeriodo.totalDias} días
               </span>
             </div>
           </div>
@@ -139,8 +149,8 @@ export default function FiltroFecha({
       )}
 
       {/* Opciones Rápidas */}
-      <div className="mb-6">
-        <p className="text-sm font-medium text-gray-700 mb-2">
+      <div className="mb-2">
+        <p className="text-xs font-bold text-[#122a4e]/70 uppercase tracking-wider mb-3">
           Opciones rápidas
         </p>
         <div className="flex flex-wrap gap-2">
@@ -148,7 +158,7 @@ export default function FiltroFecha({
             <button
               key={opcion.nombre}
               onClick={() => handleOpcionRapida(opcion)}
-              className="px-3 py-2 bg-blue-50 hover:bg-blue-100 border border-blue-100 rounded-lg text-sm font-medium text-blue-700 transition-colors whitespace-nowrap"
+              className="px-4 py-2 bg-white hover:bg-[#e2e2f6] border border-slate-200 hover:border-[#869dfc]/30 rounded-xl text-sm font-bold text-slate-600 hover:text-[#4260ad] transition-all whitespace-nowrap active:scale-95"
             >
               {opcion.nombre}
             </button>
@@ -157,57 +167,61 @@ export default function FiltroFecha({
       </div>
 
       {/* Filtros Avanzados */}
-        {mostrarFiltrosAvanzados && (
-          <div className="pt-4 border-t border-gray-200">
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-4 overflow-hidden">
-
-                {/* Fecha inicio */}
-                <div className="space-y-1">
-                  <label className="text-xs text-gray-500">
-                    Fecha inicio
-                  </label>
-
-                  <div className="relative overflow-hidden rounded-xl border border-gray-300 bg-white px-3 py-2">
-                    <input
-                      type="date"
-                      value={fechaInicio}
-                      onChange={e => setFechaInicio(e.target.value)}
-                      className="w-full bg-transparent text-sm outline-none appearance-none"
-                    />
+      {mostrarFiltrosAvanzados && (
+        <div className="mt-6 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="bg-[#f8f9fc] border border-slate-100 rounded-2xl p-5 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Fecha inicio */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#122a4e] ml-1 uppercase tracking-wider">
+                      Fecha inicio
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#4260ad] transition-colors pointer-events-none">
+                         <Calendar className="h-4 w-4" />
+                      </div>
+                      <input
+                        type="date"
+                        value={fechaInicio}
+                        onChange={e => setFechaInicio(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium text-sm outline-none transition-colors shadow-sm"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                {/* Fecha fin */}
-                <div className="space-y-1">
-                  <label className="text-xs text-gray-500">
-                    Fecha fin
-                  </label>
-
-                  <div className="relative overflow-hidden rounded-xl border border-gray-300 bg-white px-3 py-2">
-                    <input
-                      type="date"
-                      value={fechaFin}
-                      onChange={e => setFechaFin(e.target.value)}
-                      className="w-full bg-transparent text-sm outline-none appearance-none"
-                    />
+                  {/* Fecha fin */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-[#122a4e] ml-1 uppercase tracking-wider">
+                      Fecha fin
+                    </label>
+                    <div className="relative group">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#4260ad] transition-colors pointer-events-none">
+                         <Calendar className="h-4 w-4" />
+                      </div>
+                      <input
+                        type="date"
+                        value={fechaFin}
+                        onChange={e => setFechaFin(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 bg-white border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium text-sm outline-none transition-colors shadow-sm"
+                      />
+                    </div>
                   </div>
-                </div>
               </div>
+            </div>
 
-              {/* Botón */}
-              <button
-                type="submit"
-                disabled={cargando}
-                className="w-full h-12 bg-blue-500 hover:bg-blue-600 text-white rounded-xl flex items-center justify-center gap-2 font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Search className="h-4 w-4" />
-                {cargando ? "Buscando..." : "Buscar registros"}
-              </button>
-            </form>
-          </div>
-        )}
-
+            {/* Botón */}
+            <button
+              type="submit"
+              disabled={cargando}
+              className="w-full h-12 bg-[#4260ad] hover:bg-[#122a4e] text-white rounded-xl flex items-center justify-center gap-2 font-bold shadow-lg shadow-[#4260ad]/30 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+            >
+              <Search className="h-4 w-4" />
+              {cargando ? "Buscando..." : "Buscar registros"}
+            </button>
+          </form>
+        </div>
+      )}
     </div>
   )
 }

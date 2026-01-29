@@ -1,6 +1,6 @@
 "use client"
 
-import { Car, DollarSign, TrendingUp, Users, Calendar, Clock, PieChart } from 'lucide-react'
+import { Car, DollarSign, TrendingUp, CalendarRange, PieChart } from 'lucide-react'
 
 interface ResumenEstadisticasProps {
   estadisticas: {
@@ -20,158 +20,161 @@ interface ResumenEstadisticasProps {
 export default function ResumenEstadisticas({ estadisticas, cargando }: ResumenEstadisticasProps) {
   if (cargando) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 md:p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4 md:mb-6"></div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      <div className="bg-white rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-[#869dfc]/10 p-5 md:p-6">
+        <div className="animate-pulse space-y-6">
+          <div className="flex justify-between items-center">
+             <div className="h-8 bg-slate-100 rounded-xl w-1/3"></div>
+             <div className="h-8 bg-slate-100 rounded-xl w-1/4"></div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-28 md:h-32 bg-gray-200 rounded-xl"></div>
+              <div key={i} className="h-32 bg-slate-100 rounded-2xl"></div>
             ))}
           </div>
+          <div className="h-40 bg-slate-50 rounded-2xl"></div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 md:p-6">
-      {/* Encabezado con rango de fechas - VERSIÓN MEJORADA */}
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-3 md:gap-4">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center mb-3 md:mb-3">
-              <TrendingUp className="h-5 w-5 mr-2 text-blue-500 shrink-0" />
+    <div className="bg-white rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-[#869dfc]/10 p-5 md:p-6">
+      
+      {/* Encabezado */}
+      <div className="mb-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-black text-[#140f07] flex items-center gap-2">
+              <div className="p-1.5 bg-[#e2e2f6] rounded-lg">
+                 <TrendingUp className="h-5 w-5 text-[#4260ad]" />
+              </div>
               Resumen de Estadísticas
             </h3>
-            
-            {/* NUEVO DISEÑO PARA INFORMACIÓN DE FECHAS */}
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 md:p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                {/* Fecha Inicio */}
-                <div className="flex items-center bg-white p-2 rounded-lg border border-gray-200 flex-1 min-w-0">
-                  <Calendar className="h-4 w-4 text-gray-400 mr-2 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500 mb-0.5">Desde</p>
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {estadisticas.fechaInicio}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Flecha - solo visible en tablet/desktop */}
-                <div className="hidden sm:flex items-center justify-center text-gray-300">
-                  <span className="text-lg">→</span>
-                </div>
-                
-                {/* Fecha Fin */}
-                <div className="flex items-center bg-white p-2 rounded-lg border border-gray-200 flex-1 min-w-0">
-                  <Calendar className="h-4 w-4 text-gray-400 mr-2 shrink-0" />
-                  <div className="min-w-0">
-                    <p className="text-xs text-gray-500 mb-0.5">Hasta</p>
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {estadisticas.fechaFin}
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Total Días */}
-                <div className="flex items-center bg-blue-50 p-2 rounded-lg border border-blue-100">
-                  <Clock className="h-4 w-4 text-blue-500 mr-2 shrink-0" />
-                  <div>
-                    <p className="text-xs text-blue-600 mb-0.5">Período</p>
-                    <p className="text-sm font-semibold text-blue-700">
-                      {estadisticas.totalDias} día(s)
-                    </p>
-                  </div>
-                </div>
-              </div>
+            <p className="text-sm font-medium text-slate-500 mt-1 ml-1">
+              Indicadores clave de rendimiento
+            </p>
+          </div>
+          
+          {/* Rango de Fechas */}
+          <div className="bg-[#f8f9fc] border border-slate-100 rounded-2xl p-3 flex items-center gap-3 shadow-sm">
+            <div className="p-2 bg-white rounded-xl border border-slate-100 text-[#4260ad]">
+               <CalendarRange className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col">
+               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Período Seleccionado</span>
+               <div className="flex items-center gap-2 text-sm font-bold text-[#140f07]">
+                  <span>{estadisticas.fechaInicio}</span>
+                  <span className="text-slate-300">→</span>
+                  <span>{estadisticas.fechaFin}</span>
+                  <span className="ml-2 px-2 py-0.5 bg-[#122a4e] text-white text-[10px] rounded-md">
+                    {estadisticas.totalDias} días
+                  </span>
+               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tarjetas de métricas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6">
-        {/* Tarjeta 1: Total Vehículos */}
-        <div className="bg-linear-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm text-blue-700 font-medium truncate">Total Vehículos</p>
-              <p className="text-xl md:text-2xl font-bold text-blue-900 mt-1 truncate">
-                {estadisticas.totalRegistros.toLocaleString()}
-              </p>
-            </div>
-            <div className="w-10 h-10 bg-blue-200 rounded-lg flex items-center justify-center shrink-0 ml-2">
-              <Car className="h-5 w-5 text-blue-700" />
-            </div>
+      {/* Grid de Métricas */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        
+        {/* Tarjeta 1: Total USD (Principal) */}
+        <div className="bg-[#122a4e] rounded-2xl p-5 relative overflow-hidden group shadow-lg shadow-[#122a4e]/20">
+          <div className="relative z-10 flex flex-col justify-between h-full min-h-27.5">
+             <div className="flex justify-between items-start">
+                <span className="text-[#869dfc] text-xs font-bold uppercase tracking-wider">Total Ingresos</span>
+                <div className="p-1.5 bg-white/10 rounded-lg backdrop-blur-sm">
+                   <DollarSign className="h-4 w-4 text-white" />
+                </div>
+             </div>
+             <div>
+                <h4 className="text-3xl font-black text-white tracking-tight">
+                  ${estadisticas.totalIngresos.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </h4>
+                <p className="text-white/40 text-xs font-medium mt-1">Facturación total en USD</p>
+             </div>
+          </div>
+          <DollarSign className="absolute -right-4 -bottom-4 h-24 w-24 text-white/5 rotate-12 group-hover:scale-110 transition-transform duration-500" />
+        </div>
+
+        {/* Tarjeta 2: Total Bs */}
+        <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:border-[#869dfc]/30 transition-colors relative overflow-hidden group">
+          <div className="relative z-10 flex flex-col justify-between h-full min-h-27.5">
+             <div className="flex justify-between items-start">
+                <span className="text-slate-500 text-xs font-bold uppercase tracking-wider">Total Bolívares</span>
+                <div className="p-1.5 bg-[#f4f6fc] rounded-lg">
+                   <span className="text-xs font-bold text-[#140f07]">Bs</span>
+                </div>
+             </div>
+             <div>
+                <h4 className="text-2xl font-black text-[#140f07] tracking-tight">
+                  {estadisticas.ingresosBs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </h4>
+                <p className="text-slate-400 text-xs font-medium mt-1">Equivalente a tasa del día</p>
+             </div>
           </div>
         </div>
 
-        {/* Tarjeta 2: Total USD */}
-        <div className="bg-linear-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm text-green-700 font-medium truncate">Total USD</p>
-              <p className="text-xl md:text-2xl font-bold text-green-900 mt-1 truncate">
-                ${estadisticas.totalIngresos.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="w-10 h-10 bg-green-200 rounded-lg flex items-center justify-center shrink-0 ml-2">
-              <DollarSign className="h-5 w-5 text-green-700" />
-            </div>
+        {/* Tarjeta 3: Total Vehículos */}
+        <div className="bg-[#4260ad] rounded-2xl p-5 relative overflow-hidden group shadow-lg shadow-[#4260ad]/20">
+          <div className="relative z-10 flex flex-col justify-between h-full min-h-27.5">
+             <div className="flex justify-between items-start">
+                <span className="text-white/80 text-xs font-bold uppercase tracking-wider">Vehículos</span>
+                <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
+                   <Car className="h-4 w-4 text-white" />
+                </div>
+             </div>
+             <div>
+                <h4 className="text-3xl font-black text-white tracking-tight">
+                  {estadisticas.totalRegistros.toLocaleString()}
+                </h4>
+                <p className="text-white/60 text-xs font-medium mt-1">Total registrados</p>
+             </div>
           </div>
+          <Car className="absolute -right-4 -bottom-4 h-24 w-24 text-white/10 -rotate-12 group-hover:scale-110 transition-transform duration-500" />
         </div>
 
-        {/* Tarjeta 3: Total Bs */}
-        <div className="bg-linear-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm text-purple-700 font-medium truncate">Total Bs</p>
-              <p className="text-xl md:text-2xl font-bold text-purple-900 mt-1 truncate">
-                Bs {estadisticas.ingresosBs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="w-10 h-10 bg-purple-200 rounded-lg flex items-center justify-center shrink-0 ml-2">
-              <DollarSign className="h-5 w-5 text-purple-700" />
-            </div>
-          </div>
-        </div>
-
-        {/* Tarjeta 4: Promedio USD */}
-        <div className="bg-linear-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
-          <div className="flex items-center justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-sm text-orange-700 font-medium truncate">Promedio USD</p>
-              <p className="text-xl md:text-2xl font-bold text-orange-900 mt-1 truncate">
-                ${estadisticas.promedioPorVehiculo.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </p>
-            </div>
-            <div className="w-10 h-10 bg-orange-200 rounded-lg flex items-center justify-center shrink-0 ml-2">
-              <TrendingUp className="h-5 w-5 text-orange-700" />
-            </div>
+        {/* Tarjeta 4: Promedio Ticket */}
+        <div className="bg-[#f8f9fc] border border-slate-100 rounded-2xl p-5 relative overflow-hidden">
+          <div className="relative z-10 flex flex-col justify-between h-full min-h-27.5">
+             <div className="flex justify-between items-start">
+                <span className="text-[#4260ad] text-xs font-bold uppercase tracking-wider">Ticket Promedio</span>
+                <div className="p-1.5 bg-white rounded-lg shadow-sm">
+                   <TrendingUp className="h-4 w-4 text-[#4260ad]" />
+                </div>
+             </div>
+             <div>
+                <h4 className="text-2xl font-black text-[#140f07] tracking-tight">
+                  ${estadisticas.promedioPorVehiculo.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </h4>
+                <p className="text-slate-400 text-xs font-medium mt-1">Por vehículo</p>
+             </div>
           </div>
         </div>
       </div>
 
-      {/* Distribución por tipo de vehículo */}
+      {/* Distribución por tipo */}
       {estadisticas.registrosPorTipo.length > 0 && (
-        <div className="border-t border-gray-200 pt-4 md:pt-6">
-          <h4 className="text-base font-semibold text-gray-900 mb-3 md:mb-4 flex items-center">
-            <PieChart className="h-5 w-5 mr-2 text-gray-500 shrink-0" />
-            Distribución por Tipo de Vehículo
+        <div className="border-t border-slate-100 pt-6">
+          <h4 className="text-sm font-bold text-[#140f07] mb-5 flex items-center gap-2 uppercase tracking-wider">
+            <PieChart className="h-4 w-4 text-[#4260ad]" />
+            Distribución por Tipo
           </h4>
-          <div className="space-y-2 md:space-y-3">
+          <div className="space-y-4">
             {estadisticas.registrosPorTipo.map((item, index) => (
-              <div key={index} className="space-y-1 md:space-y-1.5">
+              <div key={index} className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-700 truncate mr-2">{item.tipo}</span>
-                  <span className="font-medium text-gray-900 whitespace-nowrap">
-                    {item.cantidad.toLocaleString()} ({item.porcentaje.toFixed(1)}%)
+                  <div className="flex items-center gap-2">
+                     <span className="text-[#140f07] font-bold">{item.tipo}</span>
+                     <span className="text-xs text-slate-400 font-medium">({item.cantidad} vehículos)</span>
+                  </div>
+                  <span className="font-bold text-[#4260ad]">
+                    {item.porcentaje.toFixed(1)}%
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 md:h-2">
+                <div className="w-full bg-[#f4f6fc] rounded-full h-2.5 overflow-hidden">
                   <div
-                    className="bg-blue-500 h-1.5 md:h-2 rounded-full transition-all duration-500"
+                    className="bg-[#4260ad] h-full rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(66,96,173,0.3)]"
                     style={{ width: `${item.porcentaje}%` }}
                   ></div>
                 </div>

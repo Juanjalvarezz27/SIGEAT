@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { TrendingUp, ChevronDown, ChevronUp, Calculator, List } from 'lucide-react'
+import { TrendingUp, ChevronDown, ChevronUp, Calculator, List, BarChart3 } from 'lucide-react'
 import FiltroFecha from '../../components/estadisticas/FiltroFecha'
 import ResumenEstadisticas from '../../components/estadisticas/ResumenEstadisticas'
 import ListaRegistrosFecha from '../../components/estadisticas/ListaRegistrosFecha'
@@ -189,27 +189,34 @@ export default function Estadisticas() {
   }
 
   return (
-    <div className="min-h-screen p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <TrendingUp className="h-6 w-6 mr-3 text-blue-500" />
-            Estadísticas por Fecha
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Consulta y analiza los registros por período específico o por mes
-          </p>
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        
+        {/* Header Principal */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 bg-[#122a4e] rounded-2xl flex items-center justify-center shrink-0 shadow-lg shadow-[#122a4e]/20">
+              <BarChart3 className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black text-[#140f07] tracking-tight">
+                Estadísticas
+              </h1>
+              <p className="text-sm font-medium text-[#122a4e]/60">
+                Análisis financiero y operativo
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Filtro */}
+        {/* Filtro de Fechas */}
         <FiltroFecha
           onFiltrar={buscarRegistros}
           cargando={cargando}
           infoPeriodo={infoPeriodo}
         />
 
-        {/* Resumen (SIEMPRE VISIBLE) */}
+        {/* Resumen de Estadísticas (KPIs) */}
         <div className="mb-6">
           <ResumenEstadisticas
             estadisticas={estadisticas}
@@ -217,89 +224,90 @@ export default function Estadisticas() {
           />
         </div>
 
-        {/* Lista de Registros - EN DESPLEGABLE */}
+        {/* Acordeón: Lista de Registros */}
         <div className="mb-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            {/* Header del desplegable */}
+          <div className="bg-white rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-[#869dfc]/10 overflow-hidden transition-all duration-300">
             <button
               onClick={() => setMostrarRegistros(!mostrarRegistros)}
-              className="w-full p-4 md:p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              className="w-full p-5 flex items-center justify-between hover:bg-[#f8f9fc] transition-colors"
             >
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                  <List className="h-5 w-5 text-blue-600" />
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#e2e2f6] rounded-xl flex items-center justify-center shrink-0">
+                  <List className="h-5 w-5 text-[#4260ad]" />
                 </div>
                 <div className="text-left">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Registros del Período
+                  <h3 className="text-lg font-bold text-[#140f07]">
+                    Detalle de Registros
                   </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Ver listado completo del período
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center">
-                <span className="mr-3 text-sm text-gray-500">
-                  {mostrarRegistros ? 'Ocultar' : 'Mostrar'}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#4260ad] bg-[#e2e2f6] px-2 py-1 rounded-lg">
+                  {mostrarRegistros ? 'Ocultar' : 'Ver'}
                 </span>
                 {mostrarRegistros ? (
-                  <ChevronUp className="h-5 w-5 text-gray-400" />
+                  <ChevronUp className="h-5 w-5 text-slate-400" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
                 )}
               </div>
             </button>
 
-            {/* Contenido desplegable */}
             {mostrarRegistros && (
-            <div className="border-t border-gray-200">
-              <ListaRegistrosFecha
-                registros={registros}
-                cargando={cargando}
-                onActualizarEstado={(id, nuevoEstado) => {
-                  // Actualizar el estado local si es necesario
-                  setRegistros(prev => prev.map(registro =>
-                    registro.id === id 
-                      ? { ...registro, estadoPago: nuevoEstado }
-                      : registro
-                  ))
-                }}
-              />
-            </div>
+              <div className="border-t border-slate-100 bg-[#f8f9fc] p-4">
+                <ListaRegistrosFecha
+                  registros={registros}
+                  cargando={cargando}
+                  onActualizarEstado={(id, nuevoEstado) => {
+                    setRegistros(prev => prev.map(registro =>
+                      registro.id === id 
+                        ? { ...registro, estadoPago: nuevoEstado }
+                        : registro
+                    ))
+                  }}
+                />
+              </div>
             )}
           </div>
         </div>
 
-        {/* Calculadora Semanal - EN DESPLEGABLE AL FINAL */}
-        <div className="mb-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            {/* Header del desplegable */}
+        {/* Acordeón: Calculadora Semanal */}
+        <div className="mb-20">
+          <div className="bg-white rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-[#869dfc]/10 overflow-hidden transition-all duration-300">
             <button
               onClick={() => setMostrarCalculadora(!mostrarCalculadora)}
-              className="w-full p-4 md:p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              className="w-full p-5 flex items-center justify-between hover:bg-[#f8f9fc] transition-colors"
             >
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                  <Calculator className="h-5 w-5 text-purple-600" />
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#122a4e] rounded-xl flex items-center justify-center shrink-0 shadow-md shadow-[#122a4e]/10">
+                  <Calculator className="h-5 w-5 text-white" />
                 </div>
                 <div className="text-left">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Calculadora Semanal 
+                  <h3 className="text-lg font-bold text-[#140f07]">
+                    Calculadora de Nómina
                   </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Calcular pagos semanales
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center ">
-                <span className="mr-3 p-0.5 text-sm text-gray-500">
-                  {mostrarCalculadora ? 'Ocultar' : 'Mostrar'}
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-[#4260ad] bg-[#e2e2f6] px-2 py-1 rounded-lg">
+                  {mostrarCalculadora ? 'Ocultar' : 'Calcular'}
                 </span>
                 {mostrarCalculadora ? (
-                  <ChevronUp className="h-5 w-5 text-gray-400" />
+                  <ChevronUp className="h-5 w-5 text-slate-400" />
                 ) : (
-                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                  <ChevronDown className="h-5 w-5 text-slate-400" />
                 )}
               </div>
             </button>
 
-            {/* Contenido desplegable */}
             {mostrarCalculadora && (
-              <div className="border-t border-gray-200">
+              <div className="border-t border-slate-100 bg-[#f8f9fc] p-4">
                 <CalculadoraSemananal
                   totalSemanaUSD={totalSemanaActual}
                   cargando={cargandoSemana}
@@ -308,6 +316,7 @@ export default function Estadisticas() {
             )}
           </div>
         </div>
+
       </div>
     </div>
   )

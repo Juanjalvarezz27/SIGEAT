@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Calculator, DollarSign, Users, Percent, Calendar, RefreshCw } from 'lucide-react'
+import { Calculator, DollarSign, Users, Percent, RefreshCw, Briefcase, User, Wallet } from 'lucide-react'
 import useTasaBCV from '../../hooks/useTasaBCV'
 
 interface CalculadoraSemananalProps {
@@ -18,39 +18,6 @@ export default function CalculadoraSemananal({ totalSemanaUSD, cargando }: Calcu
   const [totalDistribuirUSD, setTotalDistribuirUSD] = useState<number>(0)
   const [porPersonaBS, setPorPersonaBS] = useState<number>(0)
   const [porPersonaUSD, setPorPersonaUSD] = useState<number>(0)
-  const [fechasSemana, setFechasSemana] = useState<{ inicio: string; fin: string }>({ inicio: '', fin: '' })
-
-  // Calcular fechas de la semana actual (lunes a domingo)
-  useEffect(() => {
-    const calcularSemanaActual = () => {
-      const hoy = new Date()
-      const dia = hoy.getDay() // 0 = Domingo, 1 = Lunes, ..., 6 = Sábado
-      
-      // Calcular lunes de esta semana
-      const lunes = new Date(hoy)
-      const diffLunes = dia === 0 ? -6 : 1 - dia // Si es domingo, retroceder 6 días
-      lunes.setDate(hoy.getDate() + diffLunes)
-      
-      // Calcular domingo de esta semana
-      const domingo = new Date(lunes)
-      domingo.setDate(lunes.getDate() + 6)
-      
-      // Formatear fechas
-      const formatFecha = (fecha: Date) => {
-        const dia = fecha.getDate().toString().padStart(2, '0')
-        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0')
-        const anio = fecha.getFullYear()
-        return `${dia}/${mes}/${anio}`
-      }
-      
-      setFechasSemana({
-        inicio: formatFecha(lunes),
-        fin: formatFecha(domingo)
-      })
-    }
-    
-    calcularSemanaActual()
-  }, [])
 
   // Calcular todos los valores cuando cambia la tasa o el total en USD
   useEffect(() => {
@@ -59,7 +26,7 @@ export default function CalculadoraSemananal({ totalSemanaUSD, cargando }: Calcu
       const totalBS = totalSemanaUSD * tasa
       setTotalSemanaBS(totalBS)
       
-      // Calcular el 30% (o porcentaje seleccionado)
+      // Calcular el porcentaje seleccionado
       const porcentaje = porcentajeDistribuir / 100
       const distribuirBS = totalBS * porcentaje
       const distribuirUSD = totalSemanaUSD * porcentaje
@@ -85,7 +52,7 @@ export default function CalculadoraSemananal({ totalSemanaUSD, cargando }: Calcu
     }
   }, [tasa, totalSemanaUSD, numTrabajadores, porcentajeDistribuir])
 
-  // Formatear números con separadores de miles
+  // Formatear números
   const formatNumber = (num: number, decimals: number = 2) => {
     return new Intl.NumberFormat('es-VE', {
       minimumFractionDigits: decimals,
@@ -93,259 +60,189 @@ export default function CalculadoraSemananal({ totalSemanaUSD, cargando }: Calcu
     }).format(num)
   }
 
-  // Formatear fecha de última actualización
   const formatFechaActualizacion = () => {
     if (!ultimaActualizacion) return 'No disponible'
-    
     const fecha = new Date(ultimaActualizacion)
-    return fecha.toLocaleTimeString('es-VE', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    })
+    return fecha.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })
   }
 
   const handleActualizarTasa = async () => {
     await actualizar()
   }
 
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
-
-
-      {cargando ? (
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded"></div>
+  if (cargando) {
+    return (
+      <div className="bg-white rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-[#869dfc]/10 p-5 md:p-6 mb-6">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-slate-100 rounded-xl w-1/3"></div>
+          <div className="h-40 bg-slate-100 rounded-2xl"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="h-32 bg-gray-200 rounded-xl"></div>
-            <div className="h-32 bg-gray-200 rounded-xl"></div>
+            <div className="h-32 bg-slate-100 rounded-2xl"></div>
+            <div className="h-32 bg-slate-100 rounded-2xl"></div>
           </div>
         </div>
-      ) : (
-        <>
-          {/* Total de la semana */}
-          <div className="mb-6">
-            <div className="bg-linear-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4 md:p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="text-center md:text-left">
-                  <p className="text-sm text-blue-700 font-medium mb-1">Total generado esta semana</p>
-                  <p className="text-2xl md:text-3xl font-bold text-blue-900">
-                    ${formatNumber(totalSemanaUSD)}
-                  </p>
-                  <p className="text-sm text-blue-600 mt-1">Ingresos en dólares</p>
-                </div>
-                <div className="text-center md:text-right">
-                  <p className="text-sm text-green-700 font-medium mb-1">Equivalente en bolívares</p>
-                  <p className="text-2xl md:text-3xl font-bold text-green-900">
-                    Bs {formatNumber(totalSemanaBS)}
-                  </p>
-                  <p className="text-sm text-green-600 mt-1">
-                    Tasa: Bs {tasa ? formatNumber(tasa, 2) : '0.00'} por $
-                  </p>
-                </div>
-              </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-[#869dfc]/10 p-5 md:p-6 mb-6">
+      
+  
+      {/* Hero Card: Total Generado */}
+      <div className="bg-[#122a4e] rounded-2xl p-6 relative overflow-hidden shadow-lg shadow-[#122a4e]/20 mb-8">
+         <div className="relative z-10 flex flex-col md:flex-row justify-between md:items-end gap-4">
+            <div>
+               <p className="text-[#869dfc] font-bold text-xs uppercase tracking-wider mb-1">Ingreso Total Semanal</p>
+               <h2 className="text-4xl font-black text-white tracking-tight">
+                 ${formatNumber(totalSemanaUSD)}
+               </h2>
+               <p className="text-white/50 text-sm font-medium mt-1">Total recaudado en servicios</p>
             </div>
-          </div>
-
-          {/* Configuración de distribución */}
-          <div className="mb-6">
-            <h4 className="text-base font-semibold text-gray-900 mb-3 flex items-center">
-              <Percent className="h-5 w-5 mr-2 text-purple-500" />
-              Configurar distribución
-            </h4>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Porcentaje a distribuir */}
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Porcentaje a distribuir
-                </label>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="1"
-                    value={porcentajeDistribuir}
-                    onChange={(e) => setPorcentajeDistribuir(Number(e.target.value))}
-                    className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                  />
-                  <div className="w-20 text-center">
-                    <span className="text-lg font-bold text-purple-700">{porcentajeDistribuir}%</span>
-                  </div>
-                </div>
-                <div className="flex justify-between text-xs text-gray-500 mt-2">
-                  <span>0%</span>
-                  <span>100%</span>
-                </div>
-              </div>
-
-              {/* Número de trabajadores */}
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  <Users className="h-4 w-4 inline mr-1" />
-                  Número de trabajadores
-                </label>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => setNumTrabajadores(prev => Math.max(1, prev - 1))}
-                    className="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center text-gray-700 font-bold"
-                  >
-                    -
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={numTrabajadores}
-                    onChange={(e) => setNumTrabajadores(Math.max(1, Number(e.target.value)))}
-                    className="flex-1 h-10 border border-gray-300 rounded-lg px-3 text-center font-semibold text-gray-900"
-                  />
-                  <button
-                    onClick={() => setNumTrabajadores(prev => prev + 1)}
-                    className="w-10 h-10 bg-gray-200 hover:bg-gray-300 rounded-lg flex items-center justify-center text-gray-700 font-bold"
-                  >
-                    +
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Cantidad de personas para repartir
-                </p>
-              </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/10">
+               <p className="text-white/80 text-xs font-bold uppercase mb-1">Equivalente BCV</p>
+               <p className="text-xl font-bold text-white">Bs {formatNumber(totalSemanaBS)}</p>
             </div>
-          </div>
+         </div>
+         {/* Decorative Icon */}
+         <DollarSign className="absolute -top-6 -right-6 h-40 w-40 text-white/5 rotate-12" />
+      </div>
 
-          {/* Resultados de la distribución */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Total a distribuir */}
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
-              <h5 className="text-sm font-semibold text-purple-900 mb-2">Total a distribuir</h5>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-purple-700">En dólares:</span>
-                  <span className="font-bold text-purple-900">
-                    ${formatNumber(totalDistribuirUSD)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-purple-700">En bolívares:</span>
-                  <span className="font-bold text-purple-900">
-                    Bs {formatNumber(totalDistribuirBS)}
-                  </span>
-                </div>
-                <div className="pt-2 border-t border-purple-200">
-                  <p className="text-xs text-purple-600">
-                    {porcentajeDistribuir}% del total semanal
-                  </p>
-                </div>
-              </div>
-            </div>
+      {/* Controles de Distribución */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+        
+        {/* Slider Porcentaje */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+           <div className="flex justify-between items-center mb-4">
+              <label className="flex items-center gap-2 text-sm font-bold text-[#140f07]">
+                 <Percent className="h-4 w-4 text-[#4260ad]" />
+                 Porcentaje a Repartir
+              </label>
+              <span className="bg-[#e2e2f6] text-[#4260ad] px-3 py-1 rounded-lg text-sm font-black">
+                 {porcentajeDistribuir}%
+              </span>
+           </div>
+           <input
+             type="range"
+             min="0"
+             max="100"
+             step="1"
+             value={porcentajeDistribuir}
+             onChange={(e) => setPorcentajeDistribuir(Number(e.target.value))}
+             className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#4260ad]"
+           />
+           <div className="flex justify-between text-[10px] text-slate-400 font-bold uppercase mt-2">
+              <span>Empresa (0%)</span>
+              <span>Totalidad (100%)</span>
+           </div>
+        </div>
 
-            {/* Por persona */}
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-              <h5 className="text-sm font-semibold text-emerald-900 mb-2">Por trabajador</h5>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-emerald-700">En dólares:</span>
-                  <span className="font-bold text-emerald-900">
-                    ${formatNumber(porPersonaUSD)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-emerald-700">En bolívares:</span>
-                  <span className="font-bold text-emerald-900">
-                    Bs {formatNumber(porPersonaBS)}
-                  </span>
-                </div>
-                <div className="pt-2 border-t border-emerald-200">
-                  <p className="text-xs text-emerald-600">
-                    {numTrabajadores} trabajador{numTrabajadores !== 1 ? 'es' : ''}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Resumen */}
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <h5 className="text-sm font-semibold text-amber-900 mb-2">Resumen</h5>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-amber-700">Semana:</span>
-                  <span className="font-medium text-amber-900">
-                    ${formatNumber(totalSemanaUSD)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-amber-700">Distribuir:</span>
-                  <span className="font-medium text-amber-900">
-                    ${formatNumber(totalDistribuirUSD)} ({porcentajeDistribuir}%)
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-amber-700">Restante:</span>
-                  <span className="font-medium text-amber-900">
-                    ${formatNumber(totalSemanaUSD - totalDistribuirUSD)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        {/* Información adicional */}
-        <div className="mt-6 pt-4 border-t border-gray-200">
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:items-center sm:justify-between">
-
-            {/* Tasa BCV */}
-            <div className="flex items-center justify-center gap-2">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-                <div className="flex items-center">
-                  <DollarSign className="h-4 w-4 text-blue-600 mr-1" />
-                  <span className="text-sm font-medium text-blue-700">
-                    Tasa BCV:{' '}
-                    {loadingTasa
-                      ? 'Cargando...'
-                      : tasa
-                      ? `Bs ${formatNumber(tasa, 2)}`
-                      : 'N/D'}
-                  </span>
-                </div>
-
-                {ultimaActualizacion && (
-                  <p className="text-xs text-blue-500 mt-1 text-center">
-                    Actualizada: {formatFechaActualizacion()}
-                  </p>
-                )}
-              </div>
-
+        {/* Contador Trabajadores */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
+           <label className="flex items-center gap-2 text-sm font-bold text-[#140f07] mb-4">
+              <Users className="h-4 w-4 text-[#4260ad]" />
+              Trabajadores Activos
+           </label>
+           <div className="flex items-center gap-3">
               <button
-                onClick={handleActualizarTasa}
-                disabled={loadingTasa}
-                className="p-2 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg text-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Actualizar tasa"
+                onClick={() => setNumTrabajadores(prev => Math.max(1, prev - 1))}
+                className="w-10 h-10 rounded-xl bg-[#f4f6fc] hover:bg-[#e2e2f6] text-[#122a4e] font-bold text-lg flex items-center justify-center transition-colors"
               >
-                <RefreshCw
-                  className={`h-4 w-4 ${loadingTasa ? 'animate-spin' : ''}`}
-                />
+                -
               </button>
-            </div>
-
-            {/* Botón restablecer */}
-            <button
-              onClick={() => {
-                setPorcentajeDistribuir(30)
-                setNumTrabajadores(1)
-              }}
-              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
-            >
-              Restablecer valores
-            </button>
-
-          </div>
+              <div className="flex-1 bg-[#f4f6fc] border border-transparent h-10 rounded-xl flex items-center justify-center font-black text-[#140f07] text-lg">
+                 {numTrabajadores}
+              </div>
+              <button
+                onClick={() => setNumTrabajadores(prev => prev + 1)}
+                className="w-10 h-10 rounded-xl bg-[#122a4e] hover:bg-[#4260ad] text-white font-bold text-lg flex items-center justify-center transition-colors shadow-md shadow-[#122a4e]/20"
+              >
+                +
+              </button>
+           </div>
         </div>
+      </div>
 
+      {/* Resultados Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+         
+         {/* Card 1: Total Distribuir */}
+         <div className="bg-[#4260ad] text-white p-5 rounded-2xl relative overflow-hidden shadow-lg shadow-[#4260ad]/20 group">
+            <div className="relative z-10">
+               <div className="flex items-center gap-2 mb-3 opacity-90">
+                  <Briefcase className="h-4 w-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Total Nómina</span>
+               </div>
+               <div className="space-y-1">
+                  <p className="text-2xl font-black">${formatNumber(totalDistribuirUSD)}</p>
+                  <p className="text-sm font-medium opacity-80">Bs {formatNumber(totalDistribuirBS)}</p>
+               </div>
+            </div>
+            <div className="absolute right-0 bottom-0 opacity-10 group-hover:opacity-20 transition-opacity">
+               <Users className="h-24 w-24 -mr-4 -mb-4 rotate-12" />
+            </div>
+         </div>
 
-        </>
-      )}
+         {/* Card 2: Por Persona */}
+         <div className="bg-[#e2e2f6] text-[#122a4e] p-5 rounded-2xl relative overflow-hidden border border-[#869dfc]/20">
+            <div className="relative z-10">
+               <div className="flex items-center gap-2 mb-3">
+                  <User className="h-4 w-4 text-[#4260ad]" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#4260ad]">Por Trabajador</span>
+               </div>
+               <div className="space-y-1">
+                  <p className="text-2xl font-black">${formatNumber(porPersonaUSD)}</p>
+                  <p className="text-sm font-medium text-[#122a4e]/70">Bs {formatNumber(porPersonaBS)}</p>
+               </div>
+            </div>
+         </div>
+
+         {/* Card 3: Restante (Empresa) */}
+         <div className="bg-[#f8f9fc] text-slate-600 p-5 rounded-2xl relative overflow-hidden border border-slate-200">
+            <div className="relative z-10">
+               <div className="flex items-center gap-2 mb-3">
+                  <Wallet className="h-4 w-4 text-slate-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Restante ({100 - porcentajeDistribuir}%)</span>
+               </div>
+               <div className="space-y-1">
+                  <p className="text-2xl font-black text-[#140f07]">${formatNumber(totalSemanaUSD - totalDistribuirUSD)}</p>
+                  <p className="text-xs font-medium text-slate-400">Fondo de empresa</p>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      {/* Footer Info */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-100">
+         <div className="flex items-center gap-3 bg-[#f8f9fc] px-4 py-2 rounded-xl border border-slate-100">
+            <div className="bg-white p-1.5 rounded-lg border border-slate-100 shadow-sm">
+               <RefreshCw className={`h-3.5 w-3.5 text-[#4260ad] ${loadingTasa ? 'animate-spin' : ''}`} />
+            </div>
+            <div className="flex flex-col">
+               <span className="text-[10px] font-bold text-slate-400 uppercase">Tasa BCV</span>
+               <span className="text-xs font-bold text-[#140f07]">
+                  {loadingTasa ? '...' : tasa ? `Bs ${formatNumber(tasa, 2)}` : 'N/A'}
+               </span>
+            </div>
+            <button 
+               onClick={handleActualizarTasa}
+               className="ml-1 text-[10px] text-[#4260ad] font-bold hover:underline"
+            >
+               Actualizar
+            </button>
+         </div>
+
+         <button
+            onClick={() => {
+               setPorcentajeDistribuir(30)
+               setNumTrabajadores(1)
+            }}
+            className="text-xs font-bold text-slate-400 hover:text-[#4260ad] transition-colors"
+         >
+            Restablecer valores
+         </button>
+      </div>
+
     </div>
   )
 }
