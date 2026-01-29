@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
-import { Car, Users, Calendar, TrendingUp } from 'lucide-react'
+import { Car, Users, Calendar, ShieldCheck, Clock } from 'lucide-react'
 import BuscadorVehiculos from '../../components/vehiculos/BuscadorVehiculos'
 import ListaVehiculos from '../../components/vehiculos/ListaVehiculos'
 
@@ -51,16 +51,7 @@ export default function Vehiculos() {
     ultimaActualizacion: new Date()
   })
 
-  // Debounce para búsqueda automática
-  const debounce = (func: Function, wait: number) => {
-    let timeout: NodeJS.Timeout
-    return (...args: any[]) => {
-      clearTimeout(timeout)
-      timeout = setTimeout(() => func(...args), wait)
-    }
-  }
-
-  // Cargar datos con debounce
+  // Función de carga envuelta en useCallback para mantener referencia estable
   const cargarVehiculos = useCallback(async () => {
     setCargando(true)
     try {
@@ -72,18 +63,12 @@ export default function Vehiculos() {
       })
 
       const response = await fetch(`/api/vehiculos?${params}`)
-
-      if (!response.ok) {
-        throw new Error('Error al cargar vehículos')
-      }
+      if (!response.ok) throw new Error('Error al cargar vehículos')
 
       const data = await response.json()
-
       if (data.success) {
         setVehiculos(data.datos.vehiculos)
         setPaginacion(data.datos.paginacion)
-        
-        // Calcular estadísticas
         setEstadisticas({
           totalClientes: data.datos.paginacion.totalVehiculos,
           ultimaActualizacion: new Date()
@@ -92,29 +77,15 @@ export default function Vehiculos() {
     } catch (error) {
       console.error('Error:', error)
       setVehiculos([])
-      setPaginacion({
-        paginaActual: 1,
-        totalPaginas: 1,
-        totalVehiculos: 0,
-        porPagina: 20
-      })
     } finally {
       setCargando(false)
     }
-  }, [busqueda.termino, busqueda.tipo, paginacion.paginaActual])
+  }, [paginacion.paginaActual, paginacion.porPagina, busqueda.termino, busqueda.tipo])
 
-  // Efecto para búsqueda automática
-  useEffect(() => {
-    if (busqueda.termino.length === 0 || busqueda.termino.length >= 3) {
-      const debouncedSearch = debounce(cargarVehiculos, 500)
-      debouncedSearch()
-    }
-  }, [busqueda.termino, busqueda.tipo, cargarVehiculos])
-
-  // Cargar datos iniciales
+  // EFECTO DE CARGA: Se dispara cuando cambia la página o la búsqueda
   useEffect(() => {
     cargarVehiculos()
-  }, [paginacion.paginaActual])
+  }, [cargarVehiculos])
 
   const handleBuscar = (termino: string, tipo: string) => {
     setBusqueda({ termino, tipo })
@@ -134,67 +105,59 @@ export default function Vehiculos() {
   }
 
   return (
-    <div className="min-h-screen p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <Car className="h-6 w-6 mr-3 text-blue-500" />
-            Clientes y Vehículos
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Gestiona y consulta toda la información de clientes y sus vehículos
-          </p>
-        </div>
-
-        {/* Estadísticas */}
-        <div className="mb-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 md:p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              {/* Total Clientes */}
-              <div className="flex-1">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <Users className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 font-medium">Clientes registrados</p>
-                    <div className="flex items-baseline space-x-2">
-                      <p className="text-2xl font-bold text-gray-900">
-                        {estadisticas.totalClientes.toLocaleString()}
-                      </p>
-                      <span className="text-sm text-gray-500">
-                        vehículos únicos
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Separador */}
-              <div className="hidden md:block h-8 w-px bg-gray-200"></div>
-
-              {/* Última actualización */}
-              <div className="flex-1">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                    <Calendar className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 font-medium">Última actualización</p>
-                    <p className="text-lg font-semibold text-gray-900">
-                      {formatFecha(estadisticas.ultimaActualizacion)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
+    <div className="min-h-screen pb-12">
+      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        
+        {/* Header Principal */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+            <div className="w-16 h-16 bg-[#122a4e] rounded-3xl flex items-center justify-center shadow-xl shadow-[#122a4e]/20 shrink-0">
+              <Users className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-[#140f07] tracking-tight">
+                Clientes y Vehículos
+              </h1>
+              <p className="text-sm font-medium text-[#122a4e]/60">
+                Base de datos centralizada de registros históricos
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Buscador */}
-        <div className="mb-6">
+        {/* Dashboard de Estadísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="bg-white rounded-3xl border border-[#869dfc]/10 p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] flex items-center gap-5">
+            <div className="w-14 h-14 bg-[#f4f6fc] rounded-2xl flex items-center justify-center shrink-0">
+               <ShieldCheck className="h-7 w-7 text-[#4260ad]" />
+            </div>
+            <div>
+               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Base de Datos</p>
+               <div className="flex items-baseline gap-2">
+                 <p className="text-3xl font-black text-[#140f07]">
+                   {estadisticas.totalClientes.toLocaleString()}
+                 </p>
+                 <span className="text-sm font-bold text-[#4260ad]">Vehículos únicos</span>
+               </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-[#869dfc]/10 p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] flex items-center gap-5">
+            <div className="w-14 h-14 bg-[#f4f6fc] rounded-2xl flex items-center justify-center shrink-0">
+               <Clock className="h-7 w-7 text-[#4260ad]" />
+            </div>
+            <div>
+               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sincronización</p>
+               <p className="text-xl font-black text-[#140f07]">
+                 {formatFecha(estadisticas.ultimaActualizacion)}
+               </p>
+               <p className="text-xs font-medium text-slate-400 mt-1">Última consulta realizada</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Buscador Integrado */}
+        <div className="mb-8">
           <BuscadorVehiculos
             onBuscar={handleBuscar}
             cargando={cargando}
@@ -202,13 +165,16 @@ export default function Vehiculos() {
           />
         </div>
 
-        {/* Lista de vehículos */}
-        <ListaVehiculos
-          vehiculos={vehiculos}
-          cargando={cargando}
-          paginacion={paginacion}
-          onCambiarPagina={handleCambiarPagina}
-        />
+        {/* Listado de Vehículos */}
+        <div className="bg-[#fcfdff] rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/40">
+          <ListaVehiculos
+            vehiculos={vehiculos}
+            cargando={cargando}
+            paginacion={paginacion}
+            onCambiarPagina={handleCambiarPagina}
+          />
+        </div>
+
       </div>
     </div>
   )
