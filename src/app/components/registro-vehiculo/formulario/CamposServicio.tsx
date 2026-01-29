@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Calendar, Plus, ChevronDown, ChevronUp, FileText, Lock } from 'lucide-react'
+import { Calendar, Plus, ChevronDown, ChevronUp, FileText, Lock, Car, Wrench, CheckCircle, Receipt } from 'lucide-react'
 import { RegistroForm, FormularioDatos, Servicio, ServicioExtra, VehiculoEncontrado } from '../../../types/formularioTypes'
 
 interface CamposServicioProps {
@@ -36,21 +36,19 @@ export default function CamposServicio({
   return (
     <>
       {/* Información del Servicio */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <Calendar className="h-5 w-5 mr-2 text-blue-500" />
+      <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+        <h3 className="text-base font-bold text-[#140f07] mb-5 flex items-center gap-2 border-b border-slate-50 pb-2">
+          <div className="p-1.5 bg-[#e2e2f6] rounded-lg">
+             <Calendar className="h-4 w-4 text-[#4260ad]" />
+          </div>
           Información del Servicio
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          {/* Tipo de Vehículo */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1">
               Tipo de Vehículo *
-              {vehiculoEncontrado && (
-                <span className="ml-2 text-xs text-blue-600 flex items-center">
-                  <Lock className="h-3 w-3 mr-1" />
-                  Bloqueado (vehículo ya registrado)
-                </span>
-              )}
             </label>
             <div className="relative">
               <select
@@ -59,10 +57,10 @@ export default function CamposServicio({
                 onChange={onChange}
                 required
                 disabled={!!vehiculoEncontrado}
-                className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition appearance-none ${
+                className={`w-full px-4 py-3 border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 font-medium outline-none transition-all appearance-none ${
                   vehiculoEncontrado 
-                    ? 'bg-gray-50 border-gray-200 text-gray-700 cursor-not-allowed pr-10' 
-                    : 'bg-white border-gray-300'
+                    ? 'bg-slate-100 text-slate-500 cursor-not-allowed pr-10' 
+                    : 'bg-[#f4f6fc] text-[#140f07]'
                 }`}
               >
                 <option value="">Seleccionar tipo</option>
@@ -72,157 +70,156 @@ export default function CamposServicio({
                   </option>
                 ))}
               </select>
-              {vehiculoEncontrado && (
-                <Lock className="absolute right-3 top-3 h-4 w-4 text-gray-400" />
-              )}
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                 {vehiculoEncontrado ? (
+                    <Lock className="h-4 w-4 text-slate-400" />
+                 ) : (
+                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                 )}
+              </div>
             </div>
             {vehiculoEncontrado && (
-              <p className="mt-1 text-xs text-gray-600">
-                Tipo de vehículo: {datos?.tiposVehiculo.find(t => t.id === parseInt(form.tipoVehiculoId))?.nombre}
-              </p>
+              <div className="mt-1.5 flex items-center text-xs text-[#4260ad] font-medium animate-in fade-in">
+                <Lock className="h-3 w-3 mr-1" />
+                Vehículo registrado previamente
+              </div>
             )}
           </div>
+
+          {/* Servicio */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1">
               Servicio *
             </label>
-            <select
-              name="servicioId"
-              value={form.servicioId}
-              onChange={onChange}
-              required
-              disabled={!form.tipoVehiculoId}
-              className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
-                !form.tipoVehiculoId
-                  ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed'
-                  : 'border-gray-300 bg-white'
-              }`}
-            >
-              <option value="">
-                {form.tipoVehiculoId ? 'Seleccionar servicio' : 'Selecciona un tipo de vehículo primero'}
-              </option>
-              {serviciosFiltrados.map(servicio => (
-                <option key={servicio.id} value={servicio.id}>
-                  {servicio.nombre} - ${Number(servicio.precio).toFixed(2)}
+            <div className="relative">
+              <select
+                name="servicioId"
+                value={form.servicioId}
+                onChange={onChange}
+                required
+                disabled={!form.tipoVehiculoId}
+                className={`w-full px-4 py-3 border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 font-medium outline-none transition-all appearance-none ${
+                  !form.tipoVehiculoId
+                    ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    : 'bg-[#f4f6fc] text-[#140f07]'
+                }`}
+              >
+                <option value="">
+                  {form.tipoVehiculoId ? 'Seleccionar servicio' : 'Selecciona vehículo primero'}
                 </option>
-              ))}
-            </select>
+                {serviciosFiltrados.map(servicio => (
+                  <option key={servicio.id} value={servicio.id}>
+                    {servicio.nombre} - ${Number(servicio.precio).toFixed(2)}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            </div>
           </div>
+
+          {/* Estado del Carro */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estado del Carro *
+            <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1 items-center gap-1.5">
+               <Wrench className="h-3.5 w-3.5 text-[#4260ad]" />
+               Estado del Carro *
             </label>
-            <select
-              name="estadoCarroId"
-              value={form.estadoCarroId}
-              onChange={onChange}
-              required
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
-            >
-              {datos?.estadosCarro.map(estado => (
-                <option key={estado.id} value={estado.id}>
-                  {estado.nombre}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                name="estadoCarroId"
+                value={form.estadoCarroId}
+                onChange={onChange}
+                required
+                className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium outline-none transition-all appearance-none"
+              >
+                {datos?.estadosCarro.map(estado => (
+                  <option key={estado.id} value={estado.id}>
+                    {estado.nombre}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            </div>
           </div>
+
+          {/* Estado de Pago */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estado de Pago *
+            <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1 items-center gap-1.5">
+               <CheckCircle className="h-3.5 w-3.5 text-[#4260ad]" />
+               Estado de Pago *
             </label>
-            <select
-              name="estadoPagoId"
-              value={form.estadoPagoId}
-              onChange={onChange}
-              required
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
-            >
-              {datos?.estadosPago.map(estado => (
-                <option key={estado.id} value={estado.id}>
-                  {estado.nombre}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                name="estadoPagoId"
+                value={form.estadoPagoId}
+                onChange={onChange}
+                required
+                className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium outline-none transition-all appearance-none"
+              >
+                {datos?.estadosPago.map(estado => (
+                  <option key={estado.id} value={estado.id}>
+                    {estado.nombre}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Servicios Extras */}
       {datos?.serviciosExtras && datos.serviciosExtras.length > 0 && (
-        <div>
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
           <button
             type="button"
             onClick={onToggleServiciosExtras}
-            className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition"
+            className="w-full flex items-center justify-between p-5 bg-white hover:bg-[#f8f9fc] active:bg-slate-50 transition-colors"
           >
-            <div className="flex items-center">
-              <Plus className="h-5 w-5 text-blue-500 mr-3" />
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#e2e2f6] flex items-center justify-center text-[#4260ad]">
+                 <Plus className="h-5 w-5" />
+              </div>
               <div className="text-left">
-                <h3 className="font-semibold text-gray-900">Servicios Extras</h3>
-                <p className="text-sm text-gray-600">
+                <h3 className="font-bold text-[#140f07] text-sm">Servicios Extras</h3>
+                <p className="text-xs text-slate-500 font-medium">
                   {serviciosExtrasSeleccionados.length > 0
-                    ? `${serviciosExtrasSeleccionados.length} seleccionados - Total: $${serviciosExtrasTotal.toFixed(2)}`
-                    : 'Selecciona servicios adicionales'
+                    ? `${serviciosExtrasSeleccionados.length} seleccionados (+$${serviciosExtrasTotal.toFixed(2)})`
+                    : 'Ninguno seleccionado'
                   }
                 </p>
               </div>
             </div>
-            {serviciosExtrasAbierto ? (
-              <ChevronUp className="h-5 w-5 text-gray-500" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            )}
+            <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${serviciosExtrasAbierto ? 'rotate-180' : ''}`} />
           </button>
 
           {serviciosExtrasAbierto && (
-            <div className="mt-4 bg-white border border-gray-200 rounded-xl p-4">
+            <div className="px-5 pb-5 border-t border-slate-50 pt-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {datos.serviciosExtras.map(extra => {
                   const isSelected = serviciosExtrasSeleccionados.some(se => se.id === extra.id)
                   return (
                     <div
                       key={extra.id}
-                      className={`p-3 border rounded-xl cursor-pointer transition-all hover:shadow-sm ${
-                        isSelected
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
                       onClick={() => onServicioExtraChange(extra)}
+                      className={`p-3 rounded-xl border cursor-pointer transition-all flex items-start gap-3 group ${
+                        isSelected
+                          ? 'bg-[#e2e2f6] border-[#869dfc] shadow-sm'
+                          : 'bg-white border-slate-200 hover:border-[#869dfc]/50'
+                      }`}
                     >
-                      <div className="flex items-start justify-between h-full">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start">
-                            <div className={`mt-0.5 shrink-0 w-5 h-5 rounded border mr-3 flex items-center justify-center ${
-                              isSelected
-                                ? 'bg-blue-500 border-blue-500'
-                                : 'border-gray-300'
-                            }`}>
-                              {isSelected && (
-                                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                </svg>
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">
-                                {extra.nombre}
-                              </h4>
-                              {extra.descripcion && (
-                                <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                                  {extra.descripcion}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="ml-2 shrink-0 text-right">
-                          <div className="text-base sm:text-lg font-semibold text-blue-600 whitespace-nowrap">
-                            ${Number(extra.precio).toFixed(2)}
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1 hidden sm:block">
-                            {isSelected ? 'Seleccionado' : 'Click para seleccionar'}
-                          </div>
-                        </div>
+                      <div className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition-colors ${
+                         isSelected ? 'bg-[#4260ad] border-[#4260ad]' : 'border-slate-300 bg-white'
+                      }`}>
+                         {isSelected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                         <div className="flex justify-between items-start">
+                            <h4 className={`text-sm font-bold truncate ${isSelected ? 'text-[#122a4e]' : 'text-slate-700'}`}>{extra.nombre}</h4>
+                            <span className={`text-sm font-bold ml-2 ${isSelected ? 'text-[#4260ad]' : 'text-slate-500'}`}>${Number(extra.precio).toFixed(2)}</span>
+                         </div>
+                         {extra.descripcion && (
+                           <p className="text-xs text-slate-400 line-clamp-1 mt-0.5">{extra.descripcion}</p>
+                         )}
                       </div>
                     </div>
                   )
@@ -230,38 +227,36 @@ export default function CamposServicio({
               </div>
 
               {serviciosExtrasSeleccionados.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex flex-col gap-3">
+                <div className="mt-4 pt-4 border-t border-slate-50 space-y-3">
                     <div>
-                      <h4 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">Servicios extras seleccionados:</h4>
-                      <div className="flex flex-wrap gap-1.5">
+                      <h4 className="text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-2">Seleccionados:</h4>
+                      <div className="flex flex-wrap gap-2">
                         {serviciosExtrasSeleccionados.map(extra => (
                           <span
                             key={extra.id}
-                            className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-blue-100 text-blue-700 border border-blue-200"
+                            className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-[#e2e2f6] text-[#122a4e] border border-[#869dfc]/20"
                           >
-                            <span className="truncate max-w-30">{extra.nombre}</span>
+                            <span className="truncate max-w-37.5">{extra.nombre}</span>
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation()
                                 onServicioExtraChange(extra)
                               }}
-                              className="ml-1.5 text-blue-500 hover:text-blue-700 text-sm"
+                              className="ml-1.5 p-0.5 hover:bg-[#4260ad]/10 rounded-full text-[#4260ad] transition-colors"
                             >
-                              ×
+                              <Plus className="h-3 w-3 rotate-45" />
                             </button>
                           </span>
                         ))}
                       </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-700 font-medium text-sm sm:text-base">Total servicios extras:</span>
-                      <span className="text-base sm:text-lg font-bold text-blue-600">
+                    <div className="flex justify-between items-center bg-[#f8f9fc] p-3 rounded-xl border border-slate-100">
+                      <span className="text-slate-600 font-bold text-xs uppercase">Total extras:</span>
+                      <span className="text-sm font-black text-[#4260ad]">
                         +${serviciosExtrasTotal.toFixed(2)}
                       </span>
                     </div>
-                  </div>
                 </div>
               )}
             </div>
@@ -270,60 +265,55 @@ export default function CamposServicio({
       )}
 
       {/* Información Adicional */}
-      <div>
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <button
           type="button"
           onClick={onToggleInfoAdicional}
-          className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition"
+          className="w-full flex items-center justify-between p-5 bg-white hover:bg-[#f8f9fc] active:bg-slate-50 transition-colors"
         >
-          <div className="flex items-center">
-            <FileText className="h-5 w-5 text-blue-500 mr-3" />
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#e2e2f6] flex items-center justify-center text-[#4260ad]">
+               <FileText className="h-5 w-5" />
+            </div>
             <div className="text-left">
-              <h3 className="font-semibold text-gray-900">Información Adicional</h3>
-              <p className="text-sm text-gray-600">
-                Referencia de pago y notas adicionales (Opcional)
-              </p>
+              <h3 className="font-bold text-[#140f07] text-sm">Información Adicional</h3>
+              <p className="text-xs text-slate-500 font-medium">Referencia y notas (Opcional)</p>
             </div>
           </div>
-          {infoAdicionalAbierto ? (
-            <ChevronUp className="h-5 w-5 text-gray-500" />
-          ) : (
-            <ChevronDown className="h-5 w-5 text-gray-500" />
-          )}
+          <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${infoAdicionalAbierto ? 'rotate-180' : ''}`} />
         </button>
 
         {infoAdicionalAbierto && (
-          <div className="mt-4 bg-white border border-gray-200 rounded-xl p-4">
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Referencia de Pago (Opcional)
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  name="referenciaPago"
-                  value={form.referenciaPago}
-                  onChange={onChange}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                  placeholder="Ej: 123456789"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Notas
-                  <span className="text-xs text-gray-500 ml-1">(opcional)</span>
-                </label>
-                <textarea
-                  name="notas"
-                  value={form.notas}
-                  onChange={onChange}
-                  rows={3}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"
-                  placeholder="Observaciones adicionales..."
-                />
-              </div>
+          <div className="px-5 pb-5 border-t border-slate-50 pt-5 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1 items-center gap-1.5">
+                <Receipt className="h-3.5 w-3.5 text-[#4260ad]" />
+                Referencia de Pago
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                name="referenciaPago"
+                value={form.referenciaPago}
+                onChange={onChange}
+                className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] placeholder-slate-400 font-mono font-medium outline-none transition-all"
+                placeholder="000000"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1 items-center gap-1.5">
+                 <FileText className="h-3.5 w-3.5 text-[#4260ad]" />
+                 Notas
+              </label>
+              <textarea
+                name="notas"
+                value={form.notas}
+                onChange={onChange}
+                rows={3}
+                className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] placeholder-slate-400 font-medium outline-none transition-all resize-none"
+                placeholder="Detalles adicionales..."
+              />
             </div>
           </div>
         )}

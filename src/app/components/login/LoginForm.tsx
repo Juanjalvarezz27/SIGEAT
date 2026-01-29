@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
-import { Lock, User, AlertCircle, Loader2, Eye, EyeOff } from "lucide-react"
+import { CarFront, User, AlertCircle, Loader2, Eye, EyeOff, KeyRound } from "lucide-react"
 
 export default function LoginForm() {
   const router = useRouter()
@@ -39,62 +39,60 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* Logo/Header */}
-          <div className="text-center mb-10">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-linear-to-r from-blue-500 to-indigo-600 rounded-full mb-4">
-              <Lock className="h-8 w-8 text-white" />
+    <div className="w-full flex items-center justify-center p-6">
+      <div className="w-full max-w-sm">
+        <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgb(18,42,78,0.08)] p-8 border border-[#869dfc]/20">
+          <div className="flex flex-col items-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#122a4e] rounded-2xl shadow-lg shadow-[#4260ad]/20 mb-5 transform -rotate-3">
+              <CarFront className="h-7 w-7 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Autolavado</h1>
-            <p className="text-gray-600 mt-2">Sistema de Gestión de Vehículos</p>
+            <h1 className="text-2xl font-black text-[#140f07] tracking-tight">Autolavado</h1>
+            <p className="text-[#4260ad] font-medium text-sm mt-1">Sistema de Gestión</p>
           </div>
 
-          {/* Formulario */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg">
-                <AlertCircle className="h-5 w-5" />
-                <span className="text-sm">{error}</span>
+              <div className="flex items-center gap-3 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-lg">
+                <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
+                <span className="text-sm font-semibold text-red-800">{error}</span>
               </div>
             )}
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <User className="h-4 w-4" />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#122a4e] uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5" />
                 Usuario
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                className="w-full px-4 py-3.5 bg-[#f4f6fc] border-2 border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] placeholder-[#122a4e]/30 font-medium outline-none transition-all duration-200"
                 placeholder="Ingresa tu usuario"
                 required
                 disabled={loading}
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                <Lock className="h-4 w-4" />
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-[#122a4e] uppercase tracking-wider ml-1 flex items-center gap-1.5">
+                <KeyRound className="h-3.5 w-3.5" />
                 Contraseña
               </label>
-              <div className="relative">
+              <div className="relative group">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                  placeholder="Ingresa tu contraseña"
+                  className="w-full px-4 py-3.5 pr-12 bg-[#f4f6fc] border-2 border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] placeholder-[#122a4e]/30 font-medium outline-none transition-all duration-200"
+                  placeholder="••••••••"
                   required
                   disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none disabled:opacity-50"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#869dfc] hover:text-[#4260ad] focus:outline-none transition-colors"
                   disabled={loading}
                 >
                   {showPassword ? (
@@ -109,12 +107,12 @@ export default function LoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-linear-to-r from-blue-500 to-indigo-600 text-white font-medium rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-4 mt-2 bg-[#4260ad] hover:bg-[#122a4e] text-white font-bold rounded-xl shadow-lg shadow-[#4260ad]/30 hover:shadow-xl hover:shadow-[#122a4e]/20 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
-                  Iniciando sesión...
+                  <span>Accediendo...</span>
                 </>
               ) : (
                 "Iniciar Sesión"

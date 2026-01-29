@@ -1,17 +1,13 @@
 "use client"
 
-import { useState, useEffect, useRef } from 'react'
-import { X, AlertCircle, Plus, ChevronDown, ChevronUp, FileText, Palette } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, AlertCircle, Plus, ChevronDown, Edit, FileText, Palette, User, Car, Wrench, CheckCircle, CreditCard, DollarSign, Receipt } from 'lucide-react'
 import useTasaBCV from '../../hooks/useTasaBCV'
 import {
   ModalEditarRegistroProps,
-  RegistroVehiculoCompleto,
   FormularioDatos,
   Servicio,
-  ServicioExtra,
-  TipoVehiculo,
-  EstadoCarro,
-  EstadoPago
+  ServicioExtra
 } from '../../types/formularioTypes'
 
 export default function ModalEditarRegistro({
@@ -29,7 +25,7 @@ export default function ModalEditarRegistro({
     cedula: '',
     telefono: '',
     placa: '',
-    color: '', // NUEVO: campo color agregado
+    color: '', 
     tipoVehiculoId: '',
     servicioId: '',
     estadoCarroId: '',
@@ -49,7 +45,6 @@ export default function ModalEditarRegistro({
   // Inicializar formulario con datos del registro
   useEffect(() => {
     if (registro && datosFormulario) {
-      // Verificar que datosFormulario tiene la estructura esperada
       if (!datosFormulario.serviciosExtras || !datosFormulario.tiposVehiculo) {
         console.error('Estructura de datosFormulario incompleta:', datosFormulario)
         return
@@ -60,7 +55,7 @@ export default function ModalEditarRegistro({
         cedula: registro.cedula,
         telefono: registro.telefono,
         placa: registro.placa,
-        color: registro.color || '', // NUEVO: inicializar con valor del registro
+        color: registro.color || '', 
         tipoVehiculoId: registro.tipoVehiculoId.toString(),
         servicioId: registro.servicioId.toString(),
         estadoCarroId: registro.estadoCarroId.toString(),
@@ -70,19 +65,15 @@ export default function ModalEditarRegistro({
         serviciosExtrasIds: registro.serviciosExtras.map(se => se.servicioExtra.id)
       })
 
-      // Inicializar servicios extras seleccionados
       const extrasSeleccionados = registro.serviciosExtras
         .map(se => se.servicioExtra)
         .filter(extra => datosFormulario.serviciosExtras.some(de => de.id === extra.id))
 
       setServiciosExtrasSeleccionados(extrasSeleccionados)
-
-      // Filtrar servicios según tipo de vehículo
       filtrarServicios(registro.tipoVehiculoId.toString())
     }
   }, [registro, datosFormulario])
 
-  // Filtrar servicios según tipo de vehículo
   const filtrarServicios = (tipoVehiculoId: string) => {
     if (!datosFormulario || !tipoVehiculoId) {
       setServiciosFiltrados([])
@@ -92,18 +83,15 @@ export default function ModalEditarRegistro({
     const tipoSeleccionado = datosFormulario.tiposVehiculo.find(t => t.id === parseInt(tipoVehiculoId))
     if (!tipoSeleccionado) return
 
-    // Filtrar servicios por categoría del tipo de vehículo
-    // Agregar verificación de seguridad para categoria
     const serviciosFiltrados = datosFormulario.servicios.filter(
       servicio => servicio.categoria && 
-                 servicio.categoria.nombre && 
-                 servicio.categoria.nombre === tipoSeleccionado.categoria
+                  servicio.categoria.nombre && 
+                  servicio.categoria.nombre === tipoSeleccionado.categoria
     )
 
     setServiciosFiltrados(serviciosFiltrados)
   }
 
-  // Calcular precio total
   useEffect(() => {
     if (!datosFormulario || !form.servicioId) {
       setPrecioTotal(0)
@@ -116,14 +104,12 @@ export default function ModalEditarRegistro({
 
     let total = Number(servicio.precio)
 
-    // Sumar servicios extras
     serviciosExtrasSeleccionados.forEach(extra => {
       total += Number(extra.precio)
     })
 
     setPrecioTotal(total)
 
-    // Calcular en Bs si hay tasa
     if (tasa) {
       setPrecioTotalBs(total * tasa)
     } else {
@@ -134,18 +120,14 @@ export default function ModalEditarRegistro({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
 
-    // Validaciones específicas por campo
     let processedValue = value
 
     if (name === 'cedula' || name === 'telefono' || name === 'referenciaPago') {
-      // Solo permitir números
       processedValue = value.replace(/[^0-9]/g, '')
     } else if (name === 'placa') {
-      // Máximo 8 caracteres y convertir a mayúsculas
       processedValue = value.slice(0, 8).toUpperCase()
     }
 
-    // Si cambia el tipo de vehículo, limpiar servicio seleccionado
     if (name === 'tipoVehiculoId') {
       setForm(prev => ({
         ...prev,
@@ -181,7 +163,6 @@ export default function ModalEditarRegistro({
     setLoading(true)
     setError(null)
 
-    // Validación adicional
     if (!form.cedula || form.cedula.length < 6) {
       setError('La cédula debe tener al menos 6 dígitos')
       setLoading(false)
@@ -200,7 +181,6 @@ export default function ModalEditarRegistro({
       return
     }
 
-    // NUEVO: Validar campo color
     if (!form.color || form.color.trim() === '') {
       setError('El color del vehículo es requerido')
       setLoading(false)
@@ -232,7 +212,6 @@ export default function ModalEditarRegistro({
         throw new Error(errorData.error || 'Error al actualizar registro')
       }
 
-      // Notificar éxito y cerrar modal
       onUpdate()
       onClose()
 
@@ -250,72 +229,63 @@ export default function ModalEditarRegistro({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-screen items-center justify-center p-4 text-center">
-        {/* Overlay */}
+        {/* Overlay optimizado: Sin blur, solo color sólido semitransparente */}
         <div
           className="fixed inset-0 bg-black/50 transition-opacity"
           onClick={onClose}
         />
 
-        {/* Modal */}
-        <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl max-h-[90vh]">
+        {/* Modal optimizado: Sin sombras complejas ni transiciones pesadas */}
+        <div className="relative transform overflow-hidden rounded-3xl bg-[#f8f9fc] text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl max-h-[90vh] border border-white/20">
+          
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+          <div className="sticky top-0 z-10 bg-white border-b border-[#122a4e]/5 px-6 py-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-linear-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
-                <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
+              <div className="w-10 h-10 bg-[#e2e2f6] rounded-xl flex items-center justify-center shrink-0">
+                <Edit className="h-5 w-5 text-[#122a4e]" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-900">
+                <h2 className="text-xl font-bold text-[#140f07]">
                   Editar Registro
                 </h2>
-                <p className="text-gray-600 mt-1 text-sm">
+                <p className="text-[#4260ad] text-sm font-medium">
                   {registro.placa} - {registro.nombre}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 transition"
+              className="p-2 rounded-xl hover:bg-[#e2e2f6] text-[#122a4e]/50 hover:text-[#122a4e] transition-colors"
               aria-label="Cerrar"
             >
-              <X className="h-5 w-5 text-gray-500" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 
-          {/* Contenido */}
-          <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-            <div className="px-6 py-4">
+          {/* Contenido con scroll optimizado */}
+          <div className="overflow-y-auto max-h-[calc(90vh-80px)] bg-[#f8f9fc] overscroll-contain">
+            <div className="px-6 py-6">
               {error && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-3">
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3">
                   <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
                   <div className="flex-1">
-                    <p className="text-red-700 font-medium">{error}</p>
-                    {(form.cedula.length < 6 || form.telefono.length < 10 || form.placa.length < 5 || !form.color) && (
-                      <ul className="mt-2 text-sm text-red-600 space-y-1">
-                        {form.cedula.length < 6 && <li>• Cédula: mínimo 6 dígitos</li>}
-                        {form.telefono.length < 10 && <li>• Teléfono: mínimo 10 dígitos</li>}
-                        {form.placa.length < 5 && <li>• Placa: mínimo 5 caracteres</li>}
-                        {!form.color && <li>• Color del vehículo: campo requerido</li>}
-                      </ul>
-                    )}
+                    <p className="text-red-700 font-bold text-sm">Error:</p>
+                    <p className="text-red-600 text-sm mt-1">{error}</p>
                   </div>
                 </div>
               )}
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Información del Cliente - CON CAMPO COLOR */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                    <svg className="h-5 w-5 mr-2 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+                
+                {/* Bloque 1: Información del Cliente */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-100">
+                  <h3 className="text-base font-bold text-[#140f07] mb-4 flex items-center gap-2 border-b border-slate-50 pb-2">
+                    <User className="h-4 w-4 text-[#4260ad]" />
                     Información del Cliente
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1">
                         Nombre Completo *
                       </label>
                       <input
@@ -324,11 +294,11 @@ export default function ModalEditarRegistro({
                         value={form.nombre}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1">
                         Cédula *
                       </label>
                       <input
@@ -337,11 +307,11 @@ export default function ModalEditarRegistro({
                         value={form.cedula}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1">
                         Teléfono *
                       </label>
                       <input
@@ -350,11 +320,11 @@ export default function ModalEditarRegistro({
                         value={form.telefono}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                        className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium outline-none"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1">
                         Placa *
                       </label>
                       <input
@@ -363,13 +333,12 @@ export default function ModalEditarRegistro({
                         value={form.placa}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition uppercase"
+                        className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-bold outline-none uppercase"
                       />
                     </div>
-                    {/* NUEVO: Campo Color */}
                     <div className="sm:col-span-2">
-                      <label className="text-sm font-medium text-gray-700 mb-1 flex items-center">
-                        <Palette className="h-4 w-4 mr-2 text-blue-500" />
+                      <label className="flex text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1 items-center gap-1.5">
+                        <Palette className="h-3.5 w-3.5 text-[#4260ad]" />
                         Color del Vehículo *
                       </label>
                       <input
@@ -378,363 +347,285 @@ export default function ModalEditarRegistro({
                         value={form.color}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                        placeholder="Ej: Rojo, Azul, Negro, Blanco, Plateado..."
+                        className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium outline-none"
+                        placeholder="Ej: Rojo, Azul, Negro..."
                       />
-                      <p className="mt-1 text-xs text-gray-500">
-                        Especifica el color principal del vehículo
-                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Información del Servicio */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {/* Bloque 2: Información del Servicio */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-100">
+                  <h3 className="text-base font-bold text-[#140f07] mb-4 flex items-center gap-2 border-b border-slate-50 pb-2">
+                    <Car className="h-4 w-4 text-[#4260ad]" />
                     Información del Servicio
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1">
                         Tipo de Vehículo *
                       </label>
-                      <select
-                        name="tipoVehiculoId"
-                        value={form.tipoVehiculoId}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
-                      >
-                        <option value="">Seleccionar tipo</option>
-                        {datosFormulario.tiposVehiculo.map(tipo => (
-                          <option key={tipo.id} value={tipo.id}>
-                            {tipo.nombre}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <select
+                          name="tipoVehiculoId"
+                          value={form.tipoVehiculoId}
+                          onChange={handleChange}
+                          required
+                          className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium outline-none appearance-none"
+                        >
+                          <option value="">Seleccionar tipo</option>
+                          {datosFormulario.tiposVehiculo.map(tipo => (
+                            <option key={tipo.id} value={tipo.id}>
+                              {tipo.nombre}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1">
                         Servicio *
                       </label>
-                      <select
-                        name="servicioId"
-                        value={form.servicioId}
-                        onChange={handleChange}
-                        required
-                        disabled={!form.tipoVehiculoId}
-                        className={`w-full px-4 py-2.5 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition ${
-                          !form.tipoVehiculoId
-                            ? 'bg-gray-100 border-gray-200 text-gray-500 cursor-not-allowed'
-                            : 'border-gray-300 bg-white'
-                        }`}
-                      >
-                        <option value="">
-                          {form.tipoVehiculoId ? 'Seleccionar servicio' : 'Selecciona un tipo de vehículo primero'}
-                        </option>
-                        {serviciosFiltrados.map(servicio => (
-                          <option key={servicio.id} value={servicio.id}>
-                            {servicio.nombre} - ${Number(servicio.precio).toFixed(2)}
+                      <div className="relative">
+                        <select
+                          name="servicioId"
+                          value={form.servicioId}
+                          onChange={handleChange}
+                          required
+                          disabled={!form.tipoVehiculoId}
+                          className={`w-full px-4 py-3 border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 font-medium outline-none appearance-none ${
+                            !form.tipoVehiculoId
+                              ? 'bg-slate-100 text-slate-400'
+                              : 'bg-[#f4f6fc] text-[#140f07]'
+                          }`}
+                        >
+                          <option value="">
+                            {form.tipoVehiculoId ? 'Seleccionar servicio' : 'Selecciona vehículo'}
                           </option>
-                        ))}
-                      </select>
+                          {serviciosFiltrados.map(servicio => (
+                            <option key={servicio.id} value={servicio.id}>
+                              {servicio.nombre} - ${Number(servicio.precio).toFixed(2)}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1 items-center gap-1.5">
+                        <Wrench className="h-3.5 w-3.5 text-[#4260ad]" />
                         Estado del Carro *
                       </label>
-                      <select
-                        name="estadoCarroId"
-                        value={form.estadoCarroId}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
-                      >
-                        {datosFormulario.estadosCarro.map(estado => (
-                          <option key={estado.id} value={estado.id}>
-                            {estado.nombre}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <select
+                          name="estadoCarroId"
+                          value={form.estadoCarroId}
+                          onChange={handleChange}
+                          required
+                          className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium outline-none appearance-none"
+                        >
+                          {datosFormulario.estadosCarro.map(estado => (
+                            <option key={estado.id} value={estado.id}>
+                              {estado.nombre}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="flex text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1 items-center gap-1.5">
+                        <CheckCircle className="h-3.5 w-3.5 text-[#4260ad]" />
                         Estado de Pago *
                       </label>
-                      <select
-                        name="estadoPagoId"
-                        value={form.estadoPagoId}
-                        onChange={handleChange}
-                        required
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
-                      >
-                        {datosFormulario.estadosPago.map(estado => (
-                          <option key={estado.id} value={estado.id}>
-                            {estado.nombre}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <select
+                          name="estadoPagoId"
+                          value={form.estadoPagoId}
+                          onChange={handleChange}
+                          required
+                          className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium outline-none appearance-none"
+                        >
+                          {datosFormulario.estadosPago.map(estado => (
+                            <option key={estado.id} value={estado.id}>
+                              {estado.nombre}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Servicios Extras - Desplegable y responsivo */}
+                {/* Bloque 3: Servicios Extras */}
                 {datosFormulario && datosFormulario.serviciosExtras && datosFormulario.serviciosExtras.length > 0 && (
-                  <div>
+                  <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
                     <button
                       type="button"
                       onClick={() => setServiciosExtrasAbierto(!serviciosExtrasAbierto)}
-                      className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition"
+                      className="w-full flex items-center justify-between p-5 bg-white active:bg-gray-50 transition-colors"
                     >
-                      <div className="flex items-center">
-                        <Plus className="h-5 w-5 text-blue-500 mr-3" />
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-[#e2e2f6] flex items-center justify-center text-[#4260ad]">
+                           <Plus className="h-5 w-5" />
+                        </div>
                         <div className="text-left">
-                          <h3 className="font-semibold text-gray-900">Servicios Extras</h3>
-                          <p className="text-sm text-gray-600">
+                          <h3 className="font-bold text-[#140f07] text-sm">Servicios Extras</h3>
+                          <p className="text-xs text-slate-500 font-medium">
                             {serviciosExtrasSeleccionados.length > 0
-                              ? `${serviciosExtrasSeleccionados.length} seleccionados - Total: $${serviciosExtrasTotal.toFixed(2)}`
-                              : 'Selecciona servicios adicionales'
+                              ? `${serviciosExtrasSeleccionados.length} seleccionados`
+                              : 'Ninguno seleccionado'
                             }
                           </p>
                         </div>
                       </div>
-                      {serviciosExtrasAbierto ? (
-                        <ChevronUp className="h-5 w-5 text-gray-500" />
-                      ) : (
-                        <ChevronDown className="h-5 w-5 text-gray-500" />
-                      )}
+                      <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${serviciosExtrasAbierto ? 'rotate-180' : ''}`} />
                     </button>
 
                     {serviciosExtrasAbierto && (
-                      <div className="mt-4 bg-white border border-gray-200 rounded-xl p-4">
-                        {/* Grid responsivo para servicios extras */}
+                      <div className="px-5 pb-5 border-t border-slate-50 pt-5">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           {datosFormulario.serviciosExtras.map(extra => {
                             const isSelected = serviciosExtrasSeleccionados.some(se => se.id === extra.id)
                             return (
                               <div
                                 key={extra.id}
-                                className={`p-3 border rounded-xl cursor-pointer transition-all hover:shadow-sm ${
-                                  isSelected
-                                    ? 'border-blue-500 bg-blue-50'
-                                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                                }`}
                                 onClick={() => handleServicioExtraChange(extra)}
+                                className={`p-3 rounded-xl border cursor-pointer flex items-start gap-3 ${
+                                  isSelected
+                                    ? 'bg-[#e2e2f6] border-[#869dfc]'
+                                    : 'bg-white border-slate-200'
+                                }`}
                               >
-                                <div className="flex items-start justify-between h-full">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-start">
-                                      <div className={`mt-0.5 shrink-0 w-5 h-5 rounded border mr-3 flex items-center justify-center ${
-                                        isSelected
-                                          ? 'bg-blue-500 border-blue-500'
-                                          : 'border-gray-300'
-                                      }`}>
-                                        {isSelected && (
-                                          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                          </svg>
-                                        )}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">
-                                          {extra.nombre}
-                                        </h4>
-                                        {extra.descripcion && (
-                                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                                            {extra.descripcion}
-                                          </p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="ml-2 shrink-0 text-right">
-                                    <div className="text-base sm:text-lg font-semibold text-blue-600 whitespace-nowrap">
-                                      ${Number(extra.precio).toFixed(2)}
-                                    </div>
-                                    <div className="text-xs text-gray-500 mt-1 hidden sm:block">
-                                      {isSelected ? 'Seleccionado' : 'Click para seleccionar'}
-                                    </div>
-                                  </div>
+                                <div className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 ${
+                                   isSelected ? 'bg-[#4260ad] border-[#4260ad]' : 'border-slate-300 bg-white'
+                                }`}>
+                                   {isSelected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                   <div className="flex justify-between items-start">
+                                      <h4 className={`text-sm font-bold truncate ${isSelected ? 'text-[#122a4e]' : 'text-slate-700'}`}>{extra.nombre}</h4>
+                                      <span className={`text-sm font-bold ml-2 ${isSelected ? 'text-[#4260ad]' : 'text-slate-500'}`}>${Number(extra.precio).toFixed(2)}</span>
+                                   </div>
                                 </div>
                               </div>
                             )
                           })}
                         </div>
-
-                        {serviciosExtrasSeleccionados.length > 0 && (
-                          <div className="mt-4 pt-4 border-t border-gray-200">
-                            <div className="flex flex-col gap-3">
-                              <div>
-                                <h4 className="font-medium text-gray-900 mb-2 text-sm sm:text-base">Servicios extras seleccionados:</h4>
-                                <div className="flex flex-wrap gap-1.5">
-                                  {serviciosExtrasSeleccionados.map(extra => (
-                                    <span
-                                      key={extra.id}
-                                      className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-blue-100 text-blue-700 border border-blue-200"
-                                    >
-                                      <span className="truncate max-w-30">{extra.nombre}</span>
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.stopPropagation()
-                                          handleServicioExtraChange(extra)
-                                        }}
-                                        className="ml-1.5 text-blue-500 hover:text-blue-700 text-sm"
-                                      >
-                                        ×
-                                      </button>
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-gray-700 font-medium text-sm sm:text-base">Total servicios extras:</span>
-                                <span className="text-base sm:text-lg font-bold text-blue-600">
-                                  +${serviciosExtrasTotal.toFixed(2)}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Información Adicional desplegable */}
-                <div>
+                {/* Bloque 4: Información Adicional */}
+                <div className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
                   <button
                     type="button"
                     onClick={() => setInfoAdicionalAbierto(!infoAdicionalAbierto)}
-                    className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition"
+                    className="w-full flex items-center justify-between p-5 bg-white active:bg-gray-50 transition-colors"
                   >
-                    <div className="flex items-center">
-                      <FileText className="h-5 w-5 text-blue-500 mr-3" />
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#e2e2f6] flex items-center justify-center text-[#4260ad]">
+                         <FileText className="h-5 w-5" />
+                      </div>
                       <div className="text-left">
-                        <h3 className="font-semibold text-gray-900">Información Adicional </h3>
-                        <p className="text-sm text-gray-600">
-                          Referencia de pago y notas adicionales (Opcional)
-                        </p>
+                        <h3 className="font-bold text-[#140f07] text-sm">Información Adicional</h3>
+                        <p className="text-xs text-slate-500 font-medium">Referencia y notas (Opcional)</p>
                       </div>
                     </div>
-                    {infoAdicionalAbierto ? (
-                      <ChevronUp className="h-5 w-5 text-gray-500" />
-                    ) : (
-                      <ChevronDown className="h-5 w-5 text-gray-500" />
-                    )}
+                    <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${infoAdicionalAbierto ? 'rotate-180' : ''}`} />
                   </button>
 
                   {infoAdicionalAbierto && (
-                    <div className="mt-4 bg-white border border-gray-200 rounded-xl p-4">
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Referencia de Pago
-                            <span className="text-xs text-gray-500 ml-1">(solo números, opcional)</span>
-                          </label>
-                          <input
-                            type="text"
-                            name="referenciaPago"
-                            value={form.referenciaPago}
-                            onChange={handleChange}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Notas
-                            <span className="text-xs text-gray-500 ml-1">(opcional)</span>
-                          </label>
-                          <textarea
-                            name="notas"
-                            value={form.notas}
-                            onChange={handleChange}
-                            rows={3}
-                            className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition resize-none"
-                          />
-                        </div>
+                    <div className="px-5 pb-5 border-t border-slate-50 pt-5 space-y-4">
+                      <div>
+                        <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1 items-center gap-1.5">
+                          <Receipt className="h-3.5 w-3.5 text-[#4260ad]" />
+                          Referencia de Pago
+                        </label>
+                        <input
+                          type="text"
+                          name="referenciaPago"
+                          value={form.referenciaPago}
+                          onChange={handleChange}
+                          className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-mono font-medium outline-none"
+                          placeholder="000000"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-[#122a4e] uppercase tracking-wider mb-1.5 ml-1 items-center gap-1.5">
+                           <FileText className="h-3.5 w-3.5 text-[#4260ad]" />
+                           Notas
+                        </label>
+                        <textarea
+                          name="notas"
+                          value={form.notas}
+                          onChange={handleChange}
+                          rows={3}
+                          className="w-full px-4 py-3 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] font-medium outline-none resize-none"
+                          placeholder="Detalles adicionales..."
+                        />
                       </div>
                     </div>
                   )}
                 </div>
 
-                {/* Resumen de Pago - CON TEXTO AJUSTADO */}
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {/* Bloque 5: Resumen de Pago */}
+                <div className="bg-white p-5 rounded-2xl border border-slate-100">
+                  <h3 className="text-base font-bold text-[#140f07] mb-4 flex items-center gap-2 border-b border-slate-50 pb-2">
+                    <DollarSign className="h-4 w-4 text-[#4260ad]" />
                     Resumen de Pago
                   </h3>
-                  <div className="bg-gray-50 rounded-xl p-4 sm:p-5 space-y-3">
-                    <div className="flex justify-between items-center pb-2 border-b border-gray-200">
-                      <div>
-                        <span className="text-gray-700 text-sm sm:text-base">Subtotal servicios:</span>
-                        <div className="text-xs sm:text-sm text-gray-600 mt-1">
-                          Servicio principal
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <span className="font-semibold text-base sm:text-lg">
-                          ${(precioTotal - serviciosExtrasTotal).toFixed(2)}
-                        </span>
-                      </div>
+                  <div className="bg-[#f8f9fc] rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-center text-sm text-slate-600">
+                      <span>Subtotal:</span>
+                      <span className="font-bold text-[#140f07]">${(precioTotal - serviciosExtrasTotal).toFixed(2)}</span>
                     </div>
 
                     {serviciosExtrasSeleccionados.length > 0 && (
-                      <>
-                        <div className="flex justify-between items-center">
-                          <span className="text-gray-700 text-sm sm:text-base">Servicios extras:</span>
-                          <span className="font-semibold text-sm sm:text-base">+${serviciosExtrasTotal.toFixed(2)}</span>
-                        </div>
-                      </>
+                      <div className="flex justify-between items-center text-sm text-slate-600">
+                        <span>Extras:</span>
+                        <span className="font-bold text-[#4260ad]">+${serviciosExtrasTotal.toFixed(2)}</span>
+                      </div>
                     )}
 
-                    <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                      <span className="text-gray-900 font-semibold text-base sm:text-lg">Total en USD:</span>
-                      <span className="text-lg sm:text-xl font-bold text-blue-600">
-                        ${precioTotal.toFixed(2)}
-                      </span>
+                    <div className="h-px bg-slate-200 my-2"></div>
+
+                    <div className="flex justify-between items-center">
+                      <span className="text-[#122a4e] font-bold text-base">Total USD:</span>
+                      <span className="text-xl font-black text-[#122a4e]">${precioTotal.toFixed(2)}</span>
                     </div>
 
                     {precioTotalBs !== null && (
-                      <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                        {/* TEXTO MÁS PEQUEÑO para Total en Bolívares */}
-                        <span className="text-gray-900 font-semibold text-sm sm:text-base">Total en Bs:</span>
-                        <span className="text-base sm:text-lg font-bold text-green-600">
-                          Bs {precioTotalBs.toFixed(2)}
-                        </span>
+                      <div className="flex justify-between items-center bg-white p-2 rounded-lg border border-slate-100 mt-2">
+                        <span className="text-slate-500 font-bold text-xs uppercase tracking-wider">Total Bs:</span>
+                        <span className="text-base font-bold text-emerald-600">Bs {precioTotalBs.toFixed(2)}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
                 {/* Botones de acción */}
-                <div className="pt-4 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3">
+                <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="mt-3 sm:mt-0 inline-flex w-full justify-center rounded-xl bg-white px-6 py-3 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:w-auto"
+                    className="w-full sm:w-auto px-6 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl active:bg-slate-50 hover:text-[#122a4e]"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    disabled={loading || !form.color} // NUEVO: deshabilitar si no hay color
-                    className={`inline-flex w-full justify-center rounded-xl px-6 py-3 text-sm font-semibold text-white shadow-sm hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:w-auto ${
+                    disabled={loading || !form.color}
+                    className={`w-full sm:flex-1 px-6 py-3.5 font-bold text-white rounded-xl shadow-lg flex items-center justify-center ${
                       loading || !form.color
-                        ? 'bg-gray-300 cursor-not-allowed'
-                        : 'bg-linear-to-r from-blue-500 to-blue-600'
+                        ? 'bg-slate-300 cursor-not-allowed shadow-none'
+                        : 'bg-[#4260ad] active:bg-[#122a4e] shadow-[#4260ad]/30'
                     }`}
                   >
-                    {loading ? (
-                      <span className="flex items-center">
-                        <svg className="animate-spin h-4 w-4 mr-2 text-white" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Guardando...
-                      </span>
-                    ) : (
-                      'Guardar Cambios'
-                    )}
+                    {loading ? 'Guardando...' : 'Guardar Cambios'}
                   </button>
                 </div>
               </form>

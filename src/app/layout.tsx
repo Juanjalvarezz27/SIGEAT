@@ -29,10 +29,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${poppins.variable} ${montserrat.variable}`}>
-      <body className="min-h-screen bg-gray-50">
+      <body className="min-h-screen bg-[#e2e2f6] text-[#140f07] antialiased selection:text-white">
         <AuthProvider>
           <Navbar />
-          <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <main className="container mx-auto px-4 py-6 sm:px-6 lg:px-8 min-h-[calc(100vh-80px)]">
             {children}
           </main>
           <ToastContainer

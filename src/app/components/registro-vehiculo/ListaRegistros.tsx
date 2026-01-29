@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Car, Clock, DollarSign, CheckCircle, XCircle, AlertCircle, RefreshCw, Edit, Trash2, Hourglass, Wrench, CheckCheck, User, Phone, CreditCard, MessageCircle, ChevronDown, ChevronUp, Receipt, FileText, Palette, Search } from 'lucide-react'
+import { Car, Clock, DollarSign, CheckCircle, XCircle, AlertCircle, RefreshCw, Edit, Trash2, Hourglass, Wrench, CheckCheck, User, CreditCard, MessageCircle, ChevronDown, ChevronUp, Receipt, FileText, Search } from 'lucide-react'
 import ModalEditarRegistro from './ModalEditarRegistro'
 import ModalConfirmacion from '../ui/ModalConfirmacion'
 import BuscadorVehiculos from '../vehiculos/BuscadorVehiculos'
@@ -24,31 +24,25 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
   const [modalEliminarAbierto, setModalEliminarAbierto] = useState(false)
   const [registroAEliminar, setRegistroAEliminar] = useState<RegistroVehiculoCompleto | null>(null)
 
-  // Estados para el buscador
   const [buscando, setBuscando] = useState(false)
   const [busqueda, setBusqueda] = useState({
     termino: '',
     tipo: 'placa'
   })
 
-  // Estado para controlar qué registros tienen el desplegable abierto
   const [desplegablesAbiertos, setDesplegablesAbiertos] = useState<{ [key: number]: boolean }>({})
-
-  // Referencia para evitar doble toast
   const toastShownRef = useRef(false)
 
-  // Función para normalizar texto (sin acentos, minúsculas)
   const normalizarTexto = useCallback((texto: string): string => {
     if (!texto) return ''
 
     return texto
       .toLowerCase()
-      .normalize('NFD') // Separar acentos
-      .replace(/[\u0300-\u036f]/g, '') // Eliminar diacríticos
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
       .trim()
   }, [])
 
-  // Cargar datos del formulario
   useEffect(() => {
     const fetchDatosFormulario = async () => {
       try {
@@ -77,10 +71,8 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
       setRegistrosOriginales(data)
       setError(null)
 
-      // Resetear desplegables cuando se cargan nuevos registros
       setDesplegablesAbiertos({})
 
-      // Notificar estadísticas
       if (onRegistrosChange && typeof onRegistrosChange === 'function') {
         const totalRegistros = data.length
         const totalIngresos = data.reduce((sum: number, reg: any) => sum + Number(reg.precioTotal), 0)
@@ -95,19 +87,15 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
     }
   }
 
-  // Cargar registros al montar o cuando cambie refreshKey
   useEffect(() => {
     fetchRegistros()
   }, [refreshKey])
 
-  // Función para realizar la búsqueda (llamada desde BuscadorVehiculos)
   const realizarBusqueda = useCallback((termino: string, tipo: string) => {
-    // Si no hay término, mostrar todos los registros
     if (termino.trim() === '') {
       setRegistros(registrosOriginales)
       setBuscando(false)
 
-      // Actualizar estadísticas
       if (onRegistrosChange && registrosOriginales.length > 0) {
         const totalRegistros = registrosOriginales.length
         const totalIngresos = registrosOriginales.reduce((sum, reg) => sum + Number(reg.precioTotal), 0)
@@ -117,11 +105,8 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
     }
 
     setBuscando(true)
-
-    // Normalizar el término de búsqueda
     const terminoNormalizado = normalizarTexto(termino)
 
-    // Filtrar registros
     const resultados = registrosOriginales.filter(registro => {
       let valor: string = ''
 
@@ -144,7 +129,6 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
 
     setRegistros(resultados)
 
-    // Actualizar estadísticas con resultados filtrados
     if (onRegistrosChange) {
       const totalRegistros = resultados.length
       const totalIngresos = resultados.reduce((sum, reg) => sum + Number(reg.precioTotal), 0)
@@ -154,18 +138,13 @@ export default function ListaRegistros({ refreshKey = 0, onRegistrosChange }: Li
     setBuscando(false)
   }, [registrosOriginales, onRegistrosChange, normalizarTexto])
 
-  // Función para manejar la búsqueda desde el componente BuscadorVehiculos
   const handleBuscar = useCallback((termino: string, tipo: string) => {
-    // Actualizar estado de búsqueda
     setBusqueda({ termino, tipo })
-
-    // Ejecutar búsqueda
     realizarBusqueda(termino, tipo)
   }, [realizarBusqueda])
 
   const handleRefresh = async () => {
     await fetchRegistros()
-    // Limpiar búsqueda al refrescar
     setBusqueda({ termino: '', tipo: 'placa' })
   }
 
@@ -303,19 +282,16 @@ const abrirWhatsApp = (registro: RegistroVehiculoCompleto) => {
   
   const categoriaServicio = registro.servicio.categoria?.nombre || '';
   
-  // Construir sección de servicios extras si existen
   let serviciosExtrasTexto = '';
   if (registro.serviciosExtras.length > 0) {
     const extras = registro.serviciosExtras.map(extra => extra.servicioExtra.nombre).join(', ');
     serviciosExtrasTexto = `\n• *Servicios extras:* ${extras}`;
   }
   
-  // Construir sección de precio
   const precioTexto = registro.precioTotalBs 
     ? `\n• *Total:* $${Number(registro.precioTotal).toFixed(2)} (Bs ${Number(registro.precioTotalBs).toFixed(2)})`
     : `\n• *Total:* $${Number(registro.precioTotal).toFixed(2)}`;
   
-  // Construir sección de notas si existen
   let notasTexto = '';
   if (registro.notas && registro.notas.trim() !== '') {
     notasTexto = `\n\n*Notas adicionales:*\n${registro.notas}`;
@@ -343,24 +319,24 @@ Le informamos que su vehículo ya está listo y puede pasar a recogerlo cuando d
   const getEstadoPagoColor = (estado: string) => {
     switch (estado.toLowerCase()) {
       case 'pagado':
-        return 'text-green-600 bg-green-50 border-green-200'
+        return 'text-emerald-700 bg-emerald-50 border-emerald-200'
       case 'pendiente':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200'
+        return 'text-amber-700 bg-amber-50 border-amber-200'
       case 'cancelado':
-        return 'text-red-600 bg-red-50 border-red-200'
+        return 'text-red-700 bg-red-50 border-red-200'
       default:
-        return 'text-gray-600 bg-gray-50 border-gray-200'
+        return 'text-slate-600 bg-slate-50 border-slate-200'
     }
   }
 
   const getEstadoPagoIcon = (estado: string) => {
     switch (estado.toLowerCase()) {
       case 'pagado':
-        return <CheckCircle className="h-3.5 w-3.5 mr-1" />
+        return <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
       case 'pendiente':
-        return <Clock className="h-3.5 w-3.5 mr-1" />
+        return <Clock className="h-3.5 w-3.5 mr-1.5" />
       case 'cancelado':
-        return <XCircle className="h-3.5 w-3.5 mr-1" />
+        return <XCircle className="h-3.5 w-3.5 mr-1.5" />
       default:
         return null
     }
@@ -369,24 +345,24 @@ Le informamos que su vehículo ya está listo y puede pasar a recogerlo cuando d
   const getEstadoCarroColor = (estado: string, id: number) => {
     switch (id) {
       case 1:
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200'
+        return 'text-amber-700 bg-amber-50 border-amber-200'
       case 2:
-        return 'text-blue-600 bg-blue-50 border-blue-200'
+        return 'text-[#122a4e] bg-[#e2e2f6] border-[#869dfc]/30'
       case 3:
-        return 'text-green-600 bg-green-50 border-green-200'
+        return 'text-emerald-700 bg-emerald-50 border-emerald-200'
       default:
-        return 'text-gray-600 bg-gray-50 border-gray-200'
+        return 'text-slate-600 bg-slate-50 border-slate-200'
     }
   }
 
   const getEstadoCarroIcon = (id: number) => {
     switch (id) {
       case 1:
-        return <Hourglass className="h-3.5 w-3.5 mr-1" />
+        return <Hourglass className="h-3.5 w-3.5 mr-1.5" />
       case 2:
-        return <Wrench className="h-3.5 w-3.5 mr-1" />
+        return <Wrench className="h-3.5 w-3.5 mr-1.5" />
       case 3:
-        return <CheckCheck className="h-3.5 w-3.5 mr-1" />
+        return <CheckCheck className="h-3.5 w-3.5 mr-1.5" />
       default:
         return null
     }
@@ -406,14 +382,19 @@ Le informamos que su vehículo ya está listo y puede pasar a recogerlo cuando d
 
   if (loading && registros.length === 0) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 mt-6">
         {[1, 2, 3].map(i => (
-          <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+          <div key={i} className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6">
             <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-              <div className="space-y-3">
-                <div className="h-3 bg-gray-200 rounded"></div>
-                <div className="h-3 bg-gray-200 rounded"></div>
+              <div className="flex justify-between items-center">
+                 <div className="h-10 w-10 bg-slate-100 rounded-xl"></div>
+                 <div className="h-6 bg-slate-100 rounded w-1/4"></div>
+                 <div className="h-8 w-16 bg-slate-100 rounded-lg"></div>
+              </div>
+              <div className="h-16 bg-slate-50 rounded-xl w-full"></div>
+              <div className="grid grid-cols-2 gap-3">
+                 <div className="h-12 bg-slate-100 rounded-xl"></div>
+                 <div className="h-12 bg-slate-100 rounded-xl"></div>
               </div>
             </div>
           </div>
@@ -424,14 +405,16 @@ Le informamos que su vehículo ya está listo y puede pasar a recogerlo cuando d
 
   if (error && registros.length === 0) {
     return (
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-        <div className="text-center py-6">
-          <AlertCircle className="h-10 w-10 text-red-400 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-gray-900 mb-2">Error al cargar registros</h3>
-          <p className="text-gray-600 text-sm mb-4">{error}</p>
+      <div className="bg-white rounded-3xl shadow-sm border border-red-100 p-8 mt-6">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="h-8 w-8 text-red-500" />
+          </div>
+          <h3 className="text-lg font-bold text-[#140f07] mb-2">Error de conexión</h3>
+          <p className="text-slate-500 text-sm mb-6">{error}</p>
           <button
             onClick={handleRefresh}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition flex items-center mx-auto text-sm"
+            className="px-6 py-3 bg-[#122a4e] text-white font-medium rounded-xl hover:bg-[#4260ad] transition-colors flex items-center mx-auto"
           >
             <RefreshCw className="h-4 w-4 mr-2" />
             Reintentar
@@ -443,61 +426,63 @@ Le informamos que su vehículo ya está listo y puede pasar a recogerlo cuando d
 
   return (
     <>
-      {/* Componente de búsqueda separado */}
-      <BuscadorVehiculos
-        onBuscar={handleBuscar}
-        cargando={buscando}
-        busquedaActual={busqueda}
-      />
+      <div className="mb-6">
+        <BuscadorVehiculos
+          onBuscar={handleBuscar}
+          cargando={buscando}
+          busquedaActual={busqueda}
+        />
+      </div>
 
-      <div className="space-y-3">
-        {/* Contador de registros */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="text-xs sm:text-sm text-gray-600">
-            Mostrando <span className="font-semibold">{registros.length}</span> registro{registros.length !== 1 ? 's' : ''}
+      <div className="space-y-5">
+        <div className="flex items-center justify-between px-2">
+          <div className="text-sm font-medium text-[#122a4e]/70">
+            Mostrando <span className="font-bold text-[#140f07]">{registros.length}</span> {registros.length === 1 ? 'vehículo' : 'vehículos'}
             {busqueda.termino && registrosOriginales.length > 0 && (
-              <span className="text-gray-400 ml-2">
-                (de {registrosOriginales.length} total)
+              <span className="text-[#869dfc] ml-1">
+                (de {registrosOriginales.length})
               </span>
             )}
           </div>
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition"
-            title="Actualizar lista"
+            className="p-2 text-[#4260ad] hover:bg-[#e2e2f6] rounded-xl transition-colors"
           >
             <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
 
         {registros.length === 0 ? (
-          <div className="text-center py-8">
+          <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-10 text-center">
             {busqueda.termino ? (
               <>
-                <Search className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-gray-900 mb-1">No se encontraron resultados</h3>
-                <p className="text-gray-600 text-sm mb-4">
-                  No hay registros que coincidan con "<span className="font-medium">{busqueda.termino}</span>"
-                  en {busqueda.tipo === 'placa' ? 'placas' : busqueda.tipo === 'nombre' ? 'nombres' : 'cédulas'}
+                <div className="w-16 h-16 bg-[#f4f6fc] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="h-8 w-8 text-[#869dfc]" />
+                </div>
+                <h3 className="text-lg font-bold text-[#140f07] mb-2">Sin resultados</h3>
+                <p className="text-slate-500 text-sm mb-6">
+                  No se encontraron coincidencias para "<span className="font-semibold text-[#122a4e]">{busqueda.termino}</span>"
                 </p>
                 <button
                   onClick={() => handleBuscar('', busqueda.tipo)}
-                  className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition"
+                  className="px-5 py-2.5 text-sm font-medium text-[#4260ad] bg-[#e2e2f6] hover:bg-[#4260ad] hover:text-white rounded-xl transition-all"
                 >
-                  Mostrar todos los registros
+                  Limpiar filtros
                 </button>
               </>
             ) : (
               <>
-                <Car className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                <h3 className="text-base font-semibold text-gray-900 mb-1">No hay registros hoy</h3>
-                <p className="text-gray-600 text-sm">Los registros del día aparecerán aquí</p>
+                <div className="w-16 h-16 bg-[#f4f6fc] rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Car className="h-8 w-8 text-[#869dfc]" />
+                </div>
+                <h3 className="text-lg font-bold text-[#140f07] mb-2">Todo limpio</h3>
+                <p className="text-slate-500 text-sm">Aún no hay vehículos registrados hoy.</p>
               </>
             )}
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-5">
             {registros.map(registro => {
               const tieneInfoAdicional = tieneInformacionAdicional(registro)
               const desplegableAbierto = desplegablesAbiertos[registro.id] || false
@@ -505,209 +490,144 @@ Le informamos que su vehículo ya está listo y puede pasar a recogerlo cuando d
               return (
                 <div
                   key={registro.id}
-                  className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4 hover:border-gray-300 transition hover:shadow-sm"
+                  className="bg-white rounded-3xl shadow-[0_2px_15px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden"
                 >
-                  <div className="flex justify-between items-start mb-3 sm:mb-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
-                        <Car className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
-                      </div>
-                      <div>
-                        <div className="flex flex-col">
-                          <span className="font-bold text-base sm:text-lg text-gray-900">{registro.placa}</span>
-                          <div className="flex flex-wrap items-center gap-1 text-sm text-gray-500">
-                            <span>{registro.tipoVehiculo.nombre}</span>
-                            {registro.color && (
-                              <>
-                                <span className="text-gray-300">•</span>
-                                <span className="flex items-center">
-                                  <Palette className="h-3 w-3 mr-1 text-gray-400" />
-                                  {registro.color}
-                                </span>
-                              </>
-                            )}
+                  {/* Encabezado: Icono, Título y Acciones */}
+                  <div className="p-5 pb-0">
+                    <div className="flex justify-between items-start">
+                       <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-[#122a4e] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#122a4e]/20 shrink-0">
+                             <Car className="h-6 w-6" />
                           </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex space-x-1">
-                      <button
-                        onClick={() => handleEditar(registro)}
-                        className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
-                        aria-label="Editar registro"
-                      >
-                        <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      </button>
-                      <button
-                        onClick={() => handleEliminarClick(registro)}
-                        className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                        aria-label="Eliminar registro"
-                      >
-                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      </button>
+                          <div>
+                             <h3 className="text-xl font-black text-[#140f07] leading-tight">{registro.placa}</h3>
+                             <div className="text-sm font-medium text-slate-500 flex items-center gap-1.5 mt-0.5">
+                                <span className="text-[#4260ad] font-bold uppercase text-xs">{registro.tipoVehiculo.nombre}</span>
+                                {registro.color && (
+                                   <>
+                                     <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                     <span className="text-xs">{registro.color}</span>
+                                   </>
+                                )}
+                             </div>
+                          </div>
+                       </div>
+                       
+                       <div className="flex gap-1">
+                          <button onClick={() => handleEditar(registro)} className="p-2 text-slate-300 hover:text-[#4260ad] transition-colors">
+                             <Edit className="h-5 w-5" />
+                          </button>
+                          <button onClick={() => handleEliminarClick(registro)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                             <Trash2 className="h-5 w-5" />
+                          </button>
+                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <div className="flex items-center space-x-2">
-                        <User className="h-3.5 w-3.5 text-gray-400 shrink-0" />
+                  <div className="p-5 space-y-5">
+                     
+                     {/* Caja de Usuario */}
+                     <div className="bg-[#f8f9fc] rounded-2xl p-4 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-slate-100 shadow-sm shrink-0">
+                           <User className="h-5 w-5 text-[#122a4e]" />
+                        </div>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{registro.nombre}</p>
-                          <p className="text-sm text-gray-500 font-mono">{registro.cedula}</p>
+                           <p className="text-[#140f07] font-bold text-sm truncate">{registro.nombre}</p>
+                           <p className="text-slate-500 text-xs font-medium">{registro.cedula}</p>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        <Clock className="h-3.5 w-3.5 text-gray-400 shrink-0" />
-                        <span>{formatFecha(registro.fechaHora)}</span>
-                      </div>
-                    </div>
+                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="bg-blue-50 rounded-lg p-3">
-                        <div className="flex items-start">
-                          <CreditCard className="h-4 w-4 text-blue-500 mr-2 mt-0.5 shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-xs text-blue-700 font-medium">Servicio</p>
-                            <p className="text-sm font-semibold text-blue-600 truncate">{registro.servicio.nombre}</p>
-                          </div>
+                     {/* Fecha y Servicio */}
+                     <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-slate-500 text-xs font-medium">
+                           <Clock className="h-3.5 w-3.5" />
+                           {formatFecha(registro.fechaHora)}
                         </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">Estado carro:</span>
-                          <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${
-                            getEstadoCarroColor(registro.estadoCarro.nombre, registro.estadoCarro.id)
-                          }`}>
-                            {getEstadoCarroIcon(registro.estadoCarro.id)}
-                            <span>{registro.estadoCarro.nombre}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500">Estado pago:</span>
-                          <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${
-                            getEstadoPagoColor(registro.estadoPago.nombre)
-                          }`}>
-                            {getEstadoPagoIcon(registro.estadoPago.nombre)}
-                            <span>{registro.estadoPago.nombre}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-100">
-                      <div className="bg-gray-50 rounded-lg p-2 sm:p-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <DollarSign className="h-3.5 w-3.5 text-blue-500 mr-1.5" />
-                            <span className="text-xs text-gray-600">USD</span>
-                          </div>
-                          <span className="font-bold text-sm sm:text-base text-blue-600">
-                            ${Number(registro.precioTotal).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="bg-green-50 rounded-lg p-2 sm:p-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-600">Bs</span>
-                          <span className="font-bold text-sm sm:text-base text-green-600">
-                            Bs {registro.precioTotalBs ? Number(registro.precioTotalBs).toFixed(2) : '0.00'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-3 border-t border-gray-100">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1">
-                          <div className="flex items-center space-x-2">
-                            <Phone className="h-3.5 w-3.5 text-gray-400" />
-                            <span className="text-sm text-gray-700">{registro.telefono}</span>
-                          </div>
-
-                          <button
-                            onClick={() => abrirWhatsApp(registro)}
-                            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg border border-green-200 transition-colors w-full sm:w-auto"
-                            aria-label="Enviar mensaje por WhatsApp"
-                          >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                            <span className="text-xs font-medium">Enviar WhatsApp</span>
-                          </button>
+                        
+                        <div className="flex items-center gap-2">
+                           <CreditCard className="h-4 w-4 text-[#122a4e]" />
+                           <span className="text-[#140f07] font-bold text-sm">{registro.servicio.nombre}</span>
                         </div>
 
-                        {registro.serviciosExtras.length > 0 && (
-                          <div className="flex flex-wrap items-center gap-1">
-                            <span className="text-xs font-medium text-gray-500 mr-1">
-                              Extras:
+                        {/* Badges de Estado */}
+                        <div className="flex flex-wrap gap-2">
+                            <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold border ${getEstadoCarroColor(registro.estadoCarro.nombre, registro.estadoCarro.id)}`}>
+                                {getEstadoCarroIcon(registro.estadoCarro.id)}
+                                {registro.estadoCarro.nombre}
                             </span>
-                            <div className="flex flex-wrap gap-1">
-                              {registro.serviciosExtras.map((extra, idx) => (
-                                <span
-                                  key={idx}
-                                  className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-50 text-blue-700 border border-blue-100"
-                                >
-                                  {extra.servicioExtra.nombre}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                            <span className={`inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold border ${getEstadoPagoColor(registro.estadoPago.nombre)}`}>
+                                {getEstadoPagoIcon(registro.estadoPago.nombre)}
+                                {registro.estadoPago.nombre}
+                            </span>
+                        </div>
+                     </div>
 
-                    {tieneInfoAdicional && (
-                      <div className="pt-2 border-t border-gray-100">
-                        <button
-                          onClick={() => toggleDesplegable(registro.id)}
-                          className="flex items-center justify-between w-full p-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
-                          aria-expanded={desplegableAbierto}
-                          aria-controls={`info-adicional-${registro.id}`}
-                        >
-                          <div className="flex items-center">
-                            <FileText className="h-4 w-4 mr-2 text-gray-400" />
-                            <span className="font-medium">Información adicional</span>
-                          </div>
-                          {desplegableAbierto ? (
-                            <ChevronUp className="h-4 w-4" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4" />
-                          )}
-                        </button>
+                     {/* Cajas de Totales */}
+                     <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-[#122a4e] rounded-2xl p-4 text-center text-white shadow-lg shadow-[#122a4e]/20">
+                           <span className="text-[10px] font-bold text-[#869dfc] uppercase tracking-wider block mb-1">Total USD</span>
+                           <span className="text-xl font-black">${Number(registro.precioTotal).toFixed(2)}</span>
+                        </div>
+                        <div className="bg-[#f4f6fc] rounded-2xl p-4 text-center border border-slate-100">
+                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Total BS</span>
+                           <span className="text-xl font-black text-[#140f07]">{registro.precioTotalBs ? Number(registro.precioTotalBs).toFixed(2) : '0.00'}</span>
+                        </div>
+                     </div>
 
-                        {desplegableAbierto && (
-                          <div
-                            id={`info-adicional-${registro.id}`}
-                            className="mt-2 space-y-3 p-3 bg-gray-50 rounded-lg border border-gray-200"
-                          >
-                            {registro.referenciaPago && registro.referenciaPago.trim() !== '' && (
-                              <div className="space-y-1">
-                                <div className="flex items-center text-xs text-gray-500">
-                                  <Receipt className="h-3.5 w-3.5 mr-1.5" />
-                                  <span className="font-medium">Referencia de Pago:</span>
-                                </div>
-                                <p className="text-sm text-gray-800 bg-white p-2 rounded border border-gray-200 wrap-break-word">
-                                  {registro.referenciaPago}
-                                </p>
+                     {/* Botón WhatsApp */}
+                     <button
+                        onClick={() => abrirWhatsApp(registro)}
+                        className="w-full bg-[#e2e2f6] text-[#122a4e] font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-[#d0d6f5] transition-colors"
+                     >
+                        <MessageCircle className="h-5 w-5" />
+                        WhatsApp
+                     </button>
+
+                     {/* Extras y Chips */}
+                     {registro.serviciosExtras.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                           <span className="text-xs font-bold text-slate-300 uppercase py-1">Extras:</span>
+                           {registro.serviciosExtras.map((extra, idx) => (
+                              <span key={idx} className="text-xs font-medium text-[#4260ad] border border-[#869dfc]/20 px-2.5 py-1 rounded-lg bg-white">
+                                 {extra.servicioExtra.nombre}
+                              </span>
+                           ))}
+                        </div>
+                     )}
+
+                     {/* Expandible (Notas) */}
+                     {tieneInfoAdicional && (
+                        <div className="border-t border-slate-50 pt-3">
+                           <button
+                             onClick={() => toggleDesplegable(registro.id)}
+                             className="w-full flex items-center justify-center gap-1 text-xs font-medium text-slate-400 hover:text-[#4260ad] transition-colors"
+                           >
+                              {desplegableAbierto ? 'Ocultar detalles' : 'Ver notas y referencia'}
+                              <ChevronDown className={`h-3 w-3 transition-transform ${desplegableAbierto ? 'rotate-180' : ''}`} />
+                           </button>
+
+                           {desplegableAbierto && (
+                              <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2">
+                                  {registro.referenciaPago && registro.referenciaPago.trim() !== '' && (
+                                     <div className="bg-[#f8f9fc] p-3 rounded-xl border border-slate-100">
+                                         <p className="text-xs font-bold text-[#122a4e] mb-1 flex items-center gap-1">
+                                            <Receipt className="h-3 w-3" /> Referencia
+                                         </p>
+                                         <p className="text-sm font-mono text-slate-600">{registro.referenciaPago}</p>
+                                     </div>
+                                  )}
+                                  {registro.notas && registro.notas.trim() !== '' && (
+                                     <div className="bg-[#f8f9fc] p-3 rounded-xl border border-slate-100">
+                                         <p className="text-xs font-bold text-[#122a4e] mb-1 flex items-center gap-1">
+                                            <FileText className="h-3 w-3" /> Notas
+                                         </p>
+                                         <p className="text-sm text-slate-600 italic">{registro.notas}</p>
+                                     </div>
+                                  )}
                               </div>
-                            )}
-
-                            {registro.notas && registro.notas.trim() !== '' && (
-                              <div className="space-y-1">
-                                <div className="flex items-center text-xs text-gray-500">
-                                  <FileText className="h-3.5 w-3.5 mr-1.5" />
-                                  <span className="font-medium">Notas:</span>
-                                </div>
-                                <p className="text-sm text-gray-800 bg-white p-2 rounded border border-gray-200 wrap-break-word whitespace-pre-wrap">
-                                  {registro.notas}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                           )}
+                        </div>
+                     )}
                   </div>
                 </div>
               )
@@ -731,7 +651,7 @@ Le informamos que su vehículo ya está listo y puede pasar a recogerlo cuando d
         onClose={() => setModalEliminarAbierto(false)}
         onConfirm={handleEliminarConfirmado}
         title="Eliminar Registro"
-        message={`¿Estás seguro de que deseas eliminar el registro de ${registroAEliminar?.placa} - ${registroAEliminar?.nombre}? Esta acción no se puede deshacer.`}
+        message={`¿Estás seguro de que deseas eliminar el registro de ${registroAEliminar?.placa} - ${registroAEliminar?.nombre}?`}
         confirmText="Eliminar"
         cancelText="Cancelar"
         type="danger"

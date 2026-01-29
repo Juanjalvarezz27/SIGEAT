@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Car, Calendar, DollarSign, Plus, X } from 'lucide-react'
+import { Car, Calendar, DollarSign, Plus, X, RefreshCw } from 'lucide-react'
 import ListaRegistros from '../components/registro-vehiculo/ListaRegistros'
 import FormularioRegistro from '../components/registro-vehiculo/FormularioRegistro'
 import useTasaBCV from '../hooks/useTasaBCV'
@@ -18,10 +18,7 @@ export default function HomeDashboard() {
   const [modalAbierto, setModalAbierto] = useState(false)
 
   const handleRegistroCreado = () => {
-    // Incrementar el contador para forzar actualización
     setRefreshKey(prev => prev + 1)
-    
-    // Mostrar notificación de éxito
     toast.success('¡Vehículo registrado con éxito!', {
       position: "top-right",
       autoClose: 3000,
@@ -31,15 +28,11 @@ export default function HomeDashboard() {
       draggable: true,
       progress: undefined,
     })
-    
-    // Cerrar modal
     setModalAbierto(false)
   }
 
   const handleRegistrosChange = (nuevasEstadisticas: { totalRegistros: number; totalIngresos: number }) => {
-    // Calcular total en bolívares si hay tasa
     const totalIngresosBs = tasa ? nuevasEstadisticas.totalIngresos * tasa : 0
-    
     setEstadisticas({
       ...nuevasEstadisticas,
       totalIngresosBs
@@ -47,16 +40,16 @@ export default function HomeDashboard() {
   }
 
   const getFechaActual = () => {
-    return new Date().toLocaleDateString('es-VE', {
+    const fecha = new Date().toLocaleDateString('es-VE', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       timeZone: 'America/Caracas'
     })
+    return fecha.charAt(0).toUpperCase() + fecha.slice(1)
   }
 
-  // Actualizar total en bolívares cuando cambia la tasa
   useEffect(() => {
     if (tasa) {
       setEstadisticas(prev => ({
@@ -66,14 +59,12 @@ export default function HomeDashboard() {
     }
   }, [tasa])
 
-  // Cerrar modal con Escape key
   useEffect(() => {
     const handleEscKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && modalAbierto) {
         setModalAbierto(false)
       }
     }
-
     window.addEventListener('keydown', handleEscKey)
     return () => window.removeEventListener('keydown', handleEscKey)
   }, [modalAbierto])
@@ -82,124 +73,83 @@ export default function HomeDashboard() {
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
         
-        {/* Header principal */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="w-12 h-12 min-w-12 min-h-12 aspect-square bg-linear-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shrink-0">
-              <Car className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                Registro de Vehículos
-              </h1>
-              <p className="text-gray-600 mt-1 flex items-center">
-                <Calendar className="h-4 w-4 mr-2" />
-                {getFechaActual()}
-              </p>
-            </div>
+        {/* Header Compacto sin fondo */}
+        <div className="flex items-center gap-3.5 mb-6">
+          <div className="shrink-0 bg-[#122a4e] text-white p-2.5 rounded-xl shadow-md shadow-[#122a4e]/20">
+            <Car className="h-6 w-6" />
           </div>
-
-          {/* Estadísticas principales */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 mb-8">
-            {/* Tarjeta de Tasa BCV */}
-            <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500 font-medium">TASA BCV</p>
-                  <div className="flex items-baseline mt-1">
-                    {loadingTasa ? (
-                      <div className="animate-pulse flex space-x-2">
-                        <div className="h-5 sm:h-6 w-12 sm:w-16 bg-gray-200 rounded"></div>
-                      </div>
-                    ) : errorTasa ? (
-                      <div className="text-red-600">
-                        <p className="text-xs">Error</p>
-                        <button
-                          onClick={actualizarTasa}
-                          className="text-xs text-blue-500 hover:text-blue-700"
-                        >
-                          Reintentar
-                        </button>
-                      </div>
-                    ) : tasa ? (
-                      <span className="text-lg sm:text-xl font-bold text-gray-900">Bs {tasa.toFixed(2)}</span>
-                    ) : (
-                      <span className="text-xs sm:text-sm font-semibold text-yellow-600">N/A</span>
-                    )}
-                  </div>
-                </div>
-                <button
-                  onClick={actualizarTasa}
-                  disabled={loadingTasa}
-                  className={`ml-2 p-1.5 sm:p-2 rounded-lg transition ${
-                    loadingTasa
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-                  }`}
-                  aria-label="Actualizar tasa"
-                >
-                  <svg 
-                    className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${loadingTasa ? 'animate-spin' : ''}`} 
-                    fill="none" 
-                    viewBox="0 0 24 24" 
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Tarjeta de Total Hoy USD */}
-            <div className="bg-blue-50 rounded-xl border border-blue-100 p-3 sm:p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm font-medium text-blue-700">TOTAL HOY $</p>
-                  <p className="text-lg sm:text-2xl font-bold text-blue-600">
-                    ${estadisticas.totalIngresos.toFixed(2)}
-                  </p>
-                </div>
-                <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 text-blue-400" />
-              </div>
-            </div>
-
-            {/* Tarjeta de Total Hoy Bs */}
-            <div className="bg-green-50 rounded-xl border border-green-100 p-3 sm:p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm font-medium text-green-700">TOTAL HOY Bs</p>
-                  <p className="text-lg sm:text-2xl font-bold text-green-600">
-                    Bs {estadisticas.totalIngresosBs.toFixed(2)}
-                  </p>
-                </div>
-                <div className="text-green-400">
-                  <svg className="h-6 w-6 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Tarjeta de Vehículos Hoy */}
-            <div className="bg-purple-50 rounded-xl border border-purple-100 p-3 sm:p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs sm:text-sm font-medium text-purple-700">VEHÍCULOS</p>
-                  <p className="text-lg sm:text-2xl font-bold text-purple-600">
-                    {estadisticas.totalRegistros}
-                  </p>
-                </div>
-                <Car className="h-6 w-6 sm:h-8 sm:w-8 text-purple-400" />
-              </div>
+          <div className="flex flex-col">
+            <h1 className="text-xl sm:text-2xl font-black text-[#140f07] leading-tight">
+              Registro de Vehículos
+            </h1>
+            <div className="flex items-center text-xs font-semibold text-[#122a4e]/60 mt-0.5">
+              <Calendar className="h-3 w-3 mr-1.5" />
+              <span>{getFechaActual()}</span>
             </div>
           </div>
         </div>
 
-        {/* Sección Registros del Día - Sin box */}
-        <div className="mb-8">
-
+        {/* Estadísticas: 1 columna en móvil, 2 en tablet, 4 en desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           
-          {/* Lista de registros directamente, sin box contenedor */}
+          {/* Tarjeta 1: Tasa BCV */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#869dfc]/10 flex flex-col justify-between min-h-25">
+            <div className="flex justify-between items-start mb-2">
+              <span className="text-[10px] sm:text-xs font-bold text-[#122a4e] bg-[#f4f6fc] px-1.5 py-0.5 rounded">BCV</span>
+              <button onClick={actualizarTasa} disabled={loadingTasa} className="text-[#4260ad]">
+                <RefreshCw className={`h-3.5 w-3.5 ${loadingTasa ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+            <div className="mt-auto">
+              {loadingTasa ? (
+                <div className="h-6 w-16 bg-gray-100 animate-pulse rounded"></div>
+              ) : errorTasa ? (
+                <span className="text-xs text-red-500">Error</span>
+              ) : tasa ? (
+                <p className="text-xl sm:text-2xl font-black text-[#140f07]">Bs {tasa.toFixed(2)}</p>
+              ) : (
+                <span className="text-xs text-yellow-600">N/A</span>
+              )}
+            </div>
+          </div>
+
+          {/* Tarjeta 2: Total USD (Destacada) */}
+          <div className="bg-[#122a4e] rounded-2xl p-4 shadow-lg shadow-[#122a4e]/20 relative overflow-hidden group min-h-25 flex flex-col justify-end">
+            <DollarSign className="absolute -right-2 -top-2 h-20 w-20 text-white/5 rotate-12" />
+            <div className="relative z-10">
+              <p className="text-[#869dfc] font-bold text-[10px] sm:text-xs uppercase tracking-wider mb-1">Total USD</p>
+              <h3 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+                ${estadisticas.totalIngresos.toFixed(2)}
+              </h3>
+            </div>
+          </div>
+
+          {/* Tarjeta 3: Total Bs */}
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-[#869dfc]/10 flex flex-col justify-end min-h-25">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#122a4e]"></div>
+              <p className="text-[#122a4e]/60 font-bold text-[10px] sm:text-xs uppercase tracking-wider">Total Bs</p>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-[#140f07] truncate">
+              {estadisticas.totalIngresosBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </h3>
+          </div>
+
+          {/* Tarjeta 4: Vehículos */}
+          <div className="bg-[#4260ad] rounded-2xl p-4 shadow-md shadow-[#4260ad]/20 relative overflow-hidden min-h-25 flex flex-col justify-end">
+            <Car className="absolute -right-2 -bottom-2 h-16 w-16 text-white/10 -rotate-12" />
+            <div className="relative z-10">
+              <p className="text-white/80 font-bold text-[10px] sm:text-xs uppercase tracking-wider mb-1">Vehículos</p>
+              <h3 className="text-3xl sm:text-4xl font-black text-white">
+                {estadisticas.totalRegistros}
+              </h3>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Lista de Registros */}
+        <div className="mb-20">
           <ListaRegistros 
             refreshKey={refreshKey}
             onRegistrosChange={handleRegistrosChange}
@@ -207,50 +157,44 @@ export default function HomeDashboard() {
         </div>
       </div>
 
-      {/* Botón flotante para abrir formulario */}
+      {/* Botón flotante */}
       <button
         onClick={() => setModalAbierto(true)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 sm:w-16 sm:h-16 bg-linear-to-r from-blue-500 to-blue-600 text-white rounded-full flex items-center justify-center shadow-lg hover:shadow-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 active:scale-95"
+        className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-[#122a4e] text-white rounded-2xl flex items-center justify-center shadow-xl shadow-[#122a4e]/40 hover:bg-[#4260ad] hover:scale-105 transition-all duration-300 active:scale-95"
         aria-label="Nuevo registro"
       >
-        <Plus className="h-6 w-6 sm:h-7 sm:w-7" />
+        <Plus className="h-7 w-7" />
       </button>
 
-      {/* Overlay para el modal */}
+      {/* Modal */}
       {modalAbierto && (
         <div 
-          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-60 bg-[#122a4e]/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
           onClick={() => setModalAbierto(false)}
         >
           <div 
-            className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl"
+            className="bg-[#f8f9fc] rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl border border-white/20"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header del modal */}
-            <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4 sm:p-6 flex items-center justify-between">
+            <div className="sticky top-0 z-10 bg-white px-5 py-4 border-b border-[#122a4e]/5 flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 min-w-10 min-h-10 aspect-square bg-linear-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shrink-0">
-                  <Car className="h-5 w-5 text-white" />
+                <div className="w-8 h-8 bg-[#e2e2f6] rounded-lg flex items-center justify-center shrink-0">
+                  <Car className="h-4 w-4 text-[#122a4e]" />
                 </div>
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                    Nuevo Registro
-                  </h2>
-                  <p className="text-gray-600 mt-1 text-sm">Registra un nuevo vehículo</p>
+                  <h2 className="text-lg font-bold text-[#140f07]">Nuevo Registro</h2>
                 </div>
               </div>
               <button
                 onClick={() => setModalAbierto(false)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition"
-                aria-label="Cerrar"
+                className="p-1.5 rounded-lg hover:bg-[#e2e2f6] text-[#122a4e]/50 hover:text-[#122a4e] transition-colors"
               >
-                <X className="h-5 w-5 text-gray-500" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Contenido del modal con scroll */}
-            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
-              <div className="p-4 sm:p-6">
+            <div className="overflow-y-auto max-h-[calc(90vh-70px)] bg-[#f8f9fc]">
+              <div className="p-5">
                 <FormularioRegistro 
                   onRegistroCreado={handleRegistroCreado}
                 />

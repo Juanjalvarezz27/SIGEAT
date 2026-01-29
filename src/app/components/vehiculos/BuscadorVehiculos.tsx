@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Search, Car, User, Hash } from 'lucide-react'
+import { Search, Car, User, Hash, X, Loader2, ChevronDown } from 'lucide-react'
 
 interface BuscadorVehiculosProps {
   onBuscar: (search: string, searchType: string) => void
@@ -106,11 +106,11 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
   const getPlaceholder = useCallback(() => {
     switch (tipoBusqueda) {
       case 'placa':
-        return 'Ej: ABC123, XYZ789...'
+        return 'Ej: ABC123, XYZ...'
       case 'nombre':
-        return 'Ej: Juan Pérez, María García...'
+        return 'Ej: Juan Pérez...'
       case 'cedula':
-        return 'Ej: V12345678, E87654321...'
+        return 'Ej: 12345678...'
       default:
         return 'Buscar...'
     }
@@ -133,49 +133,49 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
   const mostrarBusquedaPendiente = terminoBusqueda.length > 0 && terminoBusqueda.length < 3
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 md:p-6 mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 md:mb-6 gap-3">
+    <div className="bg-white rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-[#869dfc]/10 p-5 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-5 gap-2">
         <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center mb-1">
-            <Search className="h-5 w-5 mr-2 text-blue-500 shrink-0" />
-            Buscar en los registros
+          <h3 className="text-lg font-black text-[#140f07] flex items-center gap-2">
+            <div className="p-1.5 bg-[#e2e2f6] rounded-lg">
+                <Search className="h-4 w-4 text-[#4260ad]" />
+            </div>
+            Filtrar Registros
           </h3>
-          <p className="text-sm text-gray-600">
-            Escribe para buscar - La búsqueda se ejecuta automáticamente después de 500ms
+          <p className="text-xs font-medium text-slate-500 mt-1 ml-1">
+            Busca por placa, nombre o documento
           </p>
         </div>
       </div>
 
       {/* Barra de búsqueda principal */}
-      <div className="mb-4">
+      <div className="mb-2">
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Select tipo de búsqueda */}
-          <div className="relative shrink-0 w-full sm:w-48">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              {tipoBusqueda === 'placa' && <Car className="h-4 w-4 text-gray-400" />}
-              {tipoBusqueda === 'nombre' && <User className="h-4 w-4 text-gray-400" />}
-              {tipoBusqueda === 'cedula' && <Hash className="h-4 w-4 text-gray-400" />}
+          <div className="relative shrink-0 w-full sm:w-44">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+              {tipoBusqueda === 'placa' && <Car className="h-4 w-4 text-[#4260ad]" />}
+              {tipoBusqueda === 'nombre' && <User className="h-4 w-4 text-[#4260ad]" />}
+              {tipoBusqueda === 'cedula' && <Hash className="h-4 w-4 text-[#4260ad]" />}
             </div>
             <select
               value={tipoBusqueda}
               onChange={handleTipoChange}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-white"
+              className="w-full pl-10 pr-8 py-3.5 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#122a4e] font-bold text-sm appearance-none transition-all outline-none"
               disabled={cargando}
             >
               <option value="placa">Placa</option>
               <option value="nombre">Nombre</option>
               <option value="cedula">Cédula</option>
             </select>
-            <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-              <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-              </svg>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <ChevronDown className="h-4 w-4 text-slate-400" />
             </div>
           </div>
 
           {/* Input de búsqueda */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <div className="relative flex-1 group">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-[#4260ad] transition-colors" />
             <input
               ref={inputRef}
               type="text"
@@ -183,43 +183,41 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={getPlaceholder()}
-              className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-11 pr-10 py-3.5 bg-[#f4f6fc] border border-transparent rounded-xl focus:bg-white focus:border-[#869dfc] focus:ring-0 text-[#140f07] placeholder-slate-400 font-medium outline-none transition-all"
               disabled={cargando}
             />
             {terminoBusqueda && (
               <button
                 type="button"
                 onClick={handleLimpiar}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1.5 text-slate-400 hover:text-[#4260ad] hover:bg-[#e2e2f6] rounded-full transition-all"
                 title="Limpiar búsqueda"
               >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <X className="h-4 w-4" />
               </button>
             )}
           </div>
         </div>
 
         {/* Contador de caracteres y estado */}
-        <div className="flex items-center justify-between mt-2">
-          <div className="text-xs text-gray-500">
+        <div className="flex items-center justify-between mt-3 px-1">
+          <div className="text-xs font-medium">
             {terminoBusqueda.length > 0 && (
-              <>
-                Buscando por <span className="font-medium">{getTipoTexto()}</span>
+              <span className="flex items-center gap-1.5 text-[#122a4e]/70">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#4260ad]"></span>
+                Buscando por <span className="font-bold text-[#122a4e] uppercase">{getTipoTexto()}</span>
                 {mostrarBusquedaPendiente && (
-                  <span className="text-amber-600 ml-1">
-                    (escribe al menos 3 caracteres para buscar)
+                  <span className="text-amber-600 bg-amber-50 px-2 py-0.5 rounded ml-1">
+                    Mínimo 3 caracteres
                   </span>
                 )}
-              </>
+              </span>
             )}
           </div>
-          <div className="text-xs text-gray-500">
+          <div className="text-xs font-medium text-slate-400">
             {terminoBusqueda.length > 0 && (
-              <span className="text-blue-600">
-                {terminoBusqueda.length} caracter{terminoBusqueda.length !== 1 ? 'es' : ''}
-                {mostrarBusquedaPendiente && ' (mínimo 3)'}
+              <span>
+                {terminoBusqueda.length} chars
               </span>
             )}
           </div>
@@ -228,43 +226,27 @@ export default function BuscadorVehiculos({ onBuscar, cargando, busquedaActual }
 
       {/* Indicador de búsqueda en curso */}
       {cargando && (
-        <div className="flex items-center justify-center p-3 bg-blue-50 border border-blue-200 rounded-xl mb-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
-            <span className="text-sm text-blue-700 font-medium">Buscando...</span>
+        <div className="flex items-center justify-center p-3 bg-[#e2e2f6] border border-[#869dfc]/20 rounded-xl mb-2 animate-in fade-in slide-in-from-top-1">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 text-[#4260ad] animate-spin" />
+            <span className="text-sm text-[#122a4e] font-bold">Buscando resultados...</span>
           </div>
         </div>
       )}
 
-      {/* Indicador de búsqueda pendiente (menos de 3 caracteres) */}
-      {mostrarBusquedaPendiente && !cargando && (
-        <div className="flex items-center justify-center p-3 bg-amber-50 border border-amber-200 rounded-xl mb-4">
-          <div className="flex items-center space-x-2">
-            <div className="w-3 h-3 bg-amber-500 rounded-full"></div>
-            <span className="text-sm text-amber-700">
-              Escribe al menos 3 caracteres para buscar automáticamente
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Información de búsqueda actual */}
+      {/* Información de búsqueda actual (Resultados encontrados) */}
       {terminoBusqueda.length >= 3 && !cargando && busquedaActual.termino === terminoBusqueda && (
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Search className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-700">
-                Mostrando resultados para: "<span className="font-medium">{terminoBusqueda}</span>"
-              </span>
-            </div>
-            <button
+        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 mb-2 flex justify-between items-center animate-in fade-in slide-in-from-top-1">
+           <div className="flex items-center gap-2 text-emerald-700 text-sm font-medium">
+              <Search className="h-4 w-4" />
+              <span>Resultados para "<span className="font-bold">{terminoBusqueda}</span>"</span>
+           </div>
+           <button
               onClick={handleLimpiar}
-              className="text-xs text-gray-500 hover:text-gray-700 underline"
+              className="text-xs font-bold text-emerald-600 hover:text-emerald-800 hover:underline px-2"
             >
-              Limpiar búsqueda
+              Limpiar
             </button>
-          </div>
         </div>
       )}
     </div>
