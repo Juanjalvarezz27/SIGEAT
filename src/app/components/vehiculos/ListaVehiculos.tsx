@@ -71,7 +71,7 @@ export default function ListaVehiculos({
       if (isNaN(fecha.getTime())) return 'Fecha inválida'
       return fecha.toLocaleDateString('es-VE', {
         day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
+        hour: '2-digit', minute: '2-digit', hour12: true
       })
     } catch (error) {
       return 'Error en fecha'
@@ -277,7 +277,7 @@ export default function ListaVehiculos({
                   >
                     <div className="flex items-center gap-3">
                       <Clock className="h-4 w-4" />
-                      Línea de Tiempo de Visitas
+                      Visitas
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${historialExpandido === vehiculo.placa ? 'bg-white/10' : 'bg-slate-100 text-slate-500'}`}>
                         {vehiculo.historial.length}
                       </span>
@@ -286,37 +286,57 @@ export default function ListaVehiculos({
                   </button>
 
                   {historialExpandido === vehiculo.placa && (
-                    <div className="mt-4 space-y-3 animate-in slide-in-from-top-2 duration-300">
+                    <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-300">
                       {vehiculo.historial.map((registro) => (
-                        <div key={registro.id} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm relative overflow-hidden group">
-                          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div key={registro.id} className="bg-white border border-slate-100 rounded-2xl overflow-hidden shadow-sm">
+                          {/* Top del Registro: Servicio, Fecha y Precio */}
+                          <div className="p-4 flex flex-col sm:flex-row justify-between gap-4">
                             <div className="flex items-start gap-3">
-                              <div className="mt-1 p-2 bg-[#f4f6fc] rounded-xl text-[#4260ad]">
-                                <Calendar className="h-4 w-4" />
+                              <div className="p-2.5 bg-[#f4f6fc] rounded-xl text-[#4260ad] shrink-0">
+                                <Calendar className="h-5 w-5" />
                               </div>
-                              <div>
-                                <p className="text-sm font-black text-[#140f07]">{formatFecha(registro.fecha)}</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-xs font-bold text-[#4260ad] bg-[#e2e2f6] px-2 py-0.5 rounded-lg">{registro.servicio}</span>
-                                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg ${
-                                    registro.estadoPago.toLowerCase() === 'pagado' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'
-                                  }`}>{registro.estadoPago}</span>
+                              <div className="min-w-0">
+                                <p className="text-sm font-black text-[#140f07] leading-tight mb-1">{formatFecha(registro.fecha)}</p>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="text-xs font-bold px-2 py-0.5 bg-[#e2e2f6] text-[#122a4e] rounded-lg truncate max-w-37.5">
+                                    {registro.servicio}
+                                  </span>
+                                  <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-lg border ${
+                                    registro.estadoPago.toLowerCase() === 'pagado' 
+                                      ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                                      : 'bg-amber-50 text-amber-600 border-amber-100'
+                                  }`}>
+                                    {registro.estadoPago}
+                                  </span>
                                 </div>
                               </div>
                             </div>
-                            <div className="flex flex-col items-end">
-                              <p className="text-xl font-black text-[#122a4e]">${formatNumber(registro.precio)}</p>
-                              {registro.referenciaPago && (
-                                <p className="text-[10px] font-mono font-bold text-slate-400 mt-1 flex items-center gap-1">
-                                  <FileText className="h-3 w-3" /> REF: {registro.referenciaPago}
-                                </p>
-                              )}
+                            
+                            <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50">
+                               <span className="text-xs font-bold text-slate-400 uppercase tracking-widest sm:hidden">Monto</span>
+                               <p className="text-xl font-black text-[#122a4e] tracking-tight">
+                                 ${formatNumber(registro.precio)}
+                               </p>
                             </div>
                           </div>
-                          {registro.notas && (
-                            <div className="mt-3 pt-3 border-t border-slate-50 flex items-start gap-2">
-                              <MessageSquare className="h-3.5 w-3.5 text-slate-300 mt-0.5 shrink-0" />
-                              <p className="text-xs text-slate-500 italic leading-relaxed">{registro.notas}</p>
+
+                          {/* Footer del Registro: Ref y Notas */}
+                          {(registro.referenciaPago || registro.notas) && (
+                            <div className="px-4 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {registro.referenciaPago && (
+                                <div className="flex items-center gap-2 bg-[#f8f9fc] p-2 rounded-xl border border-slate-50">
+                                  <FileText className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                                  <span className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-tighter">REF: {registro.referenciaPago}</span>
+                                </div>
+                              )}
+                              {registro.notas && (
+                                <div className="flex items-start gap-2 bg-amber-50/50 p-2 rounded-xl border border-amber-100/50">
+                                  <MessageSquare className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+                                  <p className="text-[11px] text-amber-700 italic leading-snug line-clamp-2">
+                                    {registro.notas}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>

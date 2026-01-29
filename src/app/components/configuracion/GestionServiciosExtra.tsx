@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { Plus, Edit, Trash2, Search, X, Star, Loader2, DollarSign, List } from 'lucide-react'
+import { Plus, Edit, Trash2, Search, X, Star, Loader2, DollarSign, List, Info } from 'lucide-react'
 import { toast } from 'react-toastify'
 
 interface ServicioExtra {
@@ -34,7 +34,6 @@ export default function GestionServiciosExtra() {
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null)
 
-  // Cargar servicios extra
   const fetchServiciosExtra = async () => {
     try {
       setLoading(true)
@@ -44,11 +43,7 @@ export default function GestionServiciosExtra() {
       }
 
       const response = await fetch(url)
-
-      if (!response.ok) {
-        throw new Error('Error al cargar servicios extra')
-      }
-
+      if (!response.ok) throw new Error('Error al cargar servicios extra')
       const data = await response.json()
       setServiciosExtra(data)
     } catch (error) {
@@ -63,49 +58,33 @@ export default function GestionServiciosExtra() {
     fetchServiciosExtra()
   }, [searchTerm])
 
-  // Manejar cambios en el formulario
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-    // Formatear precio - manejo seguro de números
-    const formatPrice = (price: number) => {
+  const formatPrice = (price: number) => {
     const priceNumber = typeof price === 'string' ? parseFloat(price) : price
-    
-    if (isNaN(priceNumber)) {
-        return '$0.00'
-    }
-    
-    return new Intl.NumberFormat('es-VE', {
+    if (isNaN(priceNumber)) return '$0.00'
+    return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     }).format(priceNumber)
-    }
+  }
 
-  // Resetear formulario
   const resetForm = () => {
-    setFormData({
-      nombre: '',
-      descripcion: '',
-      precio: ''
-    })
+    setFormData({ nombre: '', descripcion: '', precio: '' })
     setIsEditing(false)
     setSelectedId(null)
   }
 
-  // Abrir modal para crear
   const handleCreate = () => {
     resetForm()
     setShowModal(true)
   }
 
-  // Abrir modal para editar
   const handleEdit = (servicio: ServicioExtra) => {
     setFormData({
       nombre: servicio.nombre,
@@ -117,40 +96,31 @@ export default function GestionServiciosExtra() {
     setShowModal(true)
   }
 
-  // Cerrar modal
   const handleCloseModal = () => {
     setShowModal(false)
     setTimeout(() => resetForm(), 300)
   }
 
-  // Validar formulario
   const validateForm = () => {
     if (!formData.nombre.trim()) {
       toast.error('El nombre es requerido')
       return false
     }
-
     if (!formData.precio.trim()) {
       toast.error('El precio es requerido')
       return false
     }
-
     const precio = parseFloat(formData.precio)
     if (isNaN(precio) || precio < 0) {
       toast.error('El precio debe ser un número válido y positivo')
       return false
     }
-
     return true
   }
 
-  // Enviar formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!validateForm()) {
-      return
-    }
+    if (!validateForm()) return
 
     try {
       const url = '/api/servicios-extra'
@@ -158,9 +128,7 @@ export default function GestionServiciosExtra() {
 
       const response = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: isEditing ? selectedId : undefined,
           nombre: formData.nombre.trim(),
@@ -170,10 +138,7 @@ export default function GestionServiciosExtra() {
       })
 
       const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al guardar')
-      }
+      if (!response.ok) throw new Error(data.error || 'Error al guardar')
 
       toast.success(isEditing ? 'Servicio extra actualizado' : 'Servicio extra creado')
       handleCloseModal()
@@ -183,18 +148,11 @@ export default function GestionServiciosExtra() {
     }
   }
 
-  // Eliminar servicio extra
   const handleDelete = async (id: number) => {
     try {
-      const response = await fetch(`/api/servicios-extra?id=${id}`, {
-        method: 'DELETE'
-      })
-
+      const response = await fetch(`/api/servicios-extra?id=${id}`, { method: 'DELETE' })
       const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al eliminar')
-      }
+      if (!response.ok) throw new Error(data.error || 'Error al eliminar')
 
       toast.success('Servicio extra eliminado')
       setDeleteConfirm(null)
@@ -205,176 +163,122 @@ export default function GestionServiciosExtra() {
   }
 
   return (
-    <>
-      {/* Header y búsqueda */}
-      <div className="mb-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900">Servicios Extra</h3>
-            <p className="text-gray-600 text-sm">
-              {serviciosExtra.length} servicio{serviciosExtra.length !== 1 ? 's' : ''} extra
-            </p>
-          </div>
-          <button
+    <div className="space-y-6">
+      {/* Header y búsqueda responsive */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        
+        {/* Bloque Total y Nuevo */}
+        <div className="bg-[#f4f6fc] p-1.5 rounded-2xl flex items-center justify-center gap-2 w-full lg:w-fit mx-auto lg:mx-0">
+           <div className="bg-white px-5 py-2 rounded-xl shadow-sm text-center border border-slate-50">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">Total Extras</p>
+              <p className="text-lg font-black text-[#122a4e]">{serviciosExtra.length}</p>
+           </div>
+           <button
             onClick={handleCreate}
-            className="px-4 py-2.5 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors flex items-center justify-center space-x-2 w-full md:w-auto"
+            className="h-full px-8 py-2 bg-[#4260ad] hover:bg-[#122a4e] text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-[#4260ad]/20 flex items-center gap-2"
           >
-            <Plus className="h-4 w-4" />
-            <span>Nuevo Servicio Extra</span>
+            <Plus className="h-4 w-4" /> Nuevo
           </button>
         </div>
 
-        {/* Búsqueda */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Buscar servicios extra por nombre o descripción..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+        {/* Buscador */}
+        <div className="w-full lg:max-w-md">
+           <div className="relative group">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#4260ad]" />
+              <input
+                type="text"
+                placeholder="Buscar servicios extra..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-10 py-3 bg-white border border-slate-200 rounded-xl focus:border-[#869dfc] focus:ring-0 text-sm font-medium outline-none transition-colors"
+              />
+              {searchTerm && (
+                <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-slate-400 hover:text-red-500 rounded-lg">
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+           </div>
         </div>
       </div>
 
-      {/* Lista de servicios extra */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {loading ? (
-          <div className="col-span-full flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 text-amber-500 animate-spin" />
-          </div>
-        ) : serviciosExtra.length === 0 ? (
-          <div className="col-span-full text-center py-12 bg-gray-50 rounded-lg">
-            <Star className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchTerm ? 'No se encontraron resultados' : 'No hay servicios extra registrados'}
-            </h3>
-            <p className="text-gray-600 mb-4">
-              {searchTerm
-                ? 'Intenta con otros términos de búsqueda'
-                : 'Comienza creando tu primer servicio extra'
-              }
-            </p>
-            {!searchTerm && (
-              <button
-                onClick={handleCreate}
-                className="px-4 py-2.5 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors"
-              >
-                Crear Primer Servicio Extra
-              </button>
-            )}
-          </div>
-        ) : (
-          serviciosExtra.map((servicio) => (
-            <div key={servicio.id} className="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-sm transition-shadow">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h4 className="font-semibold text-gray-900">{servicio.nombre}</h4>
-                  {servicio.descripcion && (
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                      {servicio.descripcion}
-                    </p>
-                  )}
+      {/* Lista Grid */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 text-[#4260ad] animate-spin mb-2" />
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Sincronizando...</span>
+        </div>
+      ) : serviciosExtra.length === 0 ? (
+        <div className="py-12 bg-[#f8f9fc] rounded-4xl border border-dashed border-slate-200 text-center">
+           <Star className="h-10 w-10 text-slate-300 mx-auto mb-3" />
+           <p className="text-slate-500 font-bold">No se encontraron servicios extra</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {serviciosExtra.map((servicio) => (
+            <div key={servicio.id} className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm hover:border-[#869dfc]/30 transition-all duration-300 group relative overflow-hidden">
+              <div className="flex justify-between items-start mb-4">
+                <div className="p-2.5 bg-[#f4f6fc] rounded-xl text-[#122a4e] group-hover:bg-[#e2e2f6] transition-colors">
+                  <Star className="h-5 w-5" />
                 </div>
-                <div className="flex items-center space-x-1">
-                  <button
-                    onClick={() => handleEdit(servicio)}
-                    className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Editar"
-                  >
+                <div className="flex gap-1">
+                  <button onClick={() => handleEdit(servicio)} className="p-2 text-slate-400 hover:text-[#4260ad] hover:bg-[#e2e2f6] rounded-xl">
                     <Edit className="h-4 w-4" />
                   </button>
-                  <button
-                    onClick={() => setDeleteConfirm(servicio.id)}
-                    className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Eliminar"
-                  >
+                  <button onClick={() => setDeleteConfirm(servicio.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl">
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
-                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500">
-                        ID: {servicio.id}
-                    </span>
-                    </div>
-                    <div className="flex items-center space-x-1 text-sm font-semibold text-green-600">
-                    <span>{formatPrice(servicio.precio)}</span>
-                    </div>
-                </div>
-                </div>
-            </div>
-          ))
-        )}
-      </div>
 
-      {/* Modal para crear/editar */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-gray-200 bg-linear-to-r from-amber-500 to-orange-600">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">
-                  {isEditing ? 'Editar Servicio Extra' : 'Nuevo Servicio Extra'}
-                </h3>
-                <button
-                  onClick={handleCloseModal}
-                  className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/20"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+              <h4 className="font-bold text-[#140f07] text-lg mb-1 leading-tight">{servicio.nombre}</h4>
+              <p className="text-xs text-slate-500 line-clamp-2 min-h-8">{servicio.descripcion || 'Sin descripción'}</p>
+              
+              <div className="flex items-center justify-between mt-5 pt-4 border-t border-slate-50">
+                <div className="flex flex-col">
+                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Precio</span>
+                   <span className="text-xl font-black text-[#122a4e]">{formatPrice(servicio.precio)}</span>
+                </div>
+                <div className="px-3 py-1 bg-slate-50 rounded-lg text-[10px] font-black text-slate-500 uppercase">
+                  {servicio._count.registros} Usos
+                </div>
               </div>
             </div>
+          ))}
+        </div>
+      )}
 
-            <form onSubmit={handleSubmit} className="p-6">
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre *
-                </label>
+      {/* Modal Crear/Editar */}
+      {showModal && (
+        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-[#122a4e]/60 backdrop-blur-sm">
+          <div className="bg-[#fcfdff] rounded-4xl shadow-2xl w-full max-w-md overflow-hidden border border-white/20">
+            <div className="bg-white px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+               <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#e2e2f6] rounded-xl text-[#4260ad]">
+                     <Star className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-lg font-black text-[#140f07]">{isEditing ? 'Editar Servicio' : 'Nuevo Servicio'}</h3>
+               </div>
+               <button onClick={handleCloseModal} className="p-2 text-slate-400 hover:bg-slate-50 rounded-xl"><X className="h-5 w-5" /></button>
+            </div>
+            
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1.5">Nombre del Servicio *</label>
                 <input
                   type="text"
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
-                  placeholder="Ej: Encerado, Aspirado interior, etc."
+                  className="w-full px-4 py-3 bg-white border border-transparent rounded-xl focus:border-[#869dfc] focus:ring-0 text-sm font-bold text-[#140f07] outline-none shadow-sm"
+                  placeholder="Ej: Aspirado de Maleta"
                   required
-                  autoFocus
                 />
               </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Descripción (Opcional)
-                </label>
-                <textarea
-                  name="descripcion"
-                  value={formData.descripcion}
-                  onChange={handleInputChange}
-                  rows={3}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none resize-none"
-                  placeholder="Describe brevemente el servicio extra..."
-                />
-              </div>
-
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Precio (USD) *
-                </label>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1.5">Precio ($) *</label>
                 <div className="relative">
-                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#4260ad]" />
                   <input
                     type="number"
                     name="precio"
@@ -382,74 +286,50 @@ export default function GestionServiciosExtra() {
                     onChange={handleInputChange}
                     step="0.01"
                     min="0"
-                    className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 outline-none"
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-transparent rounded-xl focus:border-[#869dfc] focus:ring-0 text-sm font-black text-[#122a4e] outline-none shadow-sm"
                     placeholder="0.00"
                     required
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Ingresa el precio en dólares (USD)
-                </p>
               </div>
 
-              <div className="flex space-x-3 pt-2">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-3 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors"
-                >
-                  {isEditing ? 'Actualizar' : 'Crear'}
-                </button>
+              <div>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-1.5">Descripción</label>
+                <textarea
+                  name="descripcion"
+                  value={formData.descripcion}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="w-full px-4 py-3 bg-white border border-transparent rounded-xl focus:border-[#869dfc] focus:ring-0 text-sm font-medium outline-none resize-none shadow-sm"
+                  placeholder="Detalles adicionales del servicio..."
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={handleCloseModal} className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-xl font-bold text-sm">Cancelar</button>
+                <button type="submit" className="flex-1 py-3 bg-[#4260ad] text-white rounded-xl font-bold text-sm shadow-lg shadow-[#4260ad]/20">Guardar</button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* Modal de confirmación para eliminar */}
+      {/* Modal Confirmación Eliminar */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-sm">
-            <div className="p-6">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <Trash2 className="h-6 w-6 text-red-600" />
-                </div>
-              </div>
-
-              <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
-                Confirmar Eliminación
-              </h3>
-
-              <p className="text-center text-gray-600 text-sm mb-6">
-                ¿Estás seguro de que deseas eliminar este servicio extra?
-                Esta acción no se puede deshacer.
-              </p>
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setDeleteConfirm(null)}
-                  className="flex-1 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => handleDelete(deleteConfirm)}
-                  className="flex-1 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
-                >
-                  Eliminar
-                </button>
-              </div>
+        <div className="fixed inset-0 z-110 flex items-center justify-center p-4 bg-black/60">
+          <div className="bg-white rounded-4xl p-8 max-w-sm w-full text-center shadow-2xl border border-slate-100">
+            <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-red-500">
+              <Trash2 className="h-8 w-8" />
+            </div>
+            <h3 className="text-xl font-black text-[#140f07] mb-2">Confirmar Eliminación</h3>
+            <p className="text-sm font-medium text-slate-500 mb-8 leading-relaxed">¿Estás seguro de que deseas eliminar este servicio extra? Esta acción no se puede deshacer.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm">Cancelar</button>
+              <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-red-600/20">Eliminar</button>
             </div>
           </div>
         </div>
       )}
-    </>
+    </div>
   )
 }

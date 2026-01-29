@@ -1,249 +1,115 @@
 "use client"
 
-import { useState, useRef, useEffect } from 'react'
-import { ChevronDown, ChevronUp, Settings, Tag, Layers, Car, Star } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronDown, Tag, Layers, Car, Star, Settings2 } from 'lucide-react'
 import GestionServicios from './GestionServicios'
 import GestionCategorias from './GestionCategorias'
 import GestionTiposVehiculo from './GestionTiposVehiculo'
-import GestionServiciosExtra from './GestionServiciosExtra' // Nuevo import
+import GestionServiciosExtra from './GestionServiciosExtra'
 
 export default function GestionConfiguracion() {
-  // Estado inicial: todos los desplegables cerrados
   const [expanded, setExpanded] = useState({
     servicios: false,
     categorias: false,
     tiposVehiculo: false,
-    serviciosExtra: false // Nuevo estado
+    serviciosExtra: false
   })
 
-  const [heights, setHeights] = useState({
-    servicios: '0px',
-    categorias: '0px',
-    tiposVehiculo: '0px',
-    serviciosExtra: '0px' // Nueva altura
-  })
-
-  const serviciosRef = useRef<HTMLDivElement>(null)
-  const categoriasRef = useRef<HTMLDivElement>(null)
-  const tiposVehiculoRef = useRef<HTMLDivElement>(null)
-  const serviciosExtraRef = useRef<HTMLDivElement>(null) // Nueva referencia
-
-  const toggleSection = (section: 'servicios' | 'categorias' | 'tiposVehiculo' | 'serviciosExtra') => {
-    setExpanded(prev => {
-      const newState = !prev[section]
-
-      // Actualizar altura después de un breve delay
-      setTimeout(() => {
-        if (section === 'servicios' && serviciosRef.current) {
-          setHeights(prev => ({
-            ...prev,
-            servicios: newState ? `${serviciosRef.current!.scrollHeight}px` : '0px'
-          }))
-        } else if (section === 'categorias' && categoriasRef.current) {
-          setHeights(prev => ({
-            ...prev,
-            categorias: newState ? `${categoriasRef.current!.scrollHeight}px` : '0px'
-          }))
-        } else if (section === 'tiposVehiculo' && tiposVehiculoRef.current) {
-          setHeights(prev => ({
-            ...prev,
-            tiposVehiculo: newState ? `${tiposVehiculoRef.current!.scrollHeight}px` : '0px'
-          }))
-        } else if (section === 'serviciosExtra' && serviciosExtraRef.current) {
-          setHeights(prev => ({
-            ...prev,
-            serviciosExtra: newState ? `${serviciosExtraRef.current!.scrollHeight}px` : '0px'
-          }))
-        }
-      }, 10)
-
-      return {
-        ...prev,
-        [section]: newState
-      }
-    })
+  const toggleSection = (section: keyof typeof expanded) => {
+    setExpanded(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }))
   }
 
-  // Actualizar alturas cuando cambia el contenido
-  useEffect(() => {
-    if (expanded.servicios && serviciosRef.current) {
-      setHeights(prev => ({
-        ...prev,
-        servicios: `${serviciosRef.current!.scrollHeight}px`
-      }))
+  const sections = [
+    {
+      id: 'servicios' as const,
+      title: 'Servicios Base',
+      subtitle: 'Configura precios y servicios principales',
+      icon: <Tag className="h-5 w-5" />,
+      component: <GestionServicios />,
+      color: 'text-[#4260ad]',
+      bgColor: 'bg-[#e2e2f6]'
+    },
+    {
+      id: 'serviciosExtra' as const,
+      title: 'Servicios Extra',
+      subtitle: 'Complementos y adicionales para servicios',
+      icon: <Star className="h-5 w-5" />,
+      component: <GestionServiciosExtra />,
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50'
+    },
+    {
+      id: 'categorias' as const,
+      title: 'Categorías',
+      subtitle: 'Agrupación de servicios por jerarquía',
+      icon: <Layers className="h-5 w-5" />,
+      component: <GestionCategorias />,
+      color: 'text-slate-600',
+      bgColor: 'bg-slate-100'
+    },
+    {
+      id: 'tiposVehiculo' as const,
+      title: 'Tipos de Vehículo',
+      subtitle: 'Administra los tamaños y tipos permitidos',
+      icon: <Car className="h-5 w-5" />,
+      component: <GestionTiposVehiculo />,
+      color: 'text-[#122a4e]',
+      bgColor: 'bg-slate-200'
     }
-    if (expanded.categorias && categoriasRef.current) {
-      setHeights(prev => ({
-        ...prev,
-        categorias: `${categoriasRef.current!.scrollHeight}px`
-      }))
-    }
-    if (expanded.tiposVehiculo && tiposVehiculoRef.current) {
-      setHeights(prev => ({
-        ...prev,
-        tiposVehiculo: `${tiposVehiculoRef.current!.scrollHeight}px`
-      }))
-    }
-    if (expanded.serviciosExtra && serviciosExtraRef.current) {
-      setHeights(prev => ({
-        ...prev,
-        serviciosExtra: `${serviciosExtraRef.current!.scrollHeight}px`
-      }))
-    }
-  }, [expanded.servicios, expanded.categorias, expanded.tiposVehiculo, expanded.serviciosExtra])
+  ]
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="p-4 space-y-4">
+    <div className="space-y-4">
+      {/* Encabezado de la sección */}
+      <div className="flex items-center gap-3 px-2 mb-6">
+        <Settings2 className="h-5 w-5 text-[#122a4e]" />
+        <h2 className="text-sm font-black text-[#122a4e] uppercase tracking-[0.2em]">Panel de Control</h2>
+      </div>
 
-        {/* Desplegable - Servicios */}
-        <div className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-sm">
-          <button
-            onClick={() => toggleSection('servicios')}
-            className="w-full px-5 py-4 bg-linear-to-r from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200 transition-all duration-300 flex items-center justify-between group"
+      <div className="grid grid-cols-1 gap-4">
+        {sections.map((section) => (
+          <div 
+            key={section.id}
+            className="bg-white rounded-4xl border border-[#869dfc]/10 shadow-[0_4px_20px_rgb(0,0,0,0.03)] overflow-hidden transition-all duration-300"
           >
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <Tag className="h-4 w-4 text-white" />
+            <button
+              onClick={() => toggleSection(section.id)}
+              className="w-full p-5 sm:p-6 flex items-center justify-between group transition-colors hover:bg-[#fcfdff]"
+            >
+              <div className="flex items-center gap-4">
+                <div className={`w-12 h-12 ${section.bgColor} ${section.color} rounded-2xl flex items-center justify-center shrink-0 shadow-sm group-hover:scale-105 transition-transform duration-300`}>
+                  {section.icon}
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-black text-[#140f07] leading-none mb-1">
+                    {section.title}
+                  </h3>
+                  <p className="text-xs font-medium text-slate-400">
+                    {section.subtitle}
+                  </p>
+                </div>
               </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-gray-900 group-hover:text-blue-700 transition-colors duration-300">Servicios</h3>
+              <div className={`p-2 rounded-xl bg-[#f4f6fc] text-slate-400 transition-all duration-300 ${expanded[section.id] ? 'rotate-180 bg-[#122a4e] text-white' : ''}`}>
+                <ChevronDown className="h-5 w-5" />
               </div>
-            </div>
-            <div className={`transform transition-transform duration-300 ${expanded.servicios ? 'rotate-180' : ''}`}>
-              {expanded.servicios ? (
-                <ChevronUp className="h-5 w-5 text-blue-600" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-blue-500" />
-              )}
-            </div>
-          </button>
+            </button>
 
-          <div
-            ref={serviciosRef}
-            style={{
-              maxHeight: heights.servicios,
-              overflow: 'hidden'
-            }}
-            className="transition-all duration-300 ease-in-out"
-          >
-            <div className="p-5 border-t border-gray-200">
-              <GestionServicios />
+            <div 
+              className={`grid transition-all duration-300 ease-in-out ${
+                expanded[section.id] ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+              }`}
+            >
+              <div className="overflow-hidden">
+                <div className="p-5 sm:p-8 border-t border-slate-50 bg-[#fcfdff]">
+                  {section.component}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Desplegable - Categorías */}
-        <div className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-sm">
-          <button
-            onClick={() => toggleSection('categorias')}
-            className="w-full px-5 py-4 bg-linear-to-r from-indigo-50 to-purple-100 hover:from-indigo-100 hover:to-purple-200 transition-all duration-300 flex items-center justify-between group"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <Layers className="h-4 w-4 text-white" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors duration-300">Categorías</h3>
-              </div>
-            </div>
-            <div className={`transform transition-transform duration-300 ${expanded.categorias ? 'rotate-180' : ''}`}>
-              {expanded.categorias ? (
-                <ChevronUp className="h-5 w-5 text-indigo-600" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-indigo-500" />
-              )}
-            </div>
-          </button>
-
-          <div
-            ref={categoriasRef}
-            style={{
-              maxHeight: heights.categorias,
-              overflow: 'hidden'
-            }}
-            className="transition-all duration-300 ease-in-out"
-          >
-            <div className="p-5 border-t border-gray-200">
-              <GestionCategorias />
-            </div>
-          </div>
-        </div>
-
-        {/* Desplegable - Tipos de Vehículo */}
-        <div className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-sm">
-          <button
-            onClick={() => toggleSection('tiposVehiculo')}
-            className="w-full px-5 py-4 bg-linear-to-r from-green-50 to-emerald-100 hover:from-green-100 hover:to-emerald-200 transition-all duration-300 flex items-center justify-between group"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <Car className="h-4 w-4 text-white" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-gray-900 group-hover:text-green-700 transition-colors duration-300">Tipos de Vehículo</h3>
-              </div>
-            </div>
-            <div className={`transform transition-transform duration-300 ${expanded.tiposVehiculo ? 'rotate-180' : ''}`}>
-              {expanded.tiposVehiculo ? (
-                <ChevronUp className="h-5 w-5 text-green-600" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-green-500" />
-              )}
-            </div>
-          </button>
-
-          <div
-            ref={tiposVehiculoRef}
-            style={{
-              maxHeight: heights.tiposVehiculo,
-              overflow: 'hidden'
-            }}
-            className="transition-all duration-300 ease-in-out"
-          >
-            <div className="p-5 border-t border-gray-200">
-              <GestionTiposVehiculo />
-            </div>
-          </div>
-        </div>
-
-        {/* Desplegable - Servicios Extra (NUEVO) */}
-        <div className="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-sm">
-          <button
-            onClick={() => toggleSection('serviciosExtra')}
-            className="w-full px-5 py-4 bg-linear-to-r from-amber-50 to-orange-100 hover:from-amber-100 hover:to-orange-200 transition-all duration-300 flex items-center justify-between group"
-          >
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                <Star className="h-4 w-4 text-white" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-gray-900 group-hover:text-amber-700 transition-colors duration-300">Servicios Extra</h3>
-              </div>
-            </div>
-            <div className={`transform transition-transform duration-300 ${expanded.serviciosExtra ? 'rotate-180' : ''}`}>
-              {expanded.serviciosExtra ? (
-                <ChevronUp className="h-5 w-5 text-amber-600" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-gray-500 group-hover:text-amber-500" />
-              )}
-            </div>
-          </button>
-
-          <div
-            ref={serviciosExtraRef}
-            style={{
-              maxHeight: heights.serviciosExtra,
-              overflow: 'hidden'
-            }}
-            className="transition-all duration-300 ease-in-out"
-          >
-            <div className="p-5 border-t border-gray-200">
-              <GestionServiciosExtra />
-            </div>
-          </div>
-        </div>
-
+        ))}
       </div>
     </div>
   )
