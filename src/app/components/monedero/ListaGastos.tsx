@@ -1,6 +1,6 @@
 "use client"
 
-import { Receipt, Edit, Trash2, Calendar, CreditCard, DollarSign, Clock, StickyNote } from 'lucide-react'
+import { Receipt, Edit, Trash2, CreditCard, DollarSign, Clock, StickyNote, FileText } from 'lucide-react'
 import { Gasto } from '../../types/monedero'
 
 interface ListaGastosProps {
@@ -20,108 +20,97 @@ export default function ListaGastos({ gastos, onEditar, onEliminar }: ListaGasto
 
   const getFechaCorta = (fechaStr: string) => {
     const fecha = new Date(fechaStr)
-    // Formato ultra corto: 20 Ene • 01:01 PM
     const fechaFmt = fecha.toLocaleDateString('es-VE', { day: 'numeric', month: 'short' })
     const horaFmt = fecha.toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit', hour12: true })
-    return `${fechaFmt} • ${horaFmt}`
+    return `${fechaFmt}, ${horaFmt}`
   }
 
   if (gastos.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 px-4 bg-white rounded-xl border border-dashed border-gray-300">
-        <Receipt className="h-8 w-8 text-gray-400 mb-2" />
-        <p className="text-sm text-gray-500">Sin movimientos</p>
+      <div className="flex flex-col items-center justify-center py-12 px-4 bg-white rounded-3xl border border-dashed border-slate-200">
+        <div className="w-12 h-12 bg-[#f4f6fc] rounded-full flex items-center justify-center mb-3">
+           <Receipt className="h-6 w-6 text-[#869dfc]" />
+        </div>
+        <p className="text-sm font-medium text-slate-500">No hay movimientos registrados</p>
       </div>
     )
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {gastos.map((gasto) => {
-        const isUSD = gasto.moneda === 'USD'
-        
         return (
           <div 
             key={gasto.id} 
-            className="relative bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden hover:shadow-md transition-all"
+            className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:border-[#869dfc]/30 transition-all duration-300"
           >
-            <div className="p-3">
-              {/* --- FILA SUPERIOR: Icono + Título + Info --- */}
-              <div className="flex gap-3 mb-3">
-                {/* Icono Cuadrado */}
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
-                  isUSD ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                }`}>
-                  <DollarSign className="h-5 w-5" />
-                </div>
-
-                {/* Info Central */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-bold text-gray-900 text-base truncate pr-2">
+            <div className="p-4 sm:p-5">
+              
+              {/* Encabezado: Icono, Título y Acciones */}
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex gap-3 items-start overflow-hidden">
+                  <div className="w-10 h-10 rounded-xl bg-[#122a4e] flex items-center justify-center shrink-0 shadow-md shadow-[#122a4e]/10 text-white">
+                    <DollarSign className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-[#140f07] text-base truncate leading-tight">
                       {gasto.descripcion}
                     </h3>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border shrink-0 ${
-                      isUSD ? 'bg-green-50 text-green-700 border-green-200' : 'bg-blue-50 text-blue-700 border-blue-200'
-                    }`}>
-                      {gasto.moneda}
-                    </span>
-                  </div>
-
-                  {/* Metadatos en una sola línea compacta */}
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
-                    <div className="inline-flex items-center gap-1 text-xs text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100">
-                      <CreditCard className="h-3 w-3" />
-                      <span className="truncate max-w-20">{gasto.metodoPago?.nombre || 'General'}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
-                      <Clock className="h-3 w-3" />
-                      <span>{getFechaCorta(gasto.fechaHora)}</span>
+                    <div className="flex items-center gap-2 mt-1 text-xs font-medium text-slate-400">
+                       <Clock className="h-3 w-3" />
+                       <span>{getFechaCorta(gasto.fechaHora)}</span>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* --- FILA INFERIOR: Precio y Botones --- */}
-              <div className="flex items-end justify-between border-t border-gray-50 pt-2 mt-1">
-                {/* Precios */}
-                <div>
-                  <div className="font-bold text-lg text-gray-900 leading-none">
-                    Bs {formatBS(gasto.montoBS)}
-                  </div>
-                  <div className="text-sm text-gray-700 mt-1 font-medium">
-                    {formatUSD(gasto.montoUSD)} 
-                    {isUSD && <span className="text-gray-400 font-normal ml-1 text-[10px]"></span>}
-                  </div>
-                </div>
-
-                {/* Botones (Compactos) */}
-                <div className="flex gap-2">
+                <div className="flex gap-1 shrink-0 ml-2">
                   <button
                     onClick={() => onEditar(gasto)}
-                    className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 border border-blue-100 transition-colors"
+                    className="p-2 text-slate-400 hover:text-[#4260ad] hover:bg-[#e2e2f6] rounded-lg transition-colors"
                   >
                     <Edit className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => onEliminar(gasto)}
-                    className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-600 rounded-lg hover:bg-red-100 border border-red-100 transition-colors"
+                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
-            </div>
 
-            {/* Notas (Footer pequeño) */}
-            {gasto.notas && (
-              <div className="bg-yellow-50/50 px-3 py-1.5 border-t border-yellow-100/50 flex items-center gap-2">
-                <StickyNote className="h-3 w-3 text-yellow-600 shrink-0" />
-                <p className="text-sm text-gray-600 truncate">
-                  {gasto.notas}
-                </p>
+              {/* Cuerpo: Montos y Detalles */}
+              <div className="bg-[#f8f9fc] rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 mb-3">
+                 <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Monto en Bs</p>
+                    <p className="text-xl font-black text-[#140f07]">Bs {formatBS(gasto.montoBS)}</p>
+                 </div>
+                 <div className="text-right pl-4 border-l border-slate-200">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Ref. USD</p>
+                    <p className="text-base font-bold text-[#4260ad]">{formatUSD(gasto.montoUSD)}</p>
+                 </div>
               </div>
-            )}
+
+              {/* Footer: Tags y Notas */}
+              <div className="flex flex-wrap items-center gap-2">
+                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-600">
+                    <CreditCard className="h-3 w-3 text-[#4260ad]" />
+                    <span className="truncate max-w-25">{gasto.metodoPago?.nombre || 'General'}</span>
+                 </div>
+                 
+                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-600">
+                    <span className="font-bold text-[#122a4e]">{gasto.moneda}</span>
+                 </div>
+
+                 {gasto.notas && (
+                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#fff8e1] border border-[#ffecb3] text-xs font-medium text-amber-700 max-w-full">
+                      <StickyNote className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{gasto.notas}</span>
+                   </div>
+                 )}
+              </div>
+
+            </div>
           </div>
         )
       })}

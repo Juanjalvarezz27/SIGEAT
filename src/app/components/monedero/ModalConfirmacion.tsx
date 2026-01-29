@@ -1,6 +1,6 @@
 "use client"
 
-import { AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, X, Loader2 } from 'lucide-react'
 
 interface ModalConfirmacionProps {
   isOpen: boolean
@@ -29,63 +29,52 @@ export default function ModalConfirmacion({
 
   return (
     <div
-      className="fixed inset-0 z-100 bg-black/50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-100 bg-black/50 flex items-center justify-center p-4 transition-opacity"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
+        className="bg-[#f8f9fc] rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-white/20 transform transition-all"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header del modal */}
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-6 flex items-center justify-between">
+        {/* Header optimizado */}
+        <div className="bg-white border-b border-[#122a4e]/5 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className={`w-10 h-10 min-w-10 min-h-10 aspect-square rounded-xl flex items-center justify-center shrink-0 ${
-              esDestructivo ? 'bg-red-500' : 'bg-yellow-500'
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm ${
+              esDestructivo ? 'bg-red-50 text-red-500' : 'bg-amber-50 text-amber-500'
             }`}>
-              <AlertTriangle className="h-5 w-5 text-white" />
+              <AlertTriangle className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-[#140f07] leading-tight">
                 {titulo}
               </h2>
-              <p className="text-gray-600 mt-1 text-sm">Confirmación requerida</p>
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={loading}
-            className="p-2 rounded-lg hover:bg-gray-100 transition disabled:opacity-50"
+            className="p-2 rounded-xl hover:bg-[#e2e2f6] text-[#122a4e]/50 hover:text-[#122a4e] transition-colors disabled:opacity-50"
             aria-label="Cerrar"
           >
-            <X className="h-5 w-5 text-gray-500" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        {/* Contenido del modal */}
+        {/* Contenido */}
         <div className="p-6">
-          <div className="mb-6">
-            <div className="text-center">
-              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full ${
-                esDestructivo ? 'bg-red-100' : 'bg-yellow-100'
-              } mb-4`}>
-                <AlertTriangle className={`h-6 w-6 ${
-                  esDestructivo ? 'text-red-600' : 'text-yellow-600'
-                }`} />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                {titulo}
-              </h3>
-              <p className="text-gray-600">{mensaje}</p>
-            </div>
+          <div className="mb-8">
+            <p className="text-slate-600 font-medium leading-relaxed text-center sm:text-left">
+              {mensaje}
+            </p>
           </div>
 
-          {/* Botones */}
-          <div className="flex gap-3">
+          {/* Botones estilo App */}
+          <div className="flex flex-col-reverse sm:flex-row gap-3">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition disabled:opacity-50"
+              className="w-full sm:flex-1 px-6 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 active:bg-slate-100 transition-colors disabled:opacity-50"
             >
               {cancelarTexto}
             </button>
@@ -93,13 +82,20 @@ export default function ModalConfirmacion({
               type="button"
               onClick={onConfirm}
               disabled={loading}
-              className={`flex-1 px-4 py-3 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`w-full sm:flex-1 px-6 py-3.5 font-bold text-white rounded-2xl shadow-lg transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${
                 esDestructivo 
-                  ? 'bg-red-600 hover:bg-red-700' 
-                  : 'bg-blue-600 hover:bg-blue-700'
+                  ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20' 
+                  : 'bg-[#4260ad] hover:bg-[#122a4e] shadow-[#4260ad]/20'
               }`}
             >
-              {loading ? 'Procesando...' : confirmarTexto}
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Procesando...</span>
+                </>
+              ) : (
+                confirmarTexto
+              )}
             </button>
           </div>
         </div>

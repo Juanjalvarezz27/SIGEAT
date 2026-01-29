@@ -27,31 +27,23 @@ export default function Paginacion({
   const getPaginasMostradas = () => {
     const paginas: (number | string)[] = []
     
-    if (totalPaginas <= 7) {
-      // Mostrar todas las páginas
+    if (totalPaginas <= 5) {
       for (let i = 1; i <= totalPaginas; i++) {
         paginas.push(i)
       }
     } else {
-      // Lógica para mostrar con puntos suspensivos
-      if (paginaActual <= 4) {
-        for (let i = 1; i <= 5; i++) {
-          paginas.push(i)
-        }
+      if (paginaActual <= 3) {
+        for (let i = 1; i <= 4; i++) paginas.push(i)
         paginas.push('...')
         paginas.push(totalPaginas)
-      } else if (paginaActual >= totalPaginas - 3) {
+      } else if (paginaActual >= totalPaginas - 2) {
         paginas.push(1)
         paginas.push('...')
-        for (let i = totalPaginas - 4; i <= totalPaginas; i++) {
-          paginas.push(i)
-        }
+        for (let i = totalPaginas - 3; i <= totalPaginas; i++) paginas.push(i)
       } else {
         paginas.push(1)
         paginas.push('...')
-        for (let i = paginaActual - 1; i <= paginaActual + 1; i++) {
-          paginas.push(i)
-        }
+        paginas.push(paginaActual)
         paginas.push('...')
         paginas.push(totalPaginas)
       }
@@ -60,7 +52,6 @@ export default function Paginacion({
     return paginas
   }
 
-  // Calcular rangos de items mostrados
   const inicioItem = totalItems > 0 ? (paginaActual - 1) * limite + 1 : 0
   const finItem = Math.min(paginaActual * limite, totalItems)
 
@@ -69,37 +60,36 @@ export default function Paginacion({
   }
 
   return (
-    <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 ${className}`}>
+    <div className={`flex flex-col sm:flex-row items-center justify-between gap-4 py-4 ${className}`}>
       {/* Información de items mostrados */}
-      <div className="text-sm text-gray-600">
-        Mostrando <span className="font-semibold text-gray-900">{inicioItem}-{finItem}</span> de{' '}
-        <span className="font-semibold text-gray-900">{totalItems}</span> gastos
+      <div className="text-xs font-medium text-slate-500 bg-[#f8f9fc] px-4 py-2 rounded-xl border border-slate-100 shadow-sm">
+        Mostrando <span className="font-bold text-[#122a4e]">{inicioItem}-{finItem}</span> de{' '}
+        <span className="font-bold text-[#122a4e]">{totalItems}</span> registros
       </div>
 
       {/* Controles de paginación */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1.5">
         {/* Botón Anterior */}
         <button
           onClick={() => tieneAnterior && onChangePagina(paginaActual - 1)}
           disabled={!tieneAnterior}
-          className={`p-2 rounded-lg border transition ${
+          className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all border ${
             tieneAnterior
-              ? 'hover:bg-gray-100 border-gray-300 text-gray-700'
-              : 'opacity-50 cursor-not-allowed border-gray-200 text-gray-400'
+              ? 'bg-white border-slate-200 text-[#122a4e] hover:bg-[#e2e2f6] hover:text-[#4260ad] hover:border-[#869dfc]/30 shadow-sm'
+              : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed'
           }`}
-          aria-label="Página anterior"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-5 w-5" />
         </button>
 
         {/* Números de página */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {getPaginasMostradas().map((pagina, index) => {
             if (pagina === '...') {
               return (
-                <span key={`dots-${index}`} className="px-3 py-1 text-gray-400">
+                <div key={`dots-${index}`} className="w-8 h-10 flex items-center justify-center text-slate-300">
                   <MoreHorizontal className="h-4 w-4" />
-                </span>
+                </div>
               )
             }
 
@@ -108,13 +98,11 @@ export default function Paginacion({
               <button
                 key={pagina}
                 onClick={() => onChangePagina(Number(pagina))}
-                className={`w-9 h-9 flex items-center justify-center rounded-lg border transition ${
+                className={`w-10 h-10 text-sm font-bold rounded-xl transition-all border ${
                   esPaginaActual
-                    ? 'bg-blue-600 border-blue-600 text-white font-semibold'
-                    : 'hover:bg-gray-100 border-gray-300 text-gray-700'
+                    ? 'bg-[#122a4e] border-[#122a4e] text-white shadow-md shadow-[#122a4e]/20'
+                    : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-[#122a4e] shadow-sm'
                 }`}
-                aria-label={`Ir a página ${pagina}`}
-                aria-current={esPaginaActual ? 'page' : undefined}
               >
                 {pagina}
               </button>
@@ -126,14 +114,13 @@ export default function Paginacion({
         <button
           onClick={() => tieneSiguiente && onChangePagina(paginaActual + 1)}
           disabled={!tieneSiguiente}
-          className={`p-2 rounded-lg border transition ${
+          className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all border ${
             tieneSiguiente
-              ? 'hover:bg-gray-100 border-gray-300 text-gray-700'
-              : 'opacity-50 cursor-not-allowed border-gray-200 text-gray-400'
+              ? 'bg-white border-slate-200 text-[#122a4e] hover:bg-[#e2e2f6] hover:text-[#4260ad] hover:border-[#869dfc]/30 shadow-sm'
+              : 'bg-slate-50 border-slate-100 text-slate-300 cursor-not-allowed'
           }`}
-          aria-label="Página siguiente"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-5 w-5" />
         </button>
       </div>
     </div>
