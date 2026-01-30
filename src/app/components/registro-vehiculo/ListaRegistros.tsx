@@ -298,7 +298,7 @@ const abrirWhatsApp = (registro: RegistroVehiculoCompleto) => {
   }
   
   const mensaje = encodeURIComponent(
-`Hola ${registro.nombre}, somos Nova Cars.
+`Hola ${registro.nombre}, somos del Autolavado.
 
 Le informamos que su vehículo ya está listo y puede pasar a recogerlo cuando desee.
 
@@ -310,7 +310,7 @@ Le informamos que su vehículo ya está listo y puede pasar a recogerlo cuando d
 • *Estado:* ${registro.estadoCarro.nombre}
 • *Estado de pago:* ${registro.estadoPago.nombre}${notasTexto}
 
-*¡Gracias por confiar en Nova Cars!*`
+*¡Gracias por confiar en nosotros!*`
   );
 
   window.open(`https://wa.me/${numeroWhatsApp}?text=${mensaje}`, '_blank');

@@ -18,7 +18,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "SILAV - Autolavado",
+  title: "SEGEAT - Autolavado",
   description: "Gestión de Vehículos en Autolavado",
 };
 
